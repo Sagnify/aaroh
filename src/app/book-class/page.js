@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Users, Phone } from "lucide-react"
 
-export default function BookClass() {
+function BookClassContent() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -197,5 +197,17 @@ export default function BookClass() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function BookClass() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-[#a0303f] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <BookClassContent />
+    </Suspense>
   )
 }

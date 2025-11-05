@@ -2,14 +2,14 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Loader from '@/components/Loader'
 import VideoPlayer from '@/components/VideoPlayer'
 import { Play, Lock, CheckCircle, Clock, BookOpen } from 'lucide-react'
 
-export default function CoursePage() {
+function CoursePageContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
@@ -392,5 +392,13 @@ export default function CoursePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CoursePage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <CoursePageContent />
+    </Suspense>
   )
 }
