@@ -284,11 +284,10 @@ export default function EditCourse() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Course Thumbnail</label>
                 <ImageUpload
                   currentImage={formData.thumbnail}
                   onImageUpload={(imageUrl) => setFormData({...formData, thumbnail: imageUrl})}
-                  placeholder="Upload course thumbnail image"
+                  label="Course Thumbnail"
                 />
               </div>
 

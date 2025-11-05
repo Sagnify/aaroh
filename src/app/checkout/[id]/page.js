@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Loader from '@/components/Loader'
-import { ShoppingCart, CreditCard, Lock, CheckCircle, ArrowLeft } from 'lucide-react'
+import { ShoppingCart, CreditCard, Lock, CheckCircle, ArrowLeft, XCircle, Home } from 'lucide-react'
 import Link from 'next/link'
 
 export default function CheckoutPage() {
@@ -19,6 +19,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState(null) // 'success', 'failed', null
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -159,11 +160,13 @@ export default function CheckoutPage() {
             })
 
             if (verifyResponse.ok) {
-              router.push(`/course/${params.id}?purchased=true`)
+              setPaymentStatus('success')
             } else {
+              setPaymentStatus('failed')
               setError('Payment verification failed. Please contact support.')
             }
           } catch (error) {
+            setPaymentStatus('failed')
             setError('Payment verification failed. Please contact support.')
           } finally {
             setProcessing(false)
@@ -172,6 +175,8 @@ export default function CheckoutPage() {
         modal: {
           ondismiss: function() {
             setProcessing(false)
+            setPaymentStatus('failed')
+            setError('Payment was cancelled')
           }
         }
       }
@@ -200,6 +205,75 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Course not found</h1>
           <p className="text-gray-600">The course you're trying to purchase doesn't exist.</p>
         </div>
+      </div>
+    )
+  }
+
+  // Success Screen
+  if (paymentStatus === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10">
+        <Card className="max-w-md mx-auto bg-white/90 backdrop-blur-sm border shadow-lg">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
+            <p className="text-gray-600 mb-6">Your course purchase has been completed successfully.</p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => router.push(`/course/${params.id}`)}
+                className="w-full bg-gradient-to-r from-[#ff6b6b] to-[#ffb088] hover:from-[#e55a5a] hover:to-[#ff9f73] text-white"
+              >
+                Access Course
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push('/my-courses')}
+                className="w-full"
+              >
+                View My Courses
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Failure Screen
+  if (paymentStatus === 'failed') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10">
+        <Card className="max-w-md mx-auto bg-white/90 backdrop-blur-sm border shadow-lg">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h1>
+            <p className="text-gray-600 mb-2">Your payment could not be processed.</p>
+            {error && <p className="text-red-600 text-sm mb-6">{error}</p>}
+            <div className="space-y-3">
+              <Button 
+                onClick={() => {
+                  setPaymentStatus(null)
+                  setError('')
+                }}
+                className="w-full bg-gradient-to-r from-[#ff6b6b] to-[#ffb088] hover:from-[#e55a5a] hover:to-[#ff9f73] text-white"
+              >
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push('/')}
+                className="w-full"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Go Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }

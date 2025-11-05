@@ -189,7 +189,7 @@ export default function ManageCourses() {
                       <div className="font-medium text-gray-900">₹{course.price.toLocaleString()}</div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="text-gray-900">{course.students}</div>
+                      <div className="text-gray-900">{course._count?.purchases || 0}</div>
                     </td>
                     <td className="py-4 px-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
 
@@ -12,6 +12,11 @@ export default function ImageUpload({
 }) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState(currentImage || null)
+
+  // Update preview when currentImage prop changes
+  useEffect(() => {
+    setPreview(currentImage || null)
+  }, [currentImage])
   const fileInputRef = useRef(null)
 
   const handleFileSelect = async (event) => {
