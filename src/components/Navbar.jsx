@@ -165,81 +165,115 @@ export default function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Sidebar Overlay */}
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden py-4"
-          >
-            {(isAdminPage ? adminNavItems : navItems).map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`block px-3 py-2 text-base font-medium ${
-                  pathname === item.href
-                    ? (isAdminPage ? "text-gray-900" : (isScrolled ? "text-[#ff6b6b]" : (isHomepage ? "text-[#e6b800]" : "text-[#ff6b6b]")))
-                    : (isAdminPage ? "text-gray-600 hover:text-gray-900" : (isScrolled ? "text-gray-700 hover:text-[#ff6b6b]" : (isHomepage ? "text-white/80 hover:text-white" : "text-[#a0303f] hover:text-[#ff6b6b]")))
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => setIsOpen(false)}
+            />
             
-            {!isAdminPage && (
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                {session && session.user.role === 'USER' ? (
-                  <>
+            {/* Mobile Sidebar */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "tween", duration: 0.3 }}
+              className="fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 md:hidden overflow-y-auto"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-8">
+                  <Link 
+                    href="/" 
+                    className="text-2xl font-bold text-[#a0303f]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Aaroh{isAdminPage && <span className="text-lg font-medium ml-1 text-black">Admin</span>}
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-600"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <X size={24} />
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  {(isAdminPage ? adminNavItems : navItems).map((item) => (
                     <Link
-                      href="/dashboard"
-                      className={`flex items-center space-x-2 px-3 py-2 text-base font-medium ${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b]' : (isHomepage ? 'text-white/80 hover:text-white' : 'text-[#a0303f] hover:text-[#ff6b6b]')
+                      key={item.href}
+                      href={item.href}
+                      className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                        pathname === item.href
+                          ? "bg-[#ff6b6b] text-white"
+                          : "text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b]"
                       }`}
                       onClick={() => setIsOpen(false)}
                     >
-                      <User size={16} />
-                      <span>Dashboard</span>
+                      {item.label}
                     </Link>
-                    <button
-                      onClick={() => {
-                        signOut()
-                        setIsOpen(false)
-                      }}
-                      className={`flex items-center space-x-2 px-3 py-2 text-base font-medium w-full text-left ${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b]' : (isHomepage ? 'text-white/80 hover:text-white' : 'text-[#a0303f] hover:text-[#ff6b6b]')
-                      }`}
-                    >
-                      <LogOut size={16} />
-                      <span>Logout</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className={`block px-3 py-2 text-base font-medium ${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b]' : (isHomepage ? 'text-white/80 hover:text-white' : 'text-[#a0303f] hover:text-[#ff6b6b]')
-                      }`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/signup"
-                      className={`block px-3 py-2 text-base font-medium ${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b]' : (isHomepage ? 'text-white/80 hover:text-white' : 'text-[#a0303f] hover:text-[#ff6b6b]')
-                      }`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
-                  </>
+                  ))}
+                </div>
+                
+                {!isAdminPage && (
+                  <div className="border-t border-gray-200 mt-6 pt-6">
+                    {session && session.user.role === 'USER' ? (
+                      <div className="space-y-2">
+                        <Link
+                          href="/profile"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Settings size={20} />
+                          <span>My Profile</span>
+                        </Link>
+                        <Link
+                          href="/my-courses"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <BookOpen size={20} />
+                          <span>My Courses</span>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            signOut()
+                            setIsOpen(false)
+                          }}
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors w-full text-left"
+                        >
+                          <LogOut size={20} />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link
+                          href="/login"
+                          className="block w-full px-4 py-3 text-center rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-medium hover:bg-[#ff6b6b] hover:text-white transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          Login
+                        </Link>
+                        <Link
+                          href="/signup"
+                          className="block w-full px-4 py-3 text-center rounded-lg bg-[#ff6b6b] text-white font-medium hover:bg-[#e55a5a] transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          Sign Up
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </div>
       </div>
