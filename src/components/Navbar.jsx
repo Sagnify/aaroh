@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, User, LogOut, BookOpen, Settings, ChevronDown } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -165,116 +165,117 @@ export default function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile Sidebar Overlay */}
-        {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40 md:hidden"
-              onClick={() => setIsOpen(false)}
-            />
-            
-            {/* Mobile Sidebar */}
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 md:hidden overflow-y-auto"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-8">
-                  <Link 
-                    href="/" 
-                    className="text-2xl font-bold text-[#a0303f]"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Aaroh{isAdminPage && <span className="text-lg font-medium ml-1 text-black">Admin</span>}
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-gray-600"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X size={24} />
-                  </Button>
-                </div>
-                
-                <div className="space-y-2">
-                  {(isAdminPage ? adminNavItems : navItems).map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
-                        pathname === item.href
-                          ? "bg-[#ff6b6b] text-white"
-                          : "text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b]"
-                      }`}
+        {/* Mobile Sidebar */}
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                onClick={() => setIsOpen(false)}
+              />
+              
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "tween", duration: 0.3 }}
+                className="fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 md:hidden overflow-y-auto"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-8">
+                    <Link 
+                      href="/" 
+                      className="text-2xl font-bold text-[#a0303f]"
                       onClick={() => setIsOpen(false)}
                     >
-                      {item.label}
+                      Aaroh{isAdminPage && <span className="text-lg font-medium ml-1 text-black">Admin</span>}
                     </Link>
-                  ))}
-                </div>
-                
-                {!isAdminPage && (
-                  <div className="border-t border-gray-200 mt-6 pt-6">
-                    {session && session.user.role === 'USER' ? (
-                      <div className="space-y-2">
-                        <Link
-                          href="/profile"
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <Settings size={20} />
-                          <span>My Profile</span>
-                        </Link>
-                        <Link
-                          href="/my-courses"
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <BookOpen size={20} />
-                          <span>My Courses</span>
-                        </Link>
-                        <button
-                          onClick={() => {
-                            signOut()
-                            setIsOpen(false)
-                          }}
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors w-full text-left"
-                        >
-                          <LogOut size={20} />
-                          <span>Logout</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <Link
-                          href="/login"
-                          className="block w-full px-4 py-3 text-center rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-medium hover:bg-[#ff6b6b] hover:text-white transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          Login
-                        </Link>
-                        <Link
-                          href="/signup"
-                          className="block w-full px-4 py-3 text-center rounded-lg bg-[#ff6b6b] text-white font-medium hover:bg-[#e55a5a] transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          Sign Up
-                        </Link>
-                      </div>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-600"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <X size={24} />
+                    </Button>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
+                  
+                  <div className="space-y-2">
+                    {(isAdminPage ? adminNavItems : navItems).map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                          pathname === item.href
+                            ? "bg-[#ff6b6b] text-white"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b]"
+                        }`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                  
+                  {!isAdminPage && (
+                    <div className="border-t border-gray-200 mt-6 pt-6">
+                      {session && session.user.role === 'USER' ? (
+                        <div className="space-y-2">
+                          <Link
+                            href="/profile"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <Settings size={20} />
+                            <span>My Profile</span>
+                          </Link>
+                          <Link
+                            href="/my-courses"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <BookOpen size={20} />
+                            <span>My Courses</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              signOut()
+                              setIsOpen(false)
+                            }}
+                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors w-full text-left"
+                          >
+                            <LogOut size={20} />
+                            <span>Logout</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <Link
+                            href="/login"
+                            className="block w-full px-4 py-3 text-center rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-medium hover:bg-[#ff6b6b] hover:text-white transition-colors"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            Login
+                          </Link>
+                          <Link
+                            href="/signup"
+                            className="block w-full px-4 py-3 text-center rounded-lg bg-[#ff6b6b] text-white font-medium hover:bg-[#e55a5a] transition-colors"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            Sign Up
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
       </div>
     </nav>
