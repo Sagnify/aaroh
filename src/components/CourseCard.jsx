@@ -5,11 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Clock, BookOpen, Star, Play } from 'lucide-react'
 import Link from "next/link"
+import { calculateDiscountPercentage, hasDiscount } from '@/lib/discount-utils'
+import { useCourseDurations } from '@/hooks/useYouTubeDuration'
 
 export default function CourseCard({ course, index = 0, variant = 'default' }) {
   const isMyCoursesVariant = variant === 'my-courses'
   const displayTitle = course.title || course.name
   const displayDescription = course.subtitle || course.description
+  const { totalDuration, loading: durationsLoading } = useCourseDurations(course?.curriculum)
   
   return (
     <motion.div
@@ -43,14 +46,12 @@ export default function CourseCard({ course, index = 0, variant = 'default' }) {
             <div className="flex items-center justify-between text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>{course.duration}</span>
+                <span>{totalDuration || course.duration || 'Loading...'}</span>
               </div>
-              {course.lessons && (
-                <div className="flex items-center gap-1">
-                  <BookOpen className="w-4 h-4" />
-                  <span>{course.lessons} lessons</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>{course.curriculum?.flatMap(s => s.videos || []).length || course.lessons || 0} lessons</span>
+              </div>
             </div>
             
             {!isMyCoursesVariant && course.rating && (
@@ -79,9 +80,9 @@ export default function CourseCard({ course, index = 0, variant = 'default' }) {
                     </span>
                   )}
                 </div>
-                {course.originalPrice && (
+                {hasDiscount(course.price, course.originalPrice) && (
                   <span className="px-2 py-1 bg-[#e6b800] text-white text-xs font-medium rounded">
-                    {Math.round((1 - course.price / course.originalPrice) * 100)}% OFF
+                    {calculateDiscountPercentage(course.price, course.originalPrice)}% OFF
                   </span>
                 )}
               </div>

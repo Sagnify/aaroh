@@ -8,6 +8,7 @@ import { Play, Clock, Users, Award, Star, CheckCircle, Globe } from "lucide-reac
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { calculateDiscountPercentage, hasDiscount } from '@/lib/discount-utils'
 
 export default function CourseDetails() {
   const params = useParams()
@@ -95,7 +96,7 @@ export default function CourseDetails() {
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 text-[#e6b800] fill-current" />
                   <span className="font-semibold">{course.rating}</span>
-                  <span className="text-gray-600">({course.students.toLocaleString()} students)</span>
+                  <span className="text-gray-600">({course.students?.toLocaleString() || 0} students)</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-5 h-5 text-[#ffb088]" />
@@ -160,7 +161,7 @@ export default function CourseDetails() {
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-3xl font-bold text-[#a0303f]">₹{course.price.toLocaleString()}</span>
                     {course.originalPrice && <span className="text-lg text-gray-500 line-through">₹{course.originalPrice.toLocaleString()}</span>}
-                    {course.originalPrice && <span className="px-2 py-1 bg-[#e6b800] text-white text-xs font-medium rounded">{Math.round((1 - course.price / course.originalPrice) * 100)}% OFF</span>}
+                    {hasDiscount(course.price, course.originalPrice) && <span className="px-2 py-1 bg-[#e6b800] text-white text-xs font-medium rounded">{calculateDiscountPercentage(course.price, course.originalPrice)}% OFF</span>}
                   </div>
                   
                   {hasPurchased ? (

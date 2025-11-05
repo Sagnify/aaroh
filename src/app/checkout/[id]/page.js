@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import Loader from '@/components/Loader'
 import { ShoppingCart, CreditCard, Lock, CheckCircle, ArrowLeft, XCircle, Home } from 'lucide-react'
 import Link from 'next/link'
+import { calculateDiscountPercentage, hasDiscount } from '@/lib/discount-utils'
 
 export default function CheckoutPage() {
   const { data: session, status } = useSession()
@@ -317,9 +318,9 @@ export default function CheckoutPage() {
                   <span>Course Price</span>
                   <span>₹{course.price.toLocaleString()}</span>
                 </div>
-                {course.originalPrice && (
+                {hasDiscount(course.price, course.originalPrice) && (
                   <div className="flex justify-between text-green-600">
-                    <span>Discount</span>
+                    <span>Discount ({calculateDiscountPercentage(course.price, course.originalPrice)}% OFF)</span>
                     <span>-₹{(course.originalPrice - course.price).toLocaleString()}</span>
                   </div>
                 )}

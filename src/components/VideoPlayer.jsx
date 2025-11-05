@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Play, Pause, Volume2, VolumeX, Settings, SkipForward, SkipBack, Maximize } from 'lucide-react'
 
-export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, videoId, initialTimestamp = 0, onProgressUpdate }) {
+export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, videoId, initialTimestamp = 0, onProgressUpdate, onVideoComplete, isLastVideo, onOpenCertificate }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [volume, setVolume] = useState(100)
@@ -75,14 +75,17 @@ export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, v
   }
 
   const onPlayerReady = (event) => {
-    setDuration(event.target.getDuration())
+    const videoDuration = event.target.getDuration()
+    console.log('Video duration from YouTube (seconds):', videoDuration)
+    console.log('Video duration formatted:', formatTime(videoDuration))
+    setDuration(videoDuration)
     setVolume(event.target.getVolume())
     
     // Resume from last position if available
-    if (initialTimestamp > 0) {
+    if (initialTimestamp > 0 && videoDuration > 0) {
       event.target.seekTo(initialTimestamp, true)
       setCurrentTime(initialTimestamp)
-      setProgress((initialTimestamp / event.target.getDuration()) * 100)
+      setProgress((initialTimestamp / videoDuration) * 100)
     }
   }
 
@@ -91,8 +94,22 @@ export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, v
     setIsPlaying(isCurrentlyPlaying)
     
     // Handle video end
-    if (event.data === window.YT.PlayerState.ENDED && onVideoEnd) {
-      onVideoEnd()
+    if (event.data === window.YT.PlayerState.ENDED) {
+      // Mark video as complete when it ends
+      if (courseId && videoId) {
+        const current = playerRef.current.getCurrentTime()
+        const total = playerRef.current.getDuration()
+        if (current > 0 && total > 0) {
+          saveProgress(total, true) // Mark as completed
+        }
+      }
+      
+      // For last video, open certificate instead of next video
+      if (isLastVideo && onOpenCertificate) {
+        setTimeout(() => onOpenCertificate(), 1000) // Small delay for better UX
+      } else if (onVideoEnd) {
+        onVideoEnd()
+      }
     }
   }
 
@@ -106,9 +123,11 @@ export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, v
         if (playerRef.current && !isDragging) {
           const current = playerRef.current.getCurrentTime()
           const total = playerRef.current.getDuration()
-          if (total > 0) {
+          if (total > 0 && current >= 0) {
             setCurrentTime(current)
-            setDuration(total)
+            if (duration !== total) {
+              setDuration(total)
+            }
             setProgress((current / total) * 100)
             // Notify parent of progress update
             if (onProgressUpdate) {
@@ -118,16 +137,21 @@ export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, v
         }
       }, 100)
       
-      // Save progress every 15 seconds
+      // Save progress every 5 seconds and check for completion
       saveInterval = setInterval(() => {
         if (playerRef.current && courseId && videoId) {
           const current = playerRef.current.getCurrentTime()
           const total = playerRef.current.getDuration()
           if (current > 0 && total > 0) {
-            saveProgress(current, current >= total * 0.9)
+            const isCompleted = current >= total * 0.9 // 90% completion
+            if (isCompleted) {
+              saveProgress(current, true)
+            } else {
+              saveProgress(current, false)
+            }
           }
         }
-      }, 15000)
+      }, 5000)
     }
     
     return () => {
@@ -151,11 +175,17 @@ export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, v
         })
       })
       
-      if (!response.ok) {
-        console.error('Progress save failed:', response.status)
+      if (response.ok) {
+        if (completed && onVideoComplete) {
+          onVideoComplete(videoId)
+        }
+      } else {
+        // Silently handle progress save failures
+        console.warn('Progress save failed, continuing without saving')
       }
     } catch (error) {
-      console.error('Failed to save progress:', error)
+      // Silently handle progress save failures
+      console.warn('Failed to save progress, continuing without saving')
     }
   }
 
@@ -302,6 +332,7 @@ export default function VideoPlayer({ youtubeUrl, title, onVideoEnd, courseId, v
   }, [isPlaying, currentTime, duration])
 
   const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds) || seconds < 0) return '0:00'
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`

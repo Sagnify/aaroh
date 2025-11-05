@@ -46,9 +46,79 @@ export async function GET(request) {
   }
 }
 
+const fetchYouTubeDuration = async (url) => {
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/youtube/duration`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return { duration: data.duration, seconds: data.seconds }
+    }
+  } catch (error) {
+    console.error('Error fetching duration:', error)
+  }
+  return { duration: '0:00', seconds: 0 }
+}
+
+const calculateCourseDuration = (curriculum) => {
+  let totalSeconds = 0
+  let totalLessons = 0
+  
+  curriculum.forEach(section => {
+    if (section.videos) {
+      section.videos.forEach(video => {
+        totalSeconds += video.durationSeconds || 0
+        totalLessons++
+      })
+    }
+  })
+  
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  
+  return {
+    duration: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
+    lessons: totalLessons
+  }
+}
+
 export async function POST(request) {
   try {
     const data = await request.json()
+    
+    // Auto-fetch durations for all videos
+    const curriculumWithDurations = await Promise.all(
+      (data.curriculum || []).map(async (section, sectionIndex) => {
+        const videosWithDurations = await Promise.all(
+          (section.videos || []).map(async (video, videoIndex) => {
+            const { duration, seconds } = await fetchYouTubeDuration(video.youtubeUrl)
+            return {
+              ...video,
+              duration,
+              durationSeconds: seconds,
+              order: videoIndex
+            }
+          })
+        )
+        
+        const sectionTotalSeconds = videosWithDurations.reduce((sum, v) => sum + (v.durationSeconds || 0), 0)
+        const sectionHours = Math.floor(sectionTotalSeconds / 3600)
+        const sectionMinutes = Math.floor((sectionTotalSeconds % 3600) / 60)
+        
+        return {
+          ...section,
+          videos: videosWithDurations,
+          lessons: videosWithDurations.length,
+          duration: sectionHours > 0 ? `${sectionHours}h ${sectionMinutes}m` : `${sectionMinutes}m`,
+          order: sectionIndex
+        }
+      })
+    )
+    
+    const courseStats = calculateCourseDuration(curriculumWithDurations)
     
     const course = await prisma.course.create({
       data: {
@@ -57,31 +127,34 @@ export async function POST(request) {
         description: data.description,
         price: parseInt(data.price),
         originalPrice: data.originalPrice ? parseInt(data.originalPrice) : null,
-        duration: data.duration,
-        lessons: parseInt(data.lessons),
+        duration: courseStats.duration,
+        lessons: courseStats.lessons,
         level: data.level,
         language: data.language || 'Hindi/English',
+        thumbnail: data.thumbnail,
         whatYouLearn: data.whatYouLearn?.filter(item => item.trim()) || [],
         requirements: data.requirements?.filter(item => item.trim()) || [],
         curriculum: {
-          create: data.curriculum?.map((section, index) => ({
+          create: curriculumWithDurations.map(section => ({
             title: section.title,
             lessons: section.lessons,
             duration: section.duration,
-            order: index,
-            topics: {
-              create: section.topics?.map((topic, topicIndex) => ({
-                title: topic.title,
-                order: topicIndex
-              })) || []
+            order: section.order,
+            videos: {
+              create: section.videos.map(video => ({
+                title: video.title,
+                youtubeUrl: video.youtubeUrl,
+                duration: video.duration,
+                order: video.order
+              }))
             }
-          })) || []
+          }))
         }
       },
       include: {
         curriculum: {
           include: {
-            topics: true
+            videos: true
           }
         }
       }
@@ -89,6 +162,7 @@ export async function POST(request) {
 
     return NextResponse.json(course)
   } catch (error) {
+    console.error('Course creation error:', error)
     return NextResponse.json({ error: 'Failed to create course' }, { status: 500 })
   }
 }

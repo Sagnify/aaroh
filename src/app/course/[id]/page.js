@@ -7,7 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Loader from '@/components/Loader'
 import VideoPlayer from '@/components/VideoPlayer'
-import { Play, Lock, CheckCircle, Clock, BookOpen } from 'lucide-react'
+import ReviewModal from '@/components/ReviewModal'
+import CertificateModal from '@/components/CertificateModal'
+import { useCourseDurations } from '@/hooks/useYouTubeDuration'
+import { Play, Lock, CheckCircle, Clock, BookOpen, Star, Award } from 'lucide-react'
 
 function CoursePageContent() {
   const { data: session, status } = useSession()
@@ -21,6 +24,13 @@ function CoursePageContent() {
   const [progress, setProgress] = useState([])
   const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [hasUnsavedProgress, setHasUnsavedProgress] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showCertificateModal, setShowCertificateModal] = useState(false)
+  const [userReview, setUserReview] = useState(null)
+  const [certificate, setCertificate] = useState(null)
+  const [courseReviews, setCourseReviews] = useState([])
+  const [completionStats, setCompletionStats] = useState({ completed: 0, total: 0 })
+  const { durations, totalDuration, loading: durationsLoading } = useCourseDurations(course?.curriculum)
 
   // Handle beforeunload and route changes
   useEffect(() => {
@@ -111,6 +121,8 @@ function CoursePageContent() {
     fetchCourse()
     checkPurchase()
     loadProgress()
+    loadReviews()
+    checkCertificate()
   }, [session, status, router, params.id])
 
   // Handle URL parameters for resume watching
@@ -135,6 +147,11 @@ function CoursePageContent() {
       }
     }
   }, [course, searchParams])
+
+  // Update completion stats when progress changes
+  useEffect(() => {
+    updateCompletionStats()
+  }, [progress, course])
 
   const fetchCourse = async () => {
     try {
@@ -179,6 +196,28 @@ function CoursePageContent() {
     return null
   }
 
+  const isLastVideo = () => {
+    if (!course?.curriculum || !currentVideo) return false
+    
+    const allVideos = course.curriculum.flatMap(section => section.videos || [])
+    const lastVideo = allVideos[allVideos.length - 1]
+    return currentVideo.id === lastVideo?.id
+  }
+
+  const handleOpenCertificate = () => {
+    if (completionStats.completed === completionStats.total && completionStats.total > 0) {
+      if (userReview) {
+        if (certificate) {
+          setShowCertificateModal(true)
+        } else {
+          handleGenerateCertificate()
+        }
+      } else {
+        setShowReviewModal(true)
+      }
+    }
+  }
+
   const loadProgress = async () => {
     try {
       const response = await fetch(`/api/user/progress?courseId=${params.id}`)
@@ -188,7 +227,10 @@ function CoursePageContent() {
         
         // Resume from last watched video if no current video set and no URL params
         if (!currentVideo && progressData.length > 0 && !searchParams.get('video')) {
-          const lastWatched = progressData[0]
+          // Find the most recently updated incomplete video, or the first incomplete video
+          const incompleteProgress = progressData.filter(p => !p.completed)
+          const lastWatched = incompleteProgress.length > 0 ? incompleteProgress[0] : progressData[0]
+          
           const video = findVideoById(lastWatched.videoId)
           if (video) {
             setCurrentVideo(video)
@@ -225,6 +267,129 @@ function CoursePageContent() {
     setCurrentVideo(video)
     const videoProgress = progress.find(p => p.videoId === video.id)
     setCurrentTimestamp(videoProgress?.timestamp || 0)
+  }
+
+  const loadReviews = async () => {
+    try {
+      const response = await fetch(`/api/reviews?courseId=${params.id}`)
+      if (response.ok) {
+        const reviews = await response.json()
+        setCourseReviews(reviews)
+        const myReview = reviews.find(r => r.userId === session?.user?.id)
+        setUserReview(myReview)
+      }
+    } catch (error) {
+      console.error('Failed to load reviews:', error)
+    }
+  }
+
+  const checkCertificate = async () => {
+    try {
+      const response = await fetch(`/api/certificates?courseId=${params.id}`)
+      if (response.ok) {
+        const certificates = await response.json()
+        if (certificates.length > 0) {
+          setCertificate(certificates[0])
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check certificate:', error)
+    }
+  }
+
+  const updateCompletionStats = () => {
+    if (!course?.curriculum) return
+    
+    const allVideos = course.curriculum.flatMap(section => section.videos || [])
+    const completedCount = progress.filter(p => p.completed).length
+    
+    setCompletionStats({ completed: completedCount, total: allVideos.length })
+  }
+
+  const isVideoUnlocked = (video) => {
+    if (!course?.curriculum) return false
+    
+    const allVideos = course.curriculum.flatMap(section => section.videos || [])
+    const videoIndex = allVideos.findIndex(v => v.id === video.id)
+    
+    if (videoIndex === 0) return true // First video is always unlocked
+    
+    // Check if previous video is completed
+    const previousVideo = allVideos[videoIndex - 1]
+    const previousProgress = progress.find(p => p.videoId === previousVideo.id)
+    
+    return previousProgress?.completed || false
+  }
+
+  const getNextUnlockedVideo = () => {
+    if (!course?.curriculum) return null
+    
+    const allVideos = course.curriculum.flatMap(section => section.videos || [])
+    
+    for (const video of allVideos) {
+      const videoProgress = progress.find(p => p.videoId === video.id)
+      if (!videoProgress?.completed && isVideoUnlocked(video)) {
+        return video
+      }
+    }
+    
+    return null // All videos completed
+  }
+
+  const handleVideoComplete = async (videoId) => {
+    try {
+      const response = await fetch('/api/user/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: String(params.id),
+          videoId: String(videoId),
+          timestamp: 0,
+          completed: true
+        })
+      })
+      
+      if (response.ok) {
+        // Refresh progress
+        await loadProgress()
+      }
+    } catch (error) {
+      console.error('Failed to mark video as complete:', error)
+    }
+  }
+
+  const handleNextVideo = () => {
+    const nextVideo = getNextUnlockedVideo()
+    if (nextVideo) {
+      setCurrentVideo(nextVideo)
+      setCurrentTimestamp(0)
+    }
+  }
+
+  const handleGenerateCertificate = async () => {
+    try {
+      const response = await fetch('/api/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: params.id })
+      })
+      
+      if (response.ok) {
+        const cert = await response.json()
+        setCertificate(cert)
+        setShowCertificateModal(true)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to generate certificate')
+      }
+    } catch (error) {
+      alert('Failed to generate certificate')
+    }
+  }
+
+  const handleReviewSubmit = (review) => {
+    setUserReview(review)
+    loadReviews() // Refresh reviews
   }
 
 
@@ -286,6 +451,11 @@ function CoursePageContent() {
                     videoId={currentVideo.id}
                     initialTimestamp={currentTimestamp}
                     onProgressUpdate={handleProgressUpdate}
+                    onVideoComplete={(videoId) => {
+                      loadProgress() // Refresh progress to update UI
+                    }}
+                    isLastVideo={isLastVideo()}
+                    onOpenCertificate={handleOpenCertificate}
                   />
                 ) : (
                   <div className="aspect-video bg-gradient-to-br from-[#ff6b6b]/20 to-[#ffb088]/20 flex items-center justify-center rounded-t-lg">
@@ -296,10 +466,46 @@ function CoursePageContent() {
                   </div>
                 )}
                 <div className="p-6">
-                  <h2 className="text-2xl font-bold text-[#a0303f] mb-3">
-                    {currentVideo?.title || 'Welcome to Your Course'}
-                  </h2>
-                  <p className="text-gray-600 text-lg">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold text-[#a0303f] mb-2">
+                        {currentVideo?.title || 'Welcome to Your Course'}
+                      </h2>
+                      <p className="text-gray-600">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
+                    </div>
+                    {currentVideo && (
+                      <div className="flex items-center space-x-3 ml-4">
+                        {(() => {
+                          const videoProgress = progress.find(p => p.videoId === currentVideo.id)
+                          const isCompleted = videoProgress?.completed
+                          
+                          return (
+                            <Button
+                              onClick={() => handleVideoComplete(currentVideo.id)}
+                              variant={isCompleted ? "default" : "outline"}
+                              size="sm"
+                              className={isCompleted ? 
+                                "bg-green-500 text-white hover:bg-green-600" : 
+                                "border-green-500 text-green-600 hover:bg-green-50"
+                              }
+                              disabled={isCompleted}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              {isCompleted ? 'Completed' : 'Mark Complete'}
+                            </Button>
+                          )
+                        })()}
+                        {getNextUnlockedVideo() && (
+                          <Button
+                            onClick={handleNextVideo}
+                            className="bg-[#ff6b6b] hover:bg-[#e55a5a]"
+                          >
+                            Next Video
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -313,11 +519,11 @@ function CoursePageContent() {
                 <div className="flex items-center space-x-4 text-sm text-gray-600 mt-2">
                   <div className="flex items-center space-x-1">
                     <BookOpen className="w-4 h-4" />
-                    <span>{course.lessons} lessons</span>
+                    <span>{course.curriculum?.flatMap(s => s.videos || []).length || 0} lessons</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{course.duration}</span>
+                    <span>{durationsLoading ? 'Loading...' : totalDuration}</span>
                   </div>
                 </div>
               </CardHeader>
@@ -328,7 +534,14 @@ function CoursePageContent() {
                       <div className="p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
                         <h3 className="font-bold text-[#a0303f]">{section.title}</h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          {section.lessons} lessons • {section.duration}
+                          {(section.videos || []).length} lessons • {(() => {
+                            const sectionSeconds = (section.videos || []).reduce((sum, video) => {
+                              return sum + (durations[video.id]?.seconds || 0)
+                            }, 0)
+                            const hours = Math.floor(sectionSeconds / 3600)
+                            const minutes = Math.floor((sectionSeconds % 3600) / 60)
+                            return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+                          })()}
                         </p>
                       </div>
                       <div>
@@ -336,24 +549,31 @@ function CoursePageContent() {
                           const videoProgress = progress.find(p => p.videoId === video.id)
                           const isCompleted = videoProgress?.completed
                           const hasProgress = videoProgress && videoProgress.timestamp > 0
+                          const isUnlocked = isVideoUnlocked(video)
                           
                           return (
                             <button
                               key={video.id}
-                              onClick={() => handleVideoChange(video)}
-                              className={`w-full text-left p-4 hover:bg-gradient-to-r hover:from-[#ff6b6b]/10 hover:to-[#ffb088]/10 transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
-                                currentVideo?.id === video.id ? 'bg-gradient-to-r from-[#ff6b6b]/20 to-[#ffb088]/20 border-[#ff6b6b]/30' : ''
+                              onClick={() => isUnlocked ? handleVideoChange(video) : null}
+                              disabled={!isUnlocked}
+                              className={`w-full text-left p-4 transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
+                                !isUnlocked ? 'opacity-50 cursor-not-allowed bg-gray-50' :
+                                currentVideo?.id === video.id ? 'bg-gradient-to-r from-[#ff6b6b]/20 to-[#ffb088]/20 border-[#ff6b6b]/30' :
+                                'hover:bg-gradient-to-r hover:from-[#ff6b6b]/10 hover:to-[#ffb088]/10'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
                                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                    !isUnlocked ? 'bg-gray-300 text-gray-500' :
                                     isCompleted ? 'bg-green-500 text-white' :
                                     currentVideo?.id === video.id ? 'bg-[#ff6b6b] text-white' : 
                                     hasProgress ? 'bg-yellow-500 text-white' :
                                     'bg-gradient-to-br from-[#a0303f]/20 to-[#ff6b6b]/20 text-[#a0303f]'
                                   }`}>
-                                    {isCompleted ? (
+                                    {!isUnlocked ? (
+                                      <Lock className="w-4 h-4" />
+                                    ) : isCompleted ? (
                                       <CheckCircle className="w-4 h-4" />
                                     ) : (
                                       <Play className="w-4 h-4" />
@@ -361,18 +581,26 @@ function CoursePageContent() {
                                   </div>
                                   <div>
                                     <p className={`text-sm font-medium ${
+                                      !isUnlocked ? 'text-gray-500' :
                                       currentVideo?.id === video.id ? 'text-[#a0303f]' : 'text-gray-900'
                                     }`}>{video.title}</p>
                                     <div className="flex items-center space-x-2">
-                                      <p className="text-xs text-gray-600">{video.duration}</p>
-                                      {hasProgress && !isCompleted && (
+                                      <p className={`text-xs ${
+                                        !isUnlocked ? 'text-gray-400' : 'text-gray-600'
+                                      }`}>{durations[video.id]?.duration || video.duration || 'Loading...'}</p>
+                                      {!isUnlocked && (
+                                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                          Locked
+                                        </span>
+                                      )}
+                                      {isUnlocked && hasProgress && !isCompleted && (
                                         <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
                                           In Progress
                                         </span>
                                       )}
                                       {isCompleted && (
                                         <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                                          Completed
+                                          ✓ Completed
                                         </span>
                                       )}
                                     </div>
@@ -385,11 +613,120 @@ function CoursePageContent() {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Certificate Section */}
+                  <div className="border-b border-gray-100 last:border-b-0">
+                    <div className="p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
+                      <h3 className="font-bold text-[#a0303f]">Certificate</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Complete all lessons • {completionStats.completed}/{completionStats.total} done
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (completionStats.completed === completionStats.total && completionStats.total > 0) {
+                          if (userReview) {
+                            if (certificate) {
+                              setShowCertificateModal(true)
+                            } else {
+                              handleGenerateCertificate()
+                            }
+                          } else {
+                            setShowReviewModal(true)
+                          }
+                        }
+                      }}
+                      disabled={completionStats.completed !== completionStats.total || completionStats.total === 0}
+                      className={`w-full text-left p-4 transition-all duration-200 ${
+                        completionStats.completed !== completionStats.total || completionStats.total === 0
+                          ? 'cursor-not-allowed bg-gray-50'
+                          : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            completionStats.completed !== completionStats.total || completionStats.total === 0
+                              ? 'bg-gray-300 text-gray-500'
+                              : userReview && certificate
+                              ? 'bg-green-500 text-white'
+                              : 'bg-yellow-500 text-white'
+                          }`}>
+                            {completionStats.completed !== completionStats.total || completionStats.total === 0 ? (
+                              <Lock className="w-4 h-4" />
+                            ) : userReview && certificate ? (
+                              <Award className="w-4 h-4" />
+                            ) : (
+                              <Star className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-medium ${
+                              completionStats.completed !== completionStats.total || completionStats.total === 0
+                                ? 'text-gray-500'
+                                : 'text-gray-900'
+                            }`}>
+                              Certificate of Completion
+                            </p>
+                            <div className="flex items-center space-x-2">
+                              <p className={`text-xs ${
+                                completionStats.completed !== completionStats.total || completionStats.total === 0
+                                  ? 'text-gray-400'
+                                  : 'text-gray-600'
+                              }`}>
+                                {completionStats.completed !== completionStats.total || completionStats.total === 0
+                                  ? 'Complete all lessons'
+                                  : userReview && certificate
+                                  ? 'Ready to download'
+                                  : userReview
+                                  ? 'Generate certificate'
+                                  : 'Rate course first'
+                                }
+                              </p>
+                              {completionStats.completed !== completionStats.total || completionStats.total === 0 ? (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                  Locked
+                                </span>
+                              ) : userReview && certificate ? (
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                  ✓ Available
+                                </span>
+                              ) : (
+                                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                  Action Required
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+            
+
           </div>
         </div>
+        
+        {/* Modals */}
+        {showReviewModal && (
+          <ReviewModal
+            courseId={params.id}
+            existingReview={userReview}
+            onClose={() => setShowReviewModal(false)}
+            onSubmit={handleReviewSubmit}
+          />
+        )}
+        
+        {showCertificateModal && certificate && (
+          <CertificateModal
+            certificate={certificate}
+            userName={session?.user?.name}
+            onClose={() => setShowCertificateModal(false)}
+          />
+        )}
       </div>
     </div>
   )

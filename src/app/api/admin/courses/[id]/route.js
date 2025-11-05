@@ -28,14 +28,76 @@ export async function GET(request, { params }) {
   }
 }
 
+const fetchYouTubeDuration = async (url) => {
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/youtube/duration`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return { duration: data.duration, seconds: data.seconds }
+    }
+  } catch (error) {
+    console.error('Error fetching duration:', error)
+  }
+  return { duration: '0:00', seconds: 0 }
+}
+
 export async function PUT(request, { params }) {
   try {
     const { id } = await params
     const data = await request.json()
     
-    console.log('Updating course with data:', data)
+    // Auto-fetch durations for all videos
+    let curriculumWithDurations = []
+    let totalLessons = 0
+    let totalSeconds = 0
     
-    // Update course basic info
+    if (data.curriculum && Array.isArray(data.curriculum)) {
+      curriculumWithDurations = await Promise.all(
+        data.curriculum.map(async (section, sectionIndex) => {
+          const videosWithDurations = await Promise.all(
+            (section.videos || []).map(async (video, videoIndex) => {
+              const { duration, seconds } = await fetchYouTubeDuration(video.youtubeUrl)
+              totalSeconds += seconds
+              totalLessons++
+              return {
+                ...video,
+                duration,
+                order: videoIndex
+              }
+            })
+          )
+          
+          const sectionTotalSeconds = videosWithDurations.reduce((sum, v) => {
+            const parts = v.duration.split(':')
+            if (parts.length === 2) {
+              return sum + (parseInt(parts[0]) * 60) + parseInt(parts[1])
+            }
+            return sum
+          }, 0)
+          
+          const sectionHours = Math.floor(sectionTotalSeconds / 3600)
+          const sectionMinutes = Math.floor((sectionTotalSeconds % 3600) / 60)
+          
+          return {
+            ...section,
+            videos: videosWithDurations,
+            lessons: videosWithDurations.length,
+            duration: sectionHours > 0 ? `${sectionHours}h ${sectionMinutes}m` : `${sectionMinutes}m`,
+            order: sectionIndex
+          }
+        })
+      )
+    }
+    
+    const courseHours = Math.floor(totalSeconds / 3600)
+    const courseMinutes = Math.floor((totalSeconds % 3600) / 60)
+    const courseDuration = courseHours > 0 ? `${courseHours}h ${courseMinutes}m` : `${courseMinutes}m`
+    
+    // Update course basic info with calculated stats
     const course = await prisma.course.update({
       where: { id },
       data: {
@@ -44,8 +106,8 @@ export async function PUT(request, { params }) {
         description: data.description,
         price: data.price,
         originalPrice: data.originalPrice,
-        duration: data.duration,
-        lessons: data.lessons,
+        duration: courseDuration,
+        lessons: totalLessons,
         level: data.level,
         language: data.language,
         trailerUrl: data.trailerUrl,
@@ -56,49 +118,42 @@ export async function PUT(request, { params }) {
     })
 
     // Update curriculum if provided
-    if (data.curriculum && Array.isArray(data.curriculum)) {
+    if (curriculumWithDurations.length > 0) {
       // Get existing sections to find videos
       const existingSections = await prisma.section.findMany({
         where: { courseId: id },
         include: { videos: true }
       })
 
-      // Delete progress records for all videos in this course
-      const videoIds = existingSections.flatMap(section => section.videos.map(video => video.id))
-      if (videoIds.length > 0) {
-        await prisma.progress.deleteMany({
-          where: { videoId: { in: videoIds } }
-        })
-      }
+      // Note: Progress records will remain for existing videos
 
       // Delete existing curriculum (videos will be deleted due to cascade)
       await prisma.section.deleteMany({
         where: { courseId: id }
       })
 
-      // Create new curriculum
-      for (const section of data.curriculum) {
+      // Create new curriculum with auto-fetched durations
+      for (const section of curriculumWithDurations) {
         const createdSection = await prisma.section.create({
           data: {
             title: section.title,
-            lessons: section.lessons || 0,
-            duration: section.duration || '0m',
-            order: section.order || 0,
+            lessons: section.lessons,
+            duration: section.duration,
+            order: section.order,
             courseId: id
           }
         })
 
         // Create videos for this section
         if (section.videos && Array.isArray(section.videos)) {
-          for (let i = 0; i < section.videos.length; i++) {
-            const video = section.videos[i]
+          for (const video of section.videos) {
             await prisma.video.create({
               data: {
                 title: video.title,
                 description: video.description || '',
                 youtubeUrl: video.youtubeUrl,
-                duration: video.duration || '0:00',
-                order: i,
+                duration: video.duration,
+                order: video.order,
                 isPreview: video.isPreview || false,
                 sectionId: createdSection.id
               }

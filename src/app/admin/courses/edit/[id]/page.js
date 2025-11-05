@@ -17,6 +17,7 @@ export default function EditCourse() {
   const params = useParams()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [refreshingVideos, setRefreshingVideos] = useState({})
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -77,7 +78,6 @@ export default function EditCourse() {
     setLoading(true)
 
     try {
-      const courseStats = calculateCourseStats()
       const response = await fetch(`/api/admin/courses/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -85,13 +85,10 @@ export default function EditCourse() {
           ...formData,
           price: parseInt(formData.price),
           originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
-          duration: courseStats.duration,
-          lessons: courseStats.lessons,
           whatYouLearn: formData.whatYouLearn.filter(item => item.trim()),
           requirements: formData.requirements.filter(item => item.trim()),
           curriculum: formData.curriculum.map((section, index) => ({
             ...section,
-            ...calculateSectionStats(section),
             order: index
           }))
         })
@@ -154,67 +151,7 @@ export default function EditCourse() {
     }))
   }
 
-  const parseDuration = (duration) => {
-    if (!duration) return 0
-    const parts = duration.split(':')
-    if (parts.length === 2) {
-      return parseInt(parts[0]) * 60 + parseInt(parts[1])
-    }
-    return 0
-  }
 
-  const formatDuration = (totalSeconds) => {
-    const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`
-    }
-    return `${minutes}m`
-  }
-
-  const calculateSectionStats = (section) => {
-    const videos = section.videos || []
-    const totalSeconds = videos.reduce((sum, video) => sum + parseDuration(video.duration), 0)
-    return {
-      lessons: videos.length,
-      duration: formatDuration(totalSeconds)
-    }
-  }
-
-  const calculateCourseStats = () => {
-    let totalLessons = 0
-    let totalSeconds = 0
-    
-    formData.curriculum.forEach(section => {
-      const videos = section.videos || []
-      totalLessons += videos.length
-      totalSeconds += videos.reduce((sum, video) => sum + parseDuration(video.duration), 0)
-    })
-    
-    return {
-      lessons: totalLessons,
-      duration: formatDuration(totalSeconds)
-    }
-  }
-
-  const fetchYouTubeVideoDuration = async (url) => {
-    try {
-      const response = await fetch('/api/youtube/duration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        return data.duration
-      }
-      return null
-    } catch (error) {
-      console.error('Error fetching video duration:', error)
-      return null
-    }
-  }
 
   if (status === 'loading') {
     return <Loader />
@@ -429,60 +366,92 @@ export default function EditCourse() {
                       }}
                     />
                     <div className="text-sm text-gray-500 mt-2">
-                      {calculateSectionStats(section).lessons} lessons • {calculateSectionStats(section).duration}
+                      {(section.videos || []).length} lessons • Duration auto-calculated
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <h5 className="font-medium text-gray-700">Videos</h5>
                     {(section.videos || []).map((video, videoIndex) => (
-                      <div key={videoIndex} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 bg-gray-50 rounded">
-                        <Input
-                          placeholder="Video title"
-                          value={video.title || ''}
-                          onChange={(e) => {
-                            const newCurriculum = [...formData.curriculum]
-                            const newVideos = [...(section.videos || [])]
-                            newVideos[videoIndex] = {...video, title: e.target.value}
-                            newCurriculum[sectionIndex] = {...section, videos: newVideos}
-                            setFormData({...formData, curriculum: newCurriculum})
-                          }}
-                        />
-                        <Input
-                          placeholder="YouTube URL"
-                          value={video.youtubeUrl || ''}
-                          onChange={(e) => {
-                            const newCurriculum = [...formData.curriculum]
-                            const newVideos = [...(section.videos || [])]
-                            newVideos[videoIndex] = {...video, youtubeUrl: e.target.value}
-                            newCurriculum[sectionIndex] = {...section, videos: newVideos}
-                            setFormData({...formData, curriculum: newCurriculum})
-                          }}
-                        />
-                        <Input
-                          placeholder="Duration (e.g., 15:30)"
-                          value={video.duration || ''}
-                          onChange={(e) => {
-                            const newCurriculum = [...formData.curriculum]
-                            const newVideos = [...(section.videos || [])]
-                            newVideos[videoIndex] = {...video, duration: e.target.value}
-                            newCurriculum[sectionIndex] = {...section, videos: newVideos}
-                            setFormData({...formData, curriculum: newCurriculum})
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newCurriculum = [...formData.curriculum]
-                            const newVideos = (section.videos || []).filter((_, i) => i !== videoIndex)
-                            newCurriculum[sectionIndex] = {...section, videos: newVideos}
-                            setFormData({...formData, curriculum: newCurriculum})
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      <div key={videoIndex} className="p-4 bg-gray-50 rounded-lg border">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                          <Input
+                            placeholder="Video title"
+                            value={video.title || ''}
+                            onChange={(e) => {
+                              const newCurriculum = [...formData.curriculum]
+                              const newVideos = [...(section.videos || [])]
+                              newVideos[videoIndex] = {...video, title: e.target.value}
+                              newCurriculum[sectionIndex] = {...section, videos: newVideos}
+                              setFormData({...formData, curriculum: newCurriculum})
+                            }}
+                          />
+                          <Input
+                            placeholder="YouTube URL"
+                            value={video.youtubeUrl || ''}
+                            onChange={(e) => {
+                              const newCurriculum = [...formData.curriculum]
+                              const newVideos = [...(section.videos || [])]
+                              newVideos[videoIndex] = {...video, youtubeUrl: e.target.value}
+                              newCurriculum[sectionIndex] = {...section, videos: newVideos}
+                              setFormData({...formData, curriculum: newCurriculum})
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <span>{video.duration ? `Duration: ${video.duration}` : video.youtubeUrl ? 'Duration: Auto-detected' : 'Add YouTube URL to detect duration'}</span>
+                            {video.youtubeUrl && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const videoKey = `${sectionIndex}-${videoIndex}`
+                                  setRefreshingVideos(prev => ({...prev, [videoKey]: true}))
+                                  try {
+                                    const response = await fetch('/api/youtube/duration', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ url: video.youtubeUrl })
+                                    })
+                                    if (response.ok) {
+                                      const data = await response.json()
+                                      const newCurriculum = [...formData.curriculum]
+                                      const newVideos = [...(section.videos || [])]
+                                      newVideos[videoIndex] = {...video, duration: data.duration}
+                                      newCurriculum[sectionIndex] = {...section, videos: newVideos}
+                                      setFormData({...formData, curriculum: newCurriculum})
+                                    }
+                                  } catch (error) {
+                                    console.error('Error fetching duration:', error)
+                                  } finally {
+                                    setRefreshingVideos(prev => ({...prev, [videoKey]: false}))
+                                  }
+                                }}
+                                className={`text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-all ${
+                                  refreshingVideos[`${sectionIndex}-${videoIndex}`] ? 'animate-spin' : ''
+                                }`}
+                                title="Refresh duration"
+                                disabled={refreshingVideos[`${sectionIndex}-${videoIndex}`]}
+                              >
+                                ↻
+                              </button>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newCurriculum = [...formData.curriculum]
+                              const newVideos = (section.videos || []).filter((_, i) => i !== videoIndex)
+                              newCurriculum[sectionIndex] = {...section, videos: newVideos}
+                              setFormData({...formData, curriculum: newCurriculum})
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                     <Button

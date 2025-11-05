@@ -14,16 +14,17 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Course ID required' }, { status: 400 })
     }
 
-    const progress = await prisma.progress.findFirst({
-      where: {
-        userId: user.id,
-        courseId: courseId
-      }
-    })
+    // Use raw SQL to fetch from video_progress table
+    const progress = await prisma.$queryRaw`
+      SELECT * FROM "video_progress" 
+      WHERE "userId" = ${user.id} AND "courseId" = ${courseId}
+      ORDER BY "updatedAt" DESC
+    `
 
-    return NextResponse.json(progress ? [progress] : [])
+    return NextResponse.json(progress)
   } catch (error) {
-    return handleApiError(error, 'Progress fetch')
+    console.error('Progress fetch error:', error)
+    return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 })
   }
 }
 
@@ -33,44 +34,41 @@ export async function POST(request) {
     if (error) return error
 
     const body = await request.json()
-    const validationError = validateRequiredFields(body, ['courseId', 'videoId', 'timestamp'])
-    if (validationError) return validationError
-
+    console.log('Progress POST body:', body)
+    
     const { courseId, videoId, timestamp, completed } = body
-
-    // Find existing progress
-    const existingProgress = await prisma.progress.findFirst({
-      where: {
-        userId: user.id,
-        courseId: courseId
-      }
-    })
-
-    let progress
-    if (existingProgress) {
-      progress = await prisma.progress.update({
-        where: { id: existingProgress.id },
-        data: {
-          videoId: videoId,
-          timestamp: Math.floor(timestamp),
-          completed: completed || false,
-          lastWatched: new Date()
-        }
-      })
-    } else {
-      progress = await prisma.progress.create({
-        data: {
-          userId: user.id,
-          courseId: courseId,
-          videoId: videoId,
-          timestamp: Math.floor(timestamp),
-          completed: completed || false
-        }
-      })
+    
+    if (!courseId || !videoId || timestamp === undefined) {
+      console.log('Validation failed:', { courseId, videoId, timestamp })
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    return successResponse(progress, 'Progress saved')
+    // Use raw SQL to work with video_progress table
+    const existingProgress = await prisma.$queryRaw`
+      SELECT * FROM "video_progress" 
+      WHERE "userId" = ${user.id} AND "courseId" = ${courseId} AND "videoId" = ${videoId}
+      LIMIT 1
+    `
+
+    if (existingProgress.length > 0) {
+      // Update existing progress
+      await prisma.$executeRaw`
+        UPDATE "video_progress" 
+        SET "timestamp" = ${Math.floor(timestamp)}, "completed" = ${completed || false}, "updatedAt" = NOW()
+        WHERE "userId" = ${user.id} AND "courseId" = ${courseId} AND "videoId" = ${videoId}
+      `
+    } else {
+      // Create new progress
+      const id = `prog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await prisma.$executeRaw`
+        INSERT INTO "video_progress" ("id", "userId", "courseId", "videoId", "timestamp", "completed", "createdAt", "updatedAt")
+        VALUES (${id}, ${user.id}, ${courseId}, ${videoId}, ${Math.floor(timestamp)}, ${completed || false}, NOW(), NOW())
+      `
+    }
+
+    return NextResponse.json({ message: 'Progress saved successfully' })
   } catch (error) {
-    return handleApiError(error, 'Progress save')
+    console.error('Progress API Error:', error)
+    return NextResponse.json({ error: 'Failed to save progress' }, { status: 500 })
   }
 }
