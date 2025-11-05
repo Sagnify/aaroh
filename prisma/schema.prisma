@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  name          String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  phone         String?
+  classBookings ClassBooking[]
+  progress      Progress[]
+  purchases     Purchase[]
+}
+
+model Course {
+  id            String     @id @default(cuid())
+  title         String
+  subtitle      String?
+  description   String
+  price         Int
+  originalPrice Int?
+  duration      String
+  lessons       Int
+  level         String
+  language      String     @default("Hindi/English")
+  thumbnail     String?
+  instructor    String     @default("Kashmira Chakraborty")
+  rating        Float      @default(4.8)
+  students      Int        @default(0)
+  featured      Boolean    @default(false)
+  published     Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  whatYouLearn  String[]
+  requirements  String[]
+  trailerUrl    String?
+  popular       Boolean    @default(false)
+  progress      Progress[]
+  purchases     Purchase[]
+  curriculum    Section[]
+}
+
+model Section {
+  id       String  @id @default(cuid())
+  title    String
+  lessons  Int
+  duration String
+  order    Int
+  courseId String
+  course   Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  videos   Video[]
+}
+
+model Video {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  youtubeUrl  String
+  duration    String
+  order       Int
+  isPreview   Boolean    @default(false)
+  sectionId   String
+  progress    Progress[]
+  section     Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model Purchase {
+  id              String   @id @default(cuid())
+  userId          String
+  courseId        String
+  amount          Int
+  status          String   @default("pending")
+  razorpayOrderId String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt @default(now())
+  course          Course   @relation(fields: [courseId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model VideoProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  videoId   String
+  timestamp Int      @default(0)
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId, videoId])
+  @@map("video_progress")
+}
+
+model Progress {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  videoId     String
+  timestamp   Float    @default(0)
+  completed   Boolean  @default(false)
+  lastWatched DateTime @default(now())
+  course      Course   @relation(fields: [courseId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+  video       Video    @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model SiteContent {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("text")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClassBooking {
+  id        String   @id @default(cuid())
+  userId    String
+  classType String
+  phone     String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
