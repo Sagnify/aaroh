@@ -12,6 +12,7 @@ export default function ManageUsers() {
   const [users, setUsers] = useState([])
   const [bookings, setBookings] = useState([])
   const [activeTab, setActiveTab] = useState('users')
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -40,6 +41,8 @@ export default function ManageUsers() {
       setBookings(data)
     } catch (error) {
       console.error('Failed to fetch bookings:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -96,47 +99,54 @@ export default function ManageUsers() {
             <div className="px-6 py-4 border-b">
               <h2 className="text-lg font-medium text-gray-900">All Users</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b bg-gray-50">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">User</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Email</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Phone</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Role</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            <Users className="w-4 h-4 text-gray-600" />
-                          </div>
-                          <span className="font-medium text-gray-900">{user.name || 'No Name'}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{user.email}</td>
-                      <td className="py-4 px-6 text-gray-600">{user.phone || 'Not provided'}</td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          user.role === 'ADMIN' 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a0303f]"></div>
+                <span className="ml-3 text-gray-600">Loading users...</span>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b bg-gray-50">
+                    <tr>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">User</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Email</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Phone</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Role</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Joined</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-b hover:bg-gray-50">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <Users className="w-4 h-4 text-gray-600" />
+                            </div>
+                            <span className="font-medium text-gray-900">{user.name || 'No Name'}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">{user.email}</td>
+                        <td className="py-4 px-6 text-gray-600">{user.phone || 'Not provided'}</td>
+                        <td className="py-4 px-6">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            user.role === 'ADMIN' 
+                              ? 'bg-red-100 text-red-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -145,62 +155,69 @@ export default function ManageUsers() {
             <div className="px-6 py-4 border-b">
               <h2 className="text-lg font-medium text-gray-900">Class Booking Requests</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b bg-gray-50">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Student</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Email</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Class Type</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Phone</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900">Requested</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((booking) => (
-                    <tr key={booking.id} className="border-b hover:bg-gray-50">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Users className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <span className="font-medium text-gray-900">{booking.user.name || 'No Name'}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{booking.user.email}</td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          booking.classType === 'PRIVATE' 
-                            ? 'bg-purple-100 text-purple-800'
-                            : booking.classType === 'GROUP'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {booking.classType === 'PRIVATE' ? '1-on-1 Private' : 
-                           booking.classType === 'GROUP' ? 'Group Class' : 'Offline (Kolkata)'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{booking.phone || booking.user.phone || 'Not provided'}</td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          booking.status === 'NEW' 
-                            ? 'bg-blue-100 text-blue-800'
-                            : booking.status === 'CONTACTED'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">
-                        {new Date(booking.createdAt).toLocaleDateString()}
-                      </td>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a0303f]"></div>
+                <span className="ml-3 text-gray-600">Loading bookings...</span>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b bg-gray-50">
+                    <tr>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Student</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Email</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Class Type</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Phone</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Status</th>
+                      <th className="text-left py-4 px-6 font-medium text-gray-900">Requested</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {bookings.map((booking) => (
+                      <tr key={booking.id} className="border-b hover:bg-gray-50">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Users className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <span className="font-medium text-gray-900">{booking.user.name || 'No Name'}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">{booking.user.email}</td>
+                        <td className="py-4 px-6">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            booking.classType === 'PRIVATE' 
+                              ? 'bg-purple-100 text-purple-800'
+                              : booking.classType === 'GROUP'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-orange-100 text-orange-800'
+                          }`}>
+                            {booking.classType === 'PRIVATE' ? '1-on-1 Private' : 
+                             booking.classType === 'GROUP' ? 'Group Class' : 'Offline (Kolkata)'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">{booking.phone || booking.user.phone || 'Not provided'}</td>
+                        <td className="py-4 px-6">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            booking.status === 'NEW' 
+                              ? 'bg-blue-100 text-blue-800'
+                              : booking.status === 'CONTACTED'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">
+                          {new Date(booking.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

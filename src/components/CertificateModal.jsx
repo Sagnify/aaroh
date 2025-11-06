@@ -11,11 +11,13 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 
 export default function CertificateModal({ certificate, userName, onClose }) {
-  const defaultName = userName || certificate.userName || certificate.user?.name || 'Student'
-  const [customName, setCustomName] = useState(defaultName)
+  const defaultName = userName || certificate?.userName || certificate?.user?.name || 'Student'
+  const [customName, setCustomName] = useState(defaultName || '')
   const [showConfetti, setShowConfetti] = useState(true)
   const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 })
   const [settings, setSettings] = useState(null)
+  const [generatedImageUrl, setGeneratedImageUrl] = useState(null)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   useEffect(() => {
     const updateWindowDimensions = () => {
@@ -41,9 +43,122 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       if (response.ok) {
         const data = await response.json()
         setSettings(data)
+        // Generate initial certificate
+        generateCertificate(data)
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
+    }
+  }
+
+  const generateCertificate = async (settingsData = settings) => {
+    if (!settingsData || !certificate || !certificate.certificateId || !certificate.issuedAt) {
+      console.log('Missing data for certificate generation')
+      return
+    }
+    
+    setIsGenerating(true)
+    try {
+      // Create canvas for certificate generation
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      canvas.width = 1123
+      canvas.height = 794
+      
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      img.onload = () => {
+        // Draw template
+        ctx.drawImage(img, 0, 0, 1123, 794)
+        
+        // Helper function to calculate max font size that fits text in box
+        const calculateMaxFontSize = (text, boxWidth, boxHeight, minSize = 8) => {
+          let fontSize = boxHeight * 0.8 // Start with 80% of box height
+          ctx.font = `${fontSize}px sans-serif`
+          
+          // Reduce font size until text fits in box width
+          while (ctx.measureText(text).width > boxWidth && fontSize > minSize) {
+            fontSize -= 1
+            ctx.font = `${fontSize}px sans-serif`
+          }
+          
+          return Math.max(fontSize, minSize)
+        }
+        
+        // Student Name - Great Vibes font, dark blue, left aligned
+        const studentNameWidth = settingsData.studentNameWidth || 200
+        const studentNameHeight = settingsData.studentNameHeight || 40
+        const studentNameFontSize = calculateMaxFontSize(customName, studentNameWidth, studentNameHeight)
+        ctx.font = `bold ${studentNameFontSize}px cursive`
+        ctx.fillStyle = '#4A5568'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const studentNameX = settingsData.studentNameX - studentNameWidth / 2
+        const studentNameY = settingsData.studentNameY
+        ctx.fillText(customName, studentNameX, studentNameY)
+        
+        // Course Title - burgundy, left aligned
+        const courseTitle = certificate.courseTitle || certificate.course?.title || 'Course Title'
+        if (!courseTitle || courseTitle === 'Course Title') {
+          console.log('Course title not available, skipping generation')
+          setIsGenerating(false)
+          return
+        }
+        const courseTitleWidth = settingsData.courseTitleWidth || 250
+        const courseTitleHeight = settingsData.courseTitleHeight || 40
+        const courseTitleFontSize = calculateMaxFontSize(courseTitle, courseTitleWidth, courseTitleHeight)
+        ctx.font = `bold ${courseTitleFontSize}px sans-serif`
+        ctx.fillStyle = '#800020'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const courseTitleX = settingsData.courseTitleX - courseTitleWidth / 2
+        const courseTitleY = settingsData.courseTitleY
+        ctx.fillText(courseTitle, courseTitleX, courseTitleY)
+        
+        // Date - center aligned, larger font size, moved down
+        const issuedDate = certificate.issuedAt ? new Date(certificate.issuedAt) : new Date()
+        const dateText = issuedDate.toLocaleDateString()
+        const dateWidth = settingsData.dateWidth || 150
+        const dateHeight = settingsData.dateHeight || 30
+        const dateFontSize = calculateMaxFontSize(dateText, dateWidth, dateHeight, 10)
+        ctx.font = `${dateFontSize}px sans-serif`
+        ctx.fillStyle = '#000000'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        const dateX = settingsData.dateX
+        const dateY = settingsData.dateY + 8
+        ctx.fillText(dateText, dateX, dateY)
+        
+        // Certificate ID - center aligned, larger font size, moved down
+        const certificateId = certificate.certificateId || 'CERT-ID'
+        const certificateIdWidth = settingsData.certificateIdWidth || 120
+        const certificateIdHeight = settingsData.certificateIdHeight || 30
+        const certificateIdFontSize = calculateMaxFontSize(certificateId, certificateIdWidth, certificateIdHeight, 8)
+        ctx.font = `${certificateIdFontSize}px sans-serif`
+        ctx.fillStyle = '#000000'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        const certificateIdX = settingsData.certificateIdX
+        const certificateIdY = settingsData.certificateIdY + 8
+        ctx.fillText(certificateId, certificateIdX, certificateIdY)
+        
+        // Set generated image
+        setGeneratedImageUrl(canvas.toDataURL('image/png'))
+        setIsGenerating(false)
+      }
+      
+      img.onerror = () => {
+        console.error('Failed to load template image')
+        setIsGenerating(false)
+      }
+      
+      img.src = settingsData.templateUrl
+      
+    } catch (error) {
+      console.error('Failed to generate certificate:', error)
+      setIsGenerating(false)
     }
   }
 
@@ -54,7 +169,9 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         scale: 4,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 0
       })
       
       const imgData = canvas.toDataURL('image/png', 1.0)
@@ -64,7 +181,9 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         format: 'a4'
       })
       
-      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210)
+      const pdfWidth = 297
+      const pdfHeight = 210
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`Certificate-${certificate.certificateId}.pdf`)
       
     } catch (error) {
@@ -110,94 +229,35 @@ export default function CertificateModal({ certificate, userName, onClose }) {
 
         <div className="flex flex-col lg:flex-row">
           {/* Certificate Preview - Left Side */}
-<div className="lg:w-[60%] mx-auto p-6 bg-gray-50">
-  <div id="certificate-preview" className="relative bg-white rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden">
-    {settings?.templateUrl && settings.templateUrl !== '/certificates/template.png' ? (
-      <div className="relative w-full h-full">
-        <img
-          src={settings.templateUrl}
-          alt="Certificate Template"
-          className="w-full h-full object-contain"
-        />
-        
-        {/* Text Overlays */}
-        {settings && (
-          <>
-            {/* Student Name */}
-            <div
-              className="absolute font-bold flex items-center text-left overflow-hidden whitespace-nowrap"
-              style={{
-                left: `calc(${(settings.studentNameX / 1123) * 100}% - ${((settings.studentNameWidth || 200) / 1123) * 50}%)`,
-                top: `calc(${(settings.studentNameY / 794) * 100}% - ${((settings.studentNameHeight || 40) / 794) * 50}%)`,
-                width: `${((settings.studentNameWidth || 200) / 1123) * 100}%`,
-                height: `${((settings.studentNameHeight || 40) / 794) * 100}%`,
-                fontSize: `${Math.max(8, Math.min(((settings.studentNameHeight || 40) * 0.6), ((settings.studentNameWidth || 200) / (customName.length * 1.0))))}px`,
-                fontFamily: 'Great Vibes, cursive',
-                color: '#4A5568'
-              }}
+          <div className="lg:w-[60%] mx-auto p-6 bg-gray-50">
+            <div 
+              id="certificate-preview" 
+              className="relative bg-white rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden"
             >
-              {customName}
+              {isGenerating ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6b6b] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Generating certificate...</p>
+                  </div>
+                </div>
+              ) : generatedImageUrl ? (
+                <img
+                  src={generatedImageUrl}
+                  alt="Generated Certificate"
+                  className="w-full h-full object-contain"
+                  draggable="false"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">📄</div>
+                    <p>Loading certificate...</p>
+                  </div>
+                </div>
+              )}
             </div>
-            
-            {/* Course Title */}
-            <div
-              className="absolute font-semibold flex items-center text-left overflow-hidden whitespace-nowrap"
-              style={{
-                left: `calc(${(settings.courseTitleX / 1123) * 100}% - ${((settings.courseTitleWidth || 250) / 1123) * 50}%)`,
-                top: `calc(${(settings.courseTitleY / 794) * 100}% - ${((settings.courseTitleHeight || 40) / 794) * 50}%)`,
-                width: `${((settings.courseTitleWidth || 250) / 1123) * 100}%`,
-                height: `${((settings.courseTitleHeight || 40) / 794) * 100}%`,
-                fontSize: `${Math.max(8, Math.min(((settings.courseTitleHeight || 40) * 0.6), ((settings.courseTitleWidth || 250) / ((certificate.courseTitle || certificate.course?.title || 'Course Title').length * 1.0))))}px`,
-                color: '#800020'
-              }}
-            >
-              {certificate.courseTitle || certificate.course?.title || 'Course Title'}
-            </div>
-            
-            {/* Date */}
-            <div
-              className="absolute text-black flex items-center justify-center overflow-hidden whitespace-nowrap"
-              style={{
-                left: `calc(${(settings.dateX / 1123) * 100}% - ${((settings.dateWidth || 150) / 1123) * 50}%)`,
-                top: `calc(${(settings.dateY / 794) * 100}% - ${((settings.dateHeight || 30) / 794) * 50}%)`,
-                width: `${((settings.dateWidth || 150) / 1123) * 100}%`,
-                height: `${((settings.dateHeight || 30) / 794) * 100}%`,
-                fontSize: '12px'
-              }}
-            >
-              {new Date(certificate.issuedAt).toLocaleDateString()}
-            </div>
-            
-            {/* Certificate ID */}
-            <div
-              className="absolute text-black flex items-center justify-center overflow-hidden whitespace-nowrap"
-              style={{
-                left: `calc(${(settings.certificateIdX / 1123) * 100}% - ${((settings.certificateIdWidth || 120) / 1123) * 50}%)`,
-                top: `calc(${(settings.certificateIdY / 794) * 100}% - ${((settings.certificateIdHeight || 30) / 794) * 50}%)`,
-                width: `${((settings.certificateIdWidth || 120) / 1123) * 100}%`,
-                height: `${((settings.certificateIdHeight || 30) / 794) * 100}%`,
-                fontSize: '7px'
-              }}
-            >
-              {certificate.certificateId}
-            </div>
-            
-
-          </>
-        )}
-      </div>
-    ) : (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        <div className="text-center">
-          <div className="text-4xl mb-2">📄</div>
-          <p>No certificate template configured</p>
-          <p className="text-sm">Please contact administrator</p>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
+          </div>
 
           {/* Controls - Right Side */}
           <div className="lg:w-1/3 p-8 bg-white">
@@ -212,14 +272,23 @@ export default function CertificateModal({ certificate, userName, onClose }) {
                   <Label htmlFor="name" className="text-sm font-medium text-gray-700">
                     Name on Certificate
                   </Label>
-                  <Input
-                    id="name"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    className="mt-1 text-lg font-medium"
-                    placeholder="Enter your name"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">This name will appear on your certificate</p>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      id="name"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      className="text-lg font-medium flex-1"
+                      placeholder="Enter your name"
+                    />
+                    <Button
+                      onClick={() => generateCertificate()}
+                      disabled={isGenerating}
+                      className="bg-[#a0303f] hover:bg-[#8a2a37] text-white px-4"
+                    >
+                      {isGenerating ? 'Updating...' : 'Update'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Click Update to regenerate certificate with new name</p>
                 </div>
 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">

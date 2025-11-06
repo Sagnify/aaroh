@@ -13,6 +13,7 @@ export default function ViewPurchases() {
   const [purchases, setPurchases] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [editingStatus, setEditingStatus] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -30,6 +31,8 @@ export default function ViewPurchases() {
       setPurchases(data)
     } catch (error) {
       console.error('Failed to fetch purchases:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -84,110 +87,117 @@ export default function ViewPurchases() {
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-medium text-gray-900">All Purchases</h2>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">User</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Course</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Amount</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Status</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Date</th>
-                  <th className="text-right py-4 px-6 font-medium text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {purchases.map((purchase) => (
-                  <tr key={purchase.id} className="border-b hover:bg-gray-50">
-                    <td className="py-4 px-6">
-                      <div>
-                        <div className="font-medium text-gray-900">{purchase.user?.name || 'No Name'}</div>
-                        <div className="text-sm text-gray-500">{purchase.user?.email}</div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div>
-                        <div className="font-medium text-gray-900">{purchase.course?.title}</div>
-                        <div className="text-sm text-gray-500">{purchase.course?.level}</div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">₹{purchase.amount.toLocaleString()}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      {editingId === purchase.id ? (
-                        <select
-                          value={editingStatus}
-                          onChange={(e) => setEditingStatus(e.target.value)}
-                          className="px-2 py-1 text-xs border rounded"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="completed">Completed</option>
-                          <option value="failed">Failed</option>
-                          <option value="refunded">Refunded</option>
-                        </select>
-                      ) : (
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                          purchase.status === 'completed' 
-                            ? 'bg-green-100 text-green-800' 
-                            : purchase.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : purchase.status === 'failed'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {purchase.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div>
-                        <div className="text-gray-900">{new Date(purchase.createdAt).toLocaleDateString()}</div>
-                        <div className="text-sm text-gray-500">{new Date(purchase.createdAt).toLocaleTimeString()}</div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      {editingId === purchase.id ? (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleSaveStatus(purchase.id)}
-                            className="text-green-600 hover:text-green-700"
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a0303f]"></div>
+              <span className="ml-3 text-gray-600">Loading purchases...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b bg-gray-50">
+                  <tr>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900">User</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900">Course</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900">Amount</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900">Status</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900">Date</th>
+                    <th className="text-right py-4 px-6 font-medium text-gray-900">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchases.map((purchase) => (
+                    <tr key={purchase.id} className="border-b hover:bg-gray-50">
+                      <td className="py-4 px-6">
+                        <div>
+                          <div className="font-medium text-gray-900">{purchase.user?.name || 'No Name'}</div>
+                          <div className="text-sm text-gray-500">{purchase.user?.email}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div>
+                          <div className="font-medium text-gray-900">{purchase.course?.title}</div>
+                          <div className="text-sm text-gray-500">{purchase.course?.level}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="font-medium text-gray-900">₹{purchase.amount.toLocaleString()}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                        {editingId === purchase.id ? (
+                          <select
+                            value={editingStatus}
+                            onChange={(e) => setEditingStatus(e.target.value)}
+                            className="px-2 py-1 text-xs border rounded"
                           >
-                            <Check className="w-4 h-4" />
-                          </Button>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="refunded">Refunded</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${
+                            purchase.status === 'completed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : purchase.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : purchase.status === 'failed'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {purchase.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div>
+                          <div className="text-gray-900">{new Date(purchase.createdAt).toLocaleDateString()}</div>
+                          <div className="text-sm text-gray-500">{new Date(purchase.createdAt).toLocaleTimeString()}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        {editingId === purchase.id ? (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleSaveStatus(purchase.id)}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingId(null)
+                                setEditingStatus('')
+                              }}
+                              className="text-gray-600 hover:text-gray-700"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              setEditingId(null)
-                              setEditingStatus('')
+                              setEditingId(purchase.id)
+                              setEditingStatus(purchase.status)
                             }}
-                            className="text-gray-600 hover:text-gray-700"
+                            className="text-blue-600 hover:text-blue-700"
                           >
-                            <X className="w-4 h-4" />
+                            <Edit3 className="w-4 h-4" />
                           </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingId(purchase.id)
-                            setEditingStatus(purchase.status)
-                          }}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {purchases.length === 0 && (
