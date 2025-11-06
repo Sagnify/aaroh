@@ -15,6 +15,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   const [customName, setCustomName] = useState(defaultName)
   const [showConfetti, setShowConfetti] = useState(true)
   const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 })
+  const [settings, setSettings] = useState(null)
 
   useEffect(() => {
     const updateWindowDimensions = () => {
@@ -24,40 +25,37 @@ export default function CertificateModal({ certificate, userName, onClose }) {
     window.addEventListener('resize', updateWindowDimensions)
     
     const timer = setTimeout(() => setShowConfetti(false), 4000)
+    
+    // Fetch certificate settings
+    fetchSettings()
+    
     return () => {
       clearTimeout(timer)
       window.removeEventListener('resize', updateWindowDimensions)
     }
   }, [])
 
-  const handleDownload = async () => {
-    const certificateElement = document.getElementById('certificate-preview')
-    
-    if (!certificateElement) {
-      console.error('Certificate element not found')
-      return
-    }
-    
+  const fetchSettings = async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      const canvas = await html2canvas(certificateElement, {
-        scale: 2,
+      const response = await fetch('/api/certificate-settings')
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch settings:', error)
+    }
+  }
+
+  const handleDownload = async () => {
+    try {
+      const element = document.getElementById('certificate-preview')
+      const canvas = await html2canvas(element, {
+        scale: 4,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: certificateElement.offsetWidth,
-        height: certificateElement.offsetHeight,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0
+        backgroundColor: '#ffffff'
       })
-      
-      if (canvas.width === 0 || canvas.height === 0) {
-        console.error('Canvas has zero dimensions')
-        return
-      }
       
       const imgData = canvas.toDataURL('image/png', 1.0)
       const pdf = new jsPDF({
@@ -66,14 +64,12 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         format: 'a4'
       })
       
-      const imgWidth = 297
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210)
       pdf.save(`Certificate-${certificate.certificateId}.pdf`)
+      
     } catch (error) {
-      console.error('Error generating PDF:', error)
-      alert('Error generating PDF. Please try again.')
+      console.error('Error generating certificate:', error)
+      alert('Error generating certificate. Please try again.')
     }
   }
 
@@ -86,7 +82,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
           height={windowDimensions.height}
           recycle={false}
           numberOfPieces={200}
-          colors={['#ff6b6b', '#ffb088', '#a0303f', '#ffd700', '#ff69b4', '#4ecdc4']}
+          colors={['#ff6b6b', '#ffb088', '#a0303f', '#e55a5a', '#ff69b4', '#4ecdc4']}
           gravity={0.3}
           initialVelocityY={-20}
         />
@@ -114,81 +110,91 @@ export default function CertificateModal({ certificate, userName, onClose }) {
 
         <div className="flex flex-col lg:flex-row">
           {/* Certificate Preview - Left Side */}
-<div className="lg:w-[60%] mx-auto p-6 bg-gradient-to-b from-[#fffefb] to-[#fdf6e3]">
-  <div id="certificate-preview" className="relative bg-white rounded-xl shadow-xl border-2 border-[#d1b56f] aspect-[4/3] overflow-hidden">
+<div className="lg:w-[60%] mx-auto p-6 bg-gray-50">
+  <div id="certificate-preview" className="relative bg-white rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden">
+    {settings?.templateUrl && settings.templateUrl !== '/certificates/template.png' ? (
+      <div className="relative w-full h-full">
+        <img
+          src={settings.templateUrl}
+          alt="Certificate Template"
+          className="w-full h-full object-contain"
+        />
+        
+        {/* Text Overlays */}
+        {settings && (
+          <>
+            {/* Student Name */}
+            <div
+              className="absolute font-bold flex items-center text-left overflow-hidden whitespace-nowrap"
+              style={{
+                left: `calc(${(settings.studentNameX / 1123) * 100}% - ${((settings.studentNameWidth || 200) / 1123) * 50}%)`,
+                top: `calc(${(settings.studentNameY / 794) * 100}% - ${((settings.studentNameHeight || 40) / 794) * 50}%)`,
+                width: `${((settings.studentNameWidth || 200) / 1123) * 100}%`,
+                height: `${((settings.studentNameHeight || 40) / 794) * 100}%`,
+                fontSize: `${Math.max(8, Math.min(((settings.studentNameHeight || 40) * 0.6), ((settings.studentNameWidth || 200) / (customName.length * 1.0))))}px`,
+                fontFamily: 'Great Vibes, cursive',
+                color: '#4A5568'
+              }}
+            >
+              {customName}
+            </div>
+            
+            {/* Course Title */}
+            <div
+              className="absolute font-semibold flex items-center text-left overflow-hidden whitespace-nowrap"
+              style={{
+                left: `calc(${(settings.courseTitleX / 1123) * 100}% - ${((settings.courseTitleWidth || 250) / 1123) * 50}%)`,
+                top: `calc(${(settings.courseTitleY / 794) * 100}% - ${((settings.courseTitleHeight || 40) / 794) * 50}%)`,
+                width: `${((settings.courseTitleWidth || 250) / 1123) * 100}%`,
+                height: `${((settings.courseTitleHeight || 40) / 794) * 100}%`,
+                fontSize: `${Math.max(8, Math.min(((settings.courseTitleHeight || 40) * 0.6), ((settings.courseTitleWidth || 250) / ((certificate.courseTitle || certificate.course?.title || 'Course Title').length * 1.0))))}px`,
+                color: '#800020'
+              }}
+            >
+              {certificate.courseTitle || certificate.course?.title || 'Course Title'}
+            </div>
+            
+            {/* Date */}
+            <div
+              className="absolute text-black flex items-center justify-center overflow-hidden whitespace-nowrap"
+              style={{
+                left: `calc(${(settings.dateX / 1123) * 100}% - ${((settings.dateWidth || 150) / 1123) * 50}%)`,
+                top: `calc(${(settings.dateY / 794) * 100}% - ${((settings.dateHeight || 30) / 794) * 50}%)`,
+                width: `${((settings.dateWidth || 150) / 1123) * 100}%`,
+                height: `${((settings.dateHeight || 30) / 794) * 100}%`,
+                fontSize: '12px'
+              }}
+            >
+              {new Date(certificate.issuedAt).toLocaleDateString()}
+            </div>
+            
+            {/* Certificate ID */}
+            <div
+              className="absolute text-black flex items-center justify-center overflow-hidden whitespace-nowrap"
+              style={{
+                left: `calc(${(settings.certificateIdX / 1123) * 100}% - ${((settings.certificateIdWidth || 120) / 1123) * 50}%)`,
+                top: `calc(${(settings.certificateIdY / 794) * 100}% - ${((settings.certificateIdHeight || 30) / 794) * 50}%)`,
+                width: `${((settings.certificateIdWidth || 120) / 1123) * 100}%`,
+                height: `${((settings.certificateIdHeight || 30) / 794) * 100}%`,
+                fontSize: '7px'
+              }}
+            >
+              {certificate.certificateId}
+            </div>
+            
 
-    {/* Soft gradient glow */}
-    <div className="absolute inset-0 bg-gradient-to-br from-[#fffaf2]/40 to-transparent pointer-events-none"></div>
-
-    {/* Elegant Corners */}
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute top-2 left-2 w-6 h-6 border-t-[3px] border-l-[3px] border-[#a0303f] rounded-tl-lg"></div>
-      <div className="absolute top-2 right-2 w-6 h-6 border-t-[3px] border-r-[3px] border-[#a0303f] rounded-tr-lg"></div>
-      <div className="absolute bottom-2 left-2 w-6 h-6 border-b-[3px] border-l-[3px] border-[#a0303f] rounded-bl-lg"></div>
-      <div className="absolute bottom-2 right-2 w-6 h-6 border-b-[3px] border-r-[3px] border-[#a0303f] rounded-br-lg"></div>
-    </div>
-
-    {/* Inner border */}
-    <div className="absolute inset-6 border border-[#e0c66f]/60 rounded-lg"></div>
-
-    <div className="h-full flex flex-col justify-center items-center px-6 py-8 text-center relative z-10">
-
-      {/* Header */}
-      <div className="mb-4 mt-4">
-        {/* Medal Badge */}
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#ffd700] via-[#f8e58b] to-[#f5c400] rounded-full shadow-lg ring-4 ring-[#a0303f]/20 mb-6">
-          <div className="text-4xl text-[#a0303f] font-bold">★</div>
-        </div>
-
-        <h2 className="text-2xl font-extrabold tracking-widest text-[#a0303f] mb-2 mt-2">
-          CERTIFICATE OF COMPLETION
-        </h2>
-
-        <div className="w-24 h-[2px] bg-gradient-to-r from-[#a0303f] to-[#ffd700] mx-auto mb-4 rounded-full"></div>
-        <p className="text-gray-600 text-sm mb-2">This is to certify that</p>
+          </>
+        )}
       </div>
-
-      {/* Recipient Name */}
-      <div className="mb-4">
-        <h3
-          className="text-3xl font-bold text-[#a0303f]"
-          style={{ fontFamily: 'Playfair Display, serif', fontStyle: 'italic' }}
-        >
-          {customName}
-        </h3>
-        <div className="w-32 h-[2px] bg-gradient-to-r from-[#ffd700] to-[#a0303f] mx-auto rounded-full mt-2"></div>
-      </div>
-
-      <p className="text-gray-700 text-base mb-3 italic">
-        has successfully completed the course
-      </p>
-
-      {/* Course Title */}
-      <h4 className="text-2xl font-semibold text-[#a0303f] mb-6 tracking-wide uppercase">
-        {certificate.courseTitle || certificate.course?.title || 'Course Title'}
-      </h4>
-
-      {/* Footer — moved slightly up */}
-      <div className="mt-auto mb-3 w-full flex items-end justify-between px-8">
-        <div className="text-[11px] text-gray-500 text-left">
-          <p>Issued on</p>
-          <p className="font-medium text-gray-700">
-            {new Date(certificate.issuedAt).toLocaleDateString()}
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p
-            className="text-base font-semibold text-gray-800 mb-1"
-            style={{ fontFamily: 'Great Vibes, cursive' }}
-          >
-            Kashmira Chakraborty
-          </p>
-          <div className="w-28 h-[1px] bg-gray-400 mx-auto mb-1"></div>
-          <p className="text-[11px] text-gray-600">Instructor, Aaroh Music Academy</p>
+    ) : (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        <div className="text-center">
+          <div className="text-4xl mb-2">📄</div>
+          <p>No certificate template configured</p>
+          <p className="text-sm">Please contact administrator</p>
         </div>
       </div>
-    </div>
+    )}
   </div>
 </div>
 

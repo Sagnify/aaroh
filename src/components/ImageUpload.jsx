@@ -82,6 +82,10 @@ export default function ImageUpload({
             src={preview} 
             alt="Preview" 
             className="w-full h-48 object-cover rounded-lg border"
+            onError={(e) => {
+              console.error('Failed to load image:', preview)
+              setPreview(null)
+            }}
           />
           <Button
             type="button"

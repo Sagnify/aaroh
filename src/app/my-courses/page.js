@@ -29,12 +29,14 @@ export default function MyCourses() {
       const response = await fetch('/api/my-courses')
       if (response.ok) {
         const data = await response.json()
-        console.log('My courses data:', data)
-        data.forEach(course => {
-          if (course.latestProgress) {
-            console.log('Progress for', course.course.title, ':', course.latestProgress)
-          }
-        })
+        console.log('My courses API response:', data)
+        if (data.length > 0) {
+          console.log('First course:', data[0])
+          console.log('First course.course:', data[0].course)
+          console.log('First course thumbnail:', data[0].course?.thumbnail)
+          console.log('First course progress:', data[0].latestProgress)
+          console.log('First course completed:', data[0].isCompleted)
+        }
         setCourses(data)
       } else {
         console.error('API response not ok:', response.status, await response.text())
@@ -84,29 +86,52 @@ export default function MyCourses() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((purchase, index) => (
-              <div key={purchase.id} className="relative">
-                <CourseCard 
-                  course={purchase.course} 
-                  index={index}
-                  variant="my-courses"
-                />
-                {purchase.latestProgress && (
-                  <div className="absolute top-4 right-4 z-10">
+            {courses.map((purchase, index) => {
+              let badge = null
+              if (purchase.latestProgress) {
+                if (purchase.isCompleted) {
+                  badge = (
+                    <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg border border-white/20">
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Completed
+                      </div>
+                    </div>
+                  )
+                } else {
+                  badge = (
                     <Link href={`/course/${purchase.course.id}?video=${purchase.latestProgress.videoId}&t=${purchase.latestProgress.timestamp || 0}`}>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs">
-                        Resume
-                      </Button>
+                      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg border border-white/20 transition-all duration-200 cursor-pointer">
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                          </svg>
+                          Resume
+                        </div>
+                      </div>
                     </Link>
+                  )
+                }
+              }
+
+              return (
+                <div key={purchase.id} className="relative">
+                  <CourseCard 
+                    course={purchase.course} 
+                    index={index}
+                    variant="my-courses"
+                    badge={badge}
+                  />
+                  <div className="mt-2 text-center">
+                    <span className="text-xs text-gray-500">
+                      Purchased on {new Date(purchase.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
-                )}
-                <div className="mt-2 text-center">
-                  <span className="text-xs text-gray-500">
-                    Purchased on {new Date(purchase.createdAt).toLocaleDateString()}
-                  </span>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

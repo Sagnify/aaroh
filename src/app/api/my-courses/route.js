@@ -5,8 +5,13 @@ import { handleApiError, getAuthenticatedUser } from '@/lib/api-utils'
 
 export async function GET() {
   try {
-    const { user, error } = await getAuthenticatedUser('USER')
+    const { user, error } = await getAuthenticatedUser()
     if (error) return error
+
+    // Admin users don't have purchases
+    if (user.id === 'admin') {
+      return NextResponse.json([])
+    }
 
     const purchases = await prisma.purchase.findMany({
       where: {
@@ -35,20 +40,29 @@ export async function GET() {
             userId: user.id,
             courseId: purchase.courseId
           },
-          include: {
-            video: true
-          },
           orderBy: {
-            lastWatched: 'desc'
+            updatedAt: 'desc'
           }
         })
+
+        // Check if course is completed
+        const totalVideos = purchase.course.curriculum.reduce((acc, section) => acc + section.videos.length, 0)
+        const completedVideos = await prisma.progress.count({
+          where: {
+            userId: user.id,
+            courseId: purchase.courseId,
+            completed: true
+          }
+        })
+        const isCompleted = totalVideos > 0 && completedVideos === totalVideos
 
         const enrichedCourse = enrichCourseWithStats(purchase.course)
 
         return {
           ...purchase,
           course: enrichedCourse,
-          latestProgress
+          latestProgress,
+          isCompleted
         }
       })
     )

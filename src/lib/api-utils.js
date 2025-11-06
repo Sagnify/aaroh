@@ -24,6 +24,19 @@ export async function getAuthenticatedUser(requiredRole = null) {
       return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
     }
 
+    // Handle admin user (doesn't exist in database)
+    if (session.user.id === 'admin') {
+      return { 
+        user: {
+          id: 'admin',
+          email: session.user.email,
+          name: session.user.name,
+          role: 'ADMIN'
+        }, 
+        session 
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
     })

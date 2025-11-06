@@ -8,7 +8,7 @@ import Link from "next/link"
 import { calculateDiscountPercentage, hasDiscount } from '@/lib/discount-utils'
 import { useCourseDurations } from '@/hooks/useYouTubeDuration'
 
-export default function CourseCard({ course, index = 0, variant = 'default' }) {
+export default function CourseCard({ course, index = 0, variant = 'default', badge = null }) {
   const isMyCoursesVariant = variant === 'my-courses'
   const displayTitle = course.title || course.name
   const displayDescription = course.subtitle || course.description
@@ -20,8 +20,13 @@ export default function CourseCard({ course, index = 0, variant = 'default' }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -5 }}
-      className="h-full"
+      className="h-full relative"
     >
+      {badge && (
+        <div className="absolute top-4 right-4 z-10">
+          {badge}
+        </div>
+      )}
       <Card className="h-full flex flex-col bg-white/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
         <div className={`h-48 ${course.thumbnail ? '' : (course.fallbackClass || 'bg-gradient-to-br from-[#ff6b6b]/20 to-[#ffb088]/20')} flex items-center justify-center relative overflow-hidden`}>
           {course.thumbnail ? (
@@ -68,7 +73,7 @@ export default function CourseCard({ course, index = 0, variant = 'default' }) {
               <p className="text-sm text-gray-600">Level: {course.level}</p>
             )}
             
-            {course.price && (
+            {!isMyCoursesVariant && course.price && (
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xl font-bold text-[#a0303f]">

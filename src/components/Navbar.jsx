@@ -52,10 +52,15 @@ export default function Navbar() {
         }`}></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className={`text-2xl font-bold transition-colors duration-300 ${
-            isScrolled ? 'text-[#a0303f]' : (isHomepage ? 'text-white' : 'text-[#a0303f]')
-          }`}>
-            Aaroh{isAdminPage && <span className="text-lg font-medium ml-1 text-black">Admin</span>}
+          <Link href="/" className="flex items-center">
+            <img 
+              src="/logos/logo_dark.png"
+              alt="Aaroh"
+              className={`h-8 w-auto transition-all duration-300 ${
+                isHomepage && !isScrolled ? 'opacity-0' : 'opacity-100'
+              }`}
+            />
+            {isAdminPage && <span className="text-lg font-medium ml-2 text-black">Admin</span>}
           </Link>
 
           {/* Desktop Navigation */}
@@ -188,10 +193,15 @@ export default function Navbar() {
                   <div className="flex items-center justify-between mb-8">
                     <Link 
                       href="/" 
-                      className="text-2xl font-bold text-[#a0303f]"
+                      className="flex items-center"
                       onClick={() => setIsOpen(false)}
                     >
-                      Aaroh{isAdminPage && <span className="text-lg font-medium ml-1 text-black">Admin</span>}
+                      <img 
+                        src="/logos/logo_dark.png"
+                        alt="Aaroh"
+                        className="h-8 w-auto"
+                      />
+                      {isAdminPage && <span className="text-lg font-medium ml-2 text-black">Admin</span>}
                     </Link>
                     <Button
                       variant="ghost"

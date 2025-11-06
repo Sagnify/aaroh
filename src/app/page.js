@@ -13,6 +13,7 @@ export default function Home() {
   const { data: session } = useSession()
   const router = useRouter()
   const [isClient, setIsClient] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const [courses, setCourses] = useState([])
   const [content, setContent] = useState({
     heroTitle: "Discover the Joy of Music",
@@ -31,6 +32,12 @@ export default function Home() {
     setIsClient(true)
     fetchCourses()
     fetchContent()
+    
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const fetchCourses = async () => {
@@ -208,37 +215,43 @@ export default function Home() {
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="w-32 h-32 mx-auto mb-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30"
+            className="mx-auto mb-8 flex items-center justify-center"
           >
-            <Music className="w-16 h-16 text-white" />
+            <img 
+              src="/logos/logo_light.png"
+              alt="Aaroh"
+              className="h-24 w-auto drop-shadow-2xl"
+            />
           </motion.div>
           
-          <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 drop-shadow-lg">
-            {content.heroTitle}
-          </h1>
-          <p className="text-2xl md:text-3xl text-white mb-6 font-medium drop-shadow">
-            {content.heroSubtitle}
-          </p>
-          <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow">
-            {content.heroDescription}
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="text-lg px-8 py-4 bg-white text-[#a0303f] hover:bg-white/90 font-semibold"
-              onClick={() => document.getElementById('popular-courses')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Explore Courses
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-[#a0303f] font-semibold"
-              onClick={() => document.getElementById('live-classes')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Join a Live Class
-            </Button>
+          <div>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+              {content.heroTitle}
+            </h1>
+            <p className="text-xl md:text-2xl text-white mb-6 font-medium drop-shadow">
+              {content.heroSubtitle}
+            </p>
+            <p className="text-lg text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow">
+              {content.heroDescription}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-4 bg-white text-[#a0303f] hover:bg-white/90 font-semibold"
+                onClick={() => document.getElementById('popular-courses')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Explore Courses
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-[#a0303f] font-semibold"
+                onClick={() => document.getElementById('live-classes')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Join a Live Class
+              </Button>
+            </div>
           </div>
         </motion.div>
       </section>

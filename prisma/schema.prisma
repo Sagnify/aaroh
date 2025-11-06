@@ -156,6 +156,29 @@ model Certificate {
   @@unique([userId, courseId])
 }
 
+model CertificateSettings {
+  id                   String @id @default(cuid())
+  templateUrl          String @default("/certificates/template.png")
+  studentNameX         Int    @default(562)
+  studentNameY         Int    @default(400)
+  studentNameWidth     Int    @default(200)
+  studentNameHeight    Int    @default(40)
+  courseTitleX         Int    @default(562)
+  courseTitleY         Int    @default(500)
+  courseTitleWidth     Int    @default(250)
+  courseTitleHeight    Int    @default(40)
+  dateX                Int    @default(150)
+  dateY                Int    @default(700)
+  dateWidth            Int    @default(150)
+  dateHeight           Int    @default(30)
+  certificateIdX       Int    @default(973)
+  certificateIdY       Int    @default(700)
+  certificateIdWidth   Int    @default(120)
+  certificateIdHeight  Int    @default(30)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
 enum Role {
   USER
   ADMIN

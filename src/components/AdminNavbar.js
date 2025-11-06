@@ -5,7 +5,7 @@ import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Music, Menu, X, LogOut, Home, BookOpen, Users, ShoppingCart, FileText } from 'lucide-react'
+import { Music, Menu, X, LogOut, Home, BookOpen, Users, ShoppingCart, FileText, Award } from 'lucide-react'
 
 export default function AdminNavbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -18,6 +18,7 @@ export default function AdminNavbar() {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Purchases', href: '/admin/purchases', icon: ShoppingCart },
     { name: 'Content', href: '/admin/content', icon: FileText },
+    { name: 'Certificates', href: '/admin/certificate-settings', icon: Award },
   ]
 
   const handleSignOut = () => {
