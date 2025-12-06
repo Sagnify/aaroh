@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,12 @@ export default function Login() {
 
       if (result?.error) {
         setError('Invalid credentials')
+      } else {
+        const session = await fetch('/api/auth/session').then(r => r.json())
+        if (session?.user?.role === 'ADMIN') {
+          await signOut({ redirect: false })
+          setError('Admin users must login through /admin/login')
+        }
       }
     } catch (error) {
       setError('Login failed. Please try again.')

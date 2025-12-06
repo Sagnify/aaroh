@@ -173,3 +173,8 @@ textarea:-webkit-autofill:active {
 input, textarea {
   background-color: white !important;
 }
+
+/* Remove yellow hover only from ghost variant buttons */
+button[class*="ghost"]:hover:not([class*="hover:bg"]) {
+  background-color: transparent !important;
+}

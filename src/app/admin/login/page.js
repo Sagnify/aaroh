@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { signIn, getSession, useSession } from 'next-auth/react'
+import { signIn, signOut, getSession, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,6 +43,7 @@ export default function AdminLogin() {
         if (session?.user?.role === 'ADMIN') {
           router.push('/admin/dashboard')
         } else {
+          await signOut({ redirect: false })
           setError('Access denied. Admin privileges required.')
         }
       }

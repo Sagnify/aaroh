@@ -120,6 +120,17 @@ export default function AdminSidebar() {
             </div>
           </nav>
 
+          {/* Mobile Logout Button */}
+          <div className="lg:hidden border-t p-4">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center space-x-3 px-3 py-3 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors w-full"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Sign Out</span>
+            </button>
+          </div>
+
           {/* Collapse Toggle (Desktop only) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}

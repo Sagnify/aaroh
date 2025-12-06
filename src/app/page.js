@@ -240,21 +240,18 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="text-lg px-8 py-4 bg-white text-[#a0303f] hover:bg-white/90 font-semibold"
+              <button
                 onClick={() => document.getElementById('popular-courses')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-lg px-8 py-4 bg-white text-[#a0303f] hover:bg-white/90 rounded-md font-semibold transition-all"
               >
                 Explore Courses
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white/10 hover:border-white font-semibold transition-all"
+              </button>
+              <button
                 onClick={() => document.getElementById('live-classes')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white/10 rounded-md font-semibold transition-all"
               >
                 Join a Live Class
-              </Button>
+              </button>
             </div>
           </div>
         </motion.div>

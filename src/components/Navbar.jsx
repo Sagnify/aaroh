@@ -186,42 +186,55 @@ export default function Navbar() {
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
-                transition={{ type: "tween", duration: 0.3 }}
-                className="fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 md:hidden overflow-y-auto"
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed top-0 left-0 h-full w-80 bg-gradient-to-br from-white to-gray-50 shadow-2xl z-50 md:hidden overflow-y-auto"
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-8">
-                    <Link 
-                      href="/" 
-                      className="flex items-center"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <img 
-                        src="/logos/logo_dark.png"
-                        alt="Aaroh"
-                        className="h-8 w-auto"
-                      />
-                      {isAdminPage && <span className="text-lg font-medium ml-2 text-black">Admin</span>}
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-gray-600"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <X size={24} />
-                    </Button>
+                <div className="flex flex-col h-full">
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <Link 
+                        href="/" 
+                        className="flex items-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <img 
+                          src="/logos/logo_light.png"
+                          alt="Aaroh"
+                          className="h-8 w-auto"
+                        />
+                      </Link>
+                      <button
+                        onClick={() => setIsOpen(false)}
+                        className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                    {session && session.user.role === 'USER' && (
+                      <div className="flex items-center space-x-3 mt-4 p-3 bg-white/10 rounded-lg backdrop-blur-sm">
+                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{session.user.name || 'User'}</p>
+                          <p className="text-white/70 text-xs">{session.user.email}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="space-y-2">
+                  {/* Navigation */}
+                  <div className="flex-1 p-6">
+                  <div className="space-y-1">
                     {(isAdminPage ? adminNavItems : navItems).map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                        className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${
                           pathname === item.href
-                            ? "bg-[#ff6b6b] text-white"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b]"
+                            ? "bg-gradient-to-r from-[#ff6b6b] to-[#ff8585] text-white shadow-md"
+                            : "text-gray-700 hover:bg-white hover:shadow-sm"
                         }`}
                         onClick={() => setIsOpen(false)}
                       >
@@ -229,25 +242,31 @@ export default function Navbar() {
                       </Link>
                     ))}
                   </div>
+                  </div>
                   
+                  {/* User Menu */}
                   {!isAdminPage && (
-                    <div className="border-t border-gray-200 mt-6 pt-6">
+                    <div className="border-t border-gray-200 p-6">
                       {session && session.user.role === 'USER' ? (
                         <div className="space-y-2">
                           <Link
                             href="/profile"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
                             onClick={() => setIsOpen(false)}
                           >
-                            <Settings size={20} />
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <Settings size={18} className="text-gray-600" />
+                            </div>
                             <span>My Profile</span>
                           </Link>
                           <Link
                             href="/dashboard"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
                             onClick={() => setIsOpen(false)}
                           >
-                            <BookOpen size={20} />
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <BookOpen size={18} className="text-gray-600" />
+                            </div>
                             <span>My Courses</span>
                           </Link>
                           <button
@@ -255,9 +274,11 @@ export default function Navbar() {
                               signOut()
                               setIsOpen(false)
                             }}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors w-full text-left"
+                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all w-full text-left"
                           >
-                            <LogOut size={20} />
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <LogOut size={18} className="text-gray-600" />
+                            </div>
                             <span>Logout</span>
                           </button>
                         </div>
@@ -265,14 +286,14 @@ export default function Navbar() {
                         <div className="space-y-3">
                           <Link
                             href="/login"
-                            className="block w-full px-4 py-3 text-center rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-medium hover:bg-[#ff6b6b] hover:text-white transition-colors"
+                            className="block w-full px-4 py-3 text-center rounded-xl border-2 border-[#ff6b6b] text-[#ff6b6b] font-semibold hover:bg-[#ff6b6b] hover:text-white transition-all shadow-sm"
                             onClick={() => setIsOpen(false)}
                           >
                             Login
                           </Link>
                           <Link
                             href="/signup"
-                            className="block w-full px-4 py-3 text-center rounded-lg bg-[#ff6b6b] text-white font-medium hover:bg-[#e55a5a] transition-colors"
+                            className="block w-full px-4 py-3 text-center rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8585] text-white font-semibold hover:shadow-lg transition-all"
                             onClick={() => setIsOpen(false)}
                           >
                             Sign Up
