@@ -16,6 +16,17 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            const originalError = console.error;
+            console.error = (...args) => {
+              if (args[0]?.message?.includes('Access to storage is not allowed')) return;
+              originalError.apply(console, args);
+            };
+          `
+        }} />
+      </head>
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ErrorBoundary>
           <SessionProvider>
