@@ -432,15 +432,15 @@ function CoursePageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 pt-16">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
+      <div className="max-w-7xl mx-auto lg:px-6 lg:py-8">
+        <div className="mb-8 hidden lg:block px-6">
           <h1 className="text-3xl font-bold text-[#a0303f] mb-2">{course.title}</h1>
           <p className="text-lg text-gray-600">{course.subtitle}</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* Video Player */}
           <div className="lg:col-span-2">
-            <Card className="bg-white/90 backdrop-blur-sm border shadow-lg">
+            <Card className="bg-white/90 backdrop-blur-sm border-0 lg:border shadow-none lg:shadow-lg rounded-none lg:rounded-lg">
               <CardContent className="p-0">
                 {currentVideo && currentVideo.youtubeUrl ? (
                   <VideoPlayer 
@@ -465,16 +465,16 @@ function CoursePageContent() {
                     </div>
                   </div>
                 )}
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="p-4 lg:p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-3 lg:space-y-0">
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-[#a0303f] mb-2">
+                      <h2 className="text-lg lg:text-2xl font-bold text-[#a0303f] mb-1 lg:mb-2">
                         {currentVideo?.title || 'Welcome to Your Course'}
                       </h2>
-                      <p className="text-gray-600">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
+                      <p className="text-sm lg:text-base text-gray-600 line-clamp-2 lg:line-clamp-none">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
                     </div>
                     {currentVideo && (
-                      <div className="flex items-center space-x-3 ml-4">
+                      <div className="flex items-center space-x-2 lg:space-x-3 lg:ml-4">
                         {(() => {
                           const videoProgress = progress.find(p => p.videoId === currentVideo.id)
                           const isCompleted = videoProgress?.completed
@@ -484,23 +484,26 @@ function CoursePageContent() {
                               onClick={() => handleVideoComplete(currentVideo.id)}
                               variant={isCompleted ? "default" : "outline"}
                               size="sm"
-                              className={isCompleted ? 
+                              className={`text-xs lg:text-sm ${isCompleted ? 
                                 "bg-green-500 text-white hover:bg-green-600" : 
                                 "border-green-500 text-green-600 hover:bg-green-50"
-                              }
+                              }`}
                               disabled={isCompleted}
                             >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              {isCompleted ? 'Completed' : 'Mark Complete'}
+                              <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <span className="hidden sm:inline">{isCompleted ? 'Completed' : 'Mark Complete'}</span>
+                              <span className="sm:hidden">{isCompleted ? 'Done' : 'Complete'}</span>
                             </Button>
                           )
                         })()}
                         {getNextUnlockedVideo() && (
                           <Button
                             onClick={handleNextVideo}
-                            className="bg-[#ff6b6b] hover:bg-[#e55a5a]"
+                            size="sm"
+                            className="bg-[#ff6b6b] hover:bg-[#e55a5a] text-xs lg:text-sm"
                           >
-                            Next Video
+                            <span className="hidden sm:inline">Next Video</span>
+                            <span className="sm:hidden">Next</span>
                           </Button>
                         )}
                       </div>
@@ -512,28 +515,28 @@ function CoursePageContent() {
           </div>
 
           {/* Course Curriculum */}
-          <div>
-            <Card className="bg-white/90 backdrop-blur-sm border shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-[#a0303f]/10 to-[#ff6b6b]/10">
-                <CardTitle className="text-xl font-bold text-[#a0303f]">Course Content</CardTitle>
-                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-2">
+          <div className="lg:block">
+            <Card className="bg-white/90 backdrop-blur-sm border-0 lg:border shadow-none lg:shadow-lg rounded-none lg:rounded-lg">
+              <CardHeader className="bg-gradient-to-r from-[#a0303f]/10 to-[#ff6b6b]/10 py-3 lg:py-6">
+                <CardTitle className="text-lg lg:text-xl font-bold text-[#a0303f]">Course Content</CardTitle>
+                <div className="flex items-center space-x-4 text-xs lg:text-sm text-gray-600 mt-2">
                   <div className="flex items-center space-x-1">
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen className="w-3 h-3 lg:w-4 lg:h-4" />
                     <span>{course.curriculum?.flatMap(s => s.videos || []).length || 0} lessons</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-3 h-3 lg:w-4 lg:h-4" />
                     <span>{durationsLoading ? 'Loading...' : totalDuration}</span>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="max-h-96 overflow-y-auto">
+                <div className="lg:max-h-96 lg:overflow-y-auto">
                   {course.curriculum?.map((section, sectionIndex) => (
                     <div key={section.id} className="border-b border-gray-100 last:border-b-0">
-                      <div className="p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
-                        <h3 className="font-bold text-[#a0303f]">{section.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">
+                      <div className="p-3 lg:p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
+                        <h3 className="font-bold text-[#a0303f] text-sm lg:text-base">{section.title}</h3>
+                        <p className="text-xs lg:text-sm text-gray-600 mt-1">
                           {(section.videos || []).length} lessons • {(() => {
                             const sectionSeconds = (section.videos || []).reduce((sum, video) => {
                               return sum + (durations[video.id]?.seconds || 0)
@@ -556,15 +559,15 @@ function CoursePageContent() {
                               key={video.id}
                               onClick={() => isUnlocked ? handleVideoChange(video) : null}
                               disabled={!isUnlocked}
-                              className={`w-full text-left p-4 transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
+                              className={`w-full text-left p-3 lg:p-4 transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
                                 !isUnlocked ? 'opacity-50 cursor-not-allowed bg-gray-50' :
                                 currentVideo?.id === video.id ? 'bg-gradient-to-r from-[#ff6b6b]/20 to-[#ffb088]/20 border-[#ff6b6b]/30' :
                                 'hover:bg-gradient-to-r hover:from-[#ff6b6b]/10 hover:to-[#ffb088]/10'
                               }`}
                             >
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                <div className="flex items-center space-x-2 lg:space-x-3">
+                                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                                     !isUnlocked ? 'bg-gray-300 text-gray-500' :
                                     isCompleted ? 'bg-green-500 text-white' :
                                     currentVideo?.id === video.id ? 'bg-[#ff6b6b] text-white' : 
@@ -572,34 +575,34 @@ function CoursePageContent() {
                                     'bg-gradient-to-br from-[#a0303f]/20 to-[#ff6b6b]/20 text-[#a0303f]'
                                   }`}>
                                     {!isUnlocked ? (
-                                      <Lock className="w-4 h-4" />
+                                      <Lock className="w-3 h-3 lg:w-4 lg:h-4" />
                                     ) : isCompleted ? (
-                                      <CheckCircle className="w-4 h-4" />
+                                      <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" />
                                     ) : (
-                                      <Play className="w-4 h-4" />
+                                      <Play className="w-3 h-3 lg:w-4 lg:h-4" />
                                     )}
                                   </div>
-                                  <div>
-                                    <p className={`text-sm font-medium ${
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-xs lg:text-sm font-medium truncate ${
                                       !isUnlocked ? 'text-gray-500' :
                                       currentVideo?.id === video.id ? 'text-[#a0303f]' : 'text-gray-900'
                                     }`}>{video.title}</p>
-                                    <div className="flex items-center space-x-2">
-                                      <p className={`text-xs ${
+                                    <div className="flex items-center space-x-1 lg:space-x-2 flex-wrap">
+                                      <p className={`text-[10px] lg:text-xs ${
                                         !isUnlocked ? 'text-gray-400' : 'text-gray-600'
                                       }`}>{durations[video.id]?.duration || video.duration || 'Loading...'}</p>
                                       {!isUnlocked && (
-                                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                        <span className="text-[10px] lg:text-xs bg-gray-100 text-gray-600 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
                                           Locked
                                         </span>
                                       )}
                                       {isUnlocked && hasProgress && !isCompleted && (
-                                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                        <span className="text-[10px] lg:text-xs bg-yellow-100 text-yellow-800 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
                                           In Progress
                                         </span>
                                       )}
                                       {isCompleted && (
-                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                        <span className="text-[10px] lg:text-xs bg-green-100 text-green-800 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
                                           ✓ Completed
                                         </span>
                                       )}
@@ -616,9 +619,9 @@ function CoursePageContent() {
                   
                   {/* Certificate Section */}
                   <div className="border-b border-gray-100 last:border-b-0">
-                    <div className="p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
-                      <h3 className="font-bold text-[#a0303f]">Certificate</h3>
-                      <p className="text-sm text-gray-600 mt-1">
+                    <div className="p-3 lg:p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
+                      <h3 className="font-bold text-[#a0303f] text-sm lg:text-base">Certificate</h3>
+                      <p className="text-xs lg:text-sm text-gray-600 mt-1">
                         Complete all lessons • {completionStats.completed}/{completionStats.total} done
                       </p>
                     </div>
@@ -637,15 +640,15 @@ function CoursePageContent() {
                         }
                       }}
                       disabled={completionStats.completed !== completionStats.total || completionStats.total === 0}
-                      className={`w-full text-left p-4 transition-all duration-200 ${
+                      className={`w-full text-left p-3 lg:p-4 transition-all duration-200 ${
                         completionStats.completed !== completionStats.total || completionStats.total === 0
                           ? 'cursor-not-allowed bg-gray-50'
                           : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        <div className="flex items-center space-x-2 lg:space-x-3">
+                          <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                             completionStats.completed !== completionStats.total || completionStats.total === 0
                               ? 'bg-gray-300 text-gray-500'
                               : userReview && certificate
@@ -653,23 +656,23 @@ function CoursePageContent() {
                               : 'bg-yellow-500 text-white'
                           }`}>
                             {completionStats.completed !== completionStats.total || completionStats.total === 0 ? (
-                              <Lock className="w-4 h-4" />
+                              <Lock className="w-3 h-3 lg:w-4 lg:h-4" />
                             ) : userReview && certificate ? (
-                              <Award className="w-4 h-4" />
+                              <Award className="w-3 h-3 lg:w-4 lg:h-4" />
                             ) : (
-                              <Star className="w-4 h-4" />
+                              <Star className="w-3 h-3 lg:w-4 lg:h-4" />
                             )}
                           </div>
-                          <div>
-                            <p className={`text-sm font-medium ${
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs lg:text-sm font-medium ${
                               completionStats.completed !== completionStats.total || completionStats.total === 0
                                 ? 'text-gray-500'
                                 : 'text-gray-900'
                             }`}>
                               Certificate of Completion
                             </p>
-                            <div className="flex items-center space-x-2">
-                              <p className={`text-xs ${
+                            <div className="flex items-center space-x-1 lg:space-x-2">
+                              <p className={`text-[10px] lg:text-xs ${
                                 completionStats.completed !== completionStats.total || completionStats.total === 0
                                   ? 'text-gray-400'
                                   : 'text-gray-600'
@@ -684,15 +687,15 @@ function CoursePageContent() {
                                 }
                               </p>
                               {completionStats.completed !== completionStats.total || completionStats.total === 0 ? (
-                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] lg:text-xs bg-gray-100 text-gray-600 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
                                   Locked
                                 </span>
                               ) : userReview && certificate ? (
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] lg:text-xs bg-green-100 text-green-800 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
                                   ✓ Available
                                 </span>
                               ) : (
-                                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] lg:text-xs bg-yellow-100 text-yellow-800 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
                                   Action Required
                                 </span>
                               )}
