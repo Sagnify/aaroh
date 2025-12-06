@@ -28,19 +28,27 @@ export async function GET() {
 
     const purchasesWithCompletion = await Promise.all(
       purchases.map(async (purchase) => {
-        const totalVideos = purchase.course.curriculum.reduce((acc, section) => acc + section.videos.length, 0)
-        const completedCount = await prisma.progress.count({
-          where: {
-            userId: user.id,
-            courseId: purchase.courseId,
-            completed: true
+        try {
+          const totalVideos = purchase.course.curriculum?.reduce((acc, section) => acc + (section.videos?.length || 0), 0) || 0
+          const completedCount = await prisma.progress.count({
+            where: {
+              userId: user.id,
+              courseId: purchase.courseId,
+              completed: true
+            }
+          })
+          const isCompleted = totalVideos > 0 && completedCount === totalVideos
+          console.log(`Course ${purchase.course.title}: ${completedCount}/${totalVideos} videos completed, isCompleted: ${isCompleted}`)
+          return {
+            ...purchase,
+            isCompleted
           }
-        })
-        const isCompleted = totalVideos > 0 && completedCount === totalVideos
-        console.log(`Course ${purchase.course.title}: ${completedCount}/${totalVideos} videos completed, isCompleted: ${isCompleted}`)
-        return {
-          ...purchase,
-          isCompleted
+        } catch (err) {
+          console.error(`Error processing purchase ${purchase.id}:`, err)
+          return {
+            ...purchase,
+            isCompleted: false
+          }
         }
       })
     )

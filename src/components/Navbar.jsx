@@ -53,13 +53,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center">
-            <img 
-              src="/logos/logo_dark.png"
-              alt="Aaroh"
-              className={`h-8 w-auto transition-all duration-300 ${
-                isHomepage && !isScrolled ? 'opacity-0' : 'opacity-100'
-              }`}
-            />
+            {(!isHomepage || isScrolled) && (
+              <img 
+                src="/logos/logo_dark.png"
+                alt="Aaroh"
+                className="h-8 w-auto transition-all duration-300"
+              />
+            )}
             {isAdminPage && <span className="text-lg font-medium ml-2 text-black">Admin</span>}
           </Link>
 
@@ -115,7 +115,7 @@ export default function Navbar() {
                           My Profile
                         </Link>
                         <Link 
-                          href="/my-courses" 
+                          href="/dashboard" 
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setProfileOpen(false)}
                         >
@@ -243,7 +243,7 @@ export default function Navbar() {
                             <span>My Profile</span>
                           </Link>
                           <Link
-                            href="/my-courses"
+                            href="/dashboard"
                             className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-[#ff6b6b] transition-colors"
                             onClick={() => setIsOpen(false)}
                           >
