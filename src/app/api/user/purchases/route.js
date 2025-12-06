@@ -13,15 +13,7 @@ export async function GET() {
         status: 'completed'
       },
       include: {
-        course: {
-          include: {
-            curriculum: {
-              include: {
-                videos: true
-              }
-            }
-          }
-        }
+        course: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -29,22 +21,19 @@ export async function GET() {
     const purchasesWithCompletion = await Promise.all(
       purchases.map(async (purchase) => {
         try {
-          let curriculum = purchase.course.curriculum || []
-          // Parse curriculum if it's a JSON string
-          if (typeof curriculum === 'string') {
-            try {
-              curriculum = JSON.parse(curriculum)
-            } catch (e) {
-              console.error('Failed to parse curriculum:', e)
-              curriculum = []
+          // Get curriculum with videos separately
+          const courseWithCurriculum = await prisma.course.findUnique({
+            where: { id: purchase.courseId },
+            include: {
+              curriculum: {
+                include: {
+                  videos: true
+                }
+              }
             }
-          }
-          console.log(`Course ${purchase.course.title} curriculum:`, curriculum.length, 'sections')
-          const totalVideos = curriculum.reduce((acc, section) => {
-            const videoCount = section.videos?.length || 0
-            console.log(`  Section ${section.title}: ${videoCount} videos`)
-            return acc + videoCount
-          }, 0)
+          })
+
+          const totalVideos = courseWithCurriculum?.curriculum?.reduce((acc, section) => acc + section.videos.length, 0) || 0
           const completedCount = await prisma.progress.count({
             where: {
               userId: user.id,
@@ -53,13 +42,13 @@ export async function GET() {
             }
           })
           const isCompleted = totalVideos > 0 && completedCount === totalVideos
-          console.log(`Course ${purchase.course.title}: ${completedCount}/${totalVideos} videos completed, isCompleted: ${isCompleted}`)
+          console.log(`Course ${purchase.course.title}: ${completedCount}/${totalVideos} videos, isCompleted: ${isCompleted}`)
           return {
             ...purchase,
             isCompleted
           }
         } catch (err) {
-          console.error(`Error processing purchase ${purchase.id}:`, err.message, err.stack)
+          console.error(`Error processing purchase ${purchase.id}:`, err.message)
           return {
             ...purchase,
             isCompleted: false
