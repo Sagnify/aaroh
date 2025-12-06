@@ -139,7 +139,7 @@ export default function Navbar() {
                   <>
                     <Link href="/login">
                       <Button variant="ghost" size="sm" className={`${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b]' : (isHomepage ? 'text-white/80 hover:text-white border-white/20' : 'text-[#a0303f] hover:text-[#ff6b6b]')
+                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b] hover:bg-gray-100' : (isHomepage ? 'text-white/80 hover:text-white hover:bg-white/10 border-white/20' : 'text-[#a0303f] hover:text-[#ff6b6b] hover:bg-gray-100')
                       }`}>
                         Login
                       </Button>

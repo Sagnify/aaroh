@@ -43,8 +43,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       if (response.ok) {
         const data = await response.json()
         setSettings(data)
-        // Generate initial certificate
-        generateCertificate(data)
+        await generateCertificate(data)
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
@@ -56,106 +55,117 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       console.log('Missing data for certificate generation')
       return
     }
-    
+
     setIsGenerating(true)
+
     try {
-      // Create canvas for certificate generation
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      
-      canvas.width = 1123
-      canvas.height = 794
-      
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      
-      img.onload = () => {
-        // Draw template
-        ctx.drawImage(img, 0, 0, 1123, 794)
-        
-        // Helper function to calculate max font size that fits text in box
-        const calculateMaxFontSize = (text, boxWidth, boxHeight, minSize = 8) => {
-          let fontSize = boxHeight * 0.8 // Start with 80% of box height
-          ctx.font = `${fontSize}px sans-serif`
-          
-          // Reduce font size until text fits in box width
-          while (ctx.measureText(text).width > boxWidth && fontSize > minSize) {
-            fontSize -= 1
-            ctx.font = `${fontSize}px sans-serif`
+      return await new Promise((resolve) => {
+        try {
+          // Create canvas for certificate generation
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+
+          canvas.width = 1123
+          canvas.height = 794
+
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+
+          img.onload = () => {
+            // Draw template
+            ctx.drawImage(img, 0, 0, 1123, 794)
+
+            // Helper function to calculate max font size that fits text in box
+            const calculateMaxFontSize = (text, boxWidth, boxHeight, minSize = 8) => {
+              let fontSize = boxHeight * 0.8 // Start with 80% of box height
+              ctx.font = `${fontSize}px sans-serif`
+
+              // Reduce font size until text fits in box width
+              while (ctx.measureText(text).width > boxWidth && fontSize > minSize) {
+                fontSize -= 1
+                ctx.font = `${fontSize}px sans-serif`
+              }
+
+              return Math.max(fontSize, minSize)
+            }
+
+            // Student Name - Great Vibes font, dark blue, left aligned
+            const studentNameWidth = settingsData.studentNameWidth || 200
+            const studentNameHeight = settingsData.studentNameHeight || 40
+            const studentNameFontSize = calculateMaxFontSize(customName, studentNameWidth, studentNameHeight)
+            ctx.font = `bold ${studentNameFontSize}px cursive`
+            ctx.fillStyle = '#4A5568'
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'middle'
+            const studentNameX = settingsData.studentNameX - studentNameWidth / 2
+            const studentNameY = settingsData.studentNameY
+            ctx.fillText(customName, studentNameX, studentNameY)
+
+            // Course Title - burgundy, left aligned
+            const courseTitle = certificate.courseTitle || certificate.course?.title || 'Course Title'
+            if (!courseTitle || courseTitle === 'Course Title') {
+              console.log('Course title not available, skipping generation')
+              setIsGenerating(false)
+              resolve()
+              return
+            }
+            const courseTitleWidth = settingsData.courseTitleWidth || 250
+            const courseTitleHeight = settingsData.courseTitleHeight || 40
+            const courseTitleFontSize = calculateMaxFontSize(courseTitle, courseTitleWidth, courseTitleHeight)
+            ctx.font = `bold ${courseTitleFontSize}px sans-serif`
+            ctx.fillStyle = '#800020'
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'middle'
+            const courseTitleX = settingsData.courseTitleX - courseTitleWidth / 2
+            const courseTitleY = settingsData.courseTitleY
+            ctx.fillText(courseTitle, courseTitleX, courseTitleY)
+
+            // Date - center aligned, larger font size, moved down
+            const issuedDate = certificate.issuedAt ? new Date(certificate.issuedAt) : new Date()
+            const dateText = issuedDate.toLocaleDateString()
+            const dateWidth = settingsData.dateWidth || 150
+            const dateHeight = settingsData.dateHeight || 30
+            const dateFontSize = calculateMaxFontSize(dateText, dateWidth, dateHeight, 10)
+            ctx.font = `${dateFontSize}px sans-serif`
+            ctx.fillStyle = '#000000'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            const dateX = settingsData.dateX
+            const dateY = settingsData.dateY + 8
+            ctx.fillText(dateText, dateX, dateY)
+
+            // Certificate ID - center aligned, larger font size, moved down
+            const certificateId = certificate.certificateId || 'CERT-ID'
+            const certificateIdWidth = settingsData.certificateIdWidth || 120
+            const certificateIdHeight = settingsData.certificateIdHeight || 30
+            const certificateIdFontSize = calculateMaxFontSize(certificateId, certificateIdWidth, certificateIdHeight, 8)
+            ctx.font = `${certificateIdFontSize}px sans-serif`
+            ctx.fillStyle = '#000000'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            const certificateIdX = settingsData.certificateIdX
+            const certificateIdY = settingsData.certificateIdY + 8
+            ctx.fillText(certificateId, certificateIdX, certificateIdY)
+
+            // Set generated image
+            setGeneratedImageUrl(canvas.toDataURL('image/png'))
+            setIsGenerating(false)
+            resolve()
           }
-          
-          return Math.max(fontSize, minSize)
-        }
-        
-        // Student Name - Great Vibes font, dark blue, left aligned
-        const studentNameWidth = settingsData.studentNameWidth || 200
-        const studentNameHeight = settingsData.studentNameHeight || 40
-        const studentNameFontSize = calculateMaxFontSize(customName, studentNameWidth, studentNameHeight)
-        ctx.font = `bold ${studentNameFontSize}px cursive`
-        ctx.fillStyle = '#4A5568'
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'middle'
-        const studentNameX = settingsData.studentNameX - studentNameWidth / 2
-        const studentNameY = settingsData.studentNameY
-        ctx.fillText(customName, studentNameX, studentNameY)
-        
-        // Course Title - burgundy, left aligned
-        const courseTitle = certificate.courseTitle || certificate.course?.title || 'Course Title'
-        if (!courseTitle || courseTitle === 'Course Title') {
-          console.log('Course title not available, skipping generation')
+
+          img.onerror = () => {
+            console.error('Failed to load template image')
+            setIsGenerating(false)
+            resolve()
+          }
+
+          img.src = settingsData.templateUrl
+        } catch (err) {
+          console.error('Failed to generate certificate inner error:', err)
           setIsGenerating(false)
-          return
+          resolve()
         }
-        const courseTitleWidth = settingsData.courseTitleWidth || 250
-        const courseTitleHeight = settingsData.courseTitleHeight || 40
-        const courseTitleFontSize = calculateMaxFontSize(courseTitle, courseTitleWidth, courseTitleHeight)
-        ctx.font = `bold ${courseTitleFontSize}px sans-serif`
-        ctx.fillStyle = '#800020'
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'middle'
-        const courseTitleX = settingsData.courseTitleX - courseTitleWidth / 2
-        const courseTitleY = settingsData.courseTitleY
-        ctx.fillText(courseTitle, courseTitleX, courseTitleY)
-        
-        // Date - center aligned, larger font size, moved down
-        const issuedDate = certificate.issuedAt ? new Date(certificate.issuedAt) : new Date()
-        const dateText = issuedDate.toLocaleDateString()
-        const dateWidth = settingsData.dateWidth || 150
-        const dateHeight = settingsData.dateHeight || 30
-        const dateFontSize = calculateMaxFontSize(dateText, dateWidth, dateHeight, 10)
-        ctx.font = `${dateFontSize}px sans-serif`
-        ctx.fillStyle = '#000000'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        const dateX = settingsData.dateX
-        const dateY = settingsData.dateY + 8
-        ctx.fillText(dateText, dateX, dateY)
-        
-        // Certificate ID - center aligned, larger font size, moved down
-        const certificateId = certificate.certificateId || 'CERT-ID'
-        const certificateIdWidth = settingsData.certificateIdWidth || 120
-        const certificateIdHeight = settingsData.certificateIdHeight || 30
-        const certificateIdFontSize = calculateMaxFontSize(certificateId, certificateIdWidth, certificateIdHeight, 8)
-        ctx.font = `${certificateIdFontSize}px sans-serif`
-        ctx.fillStyle = '#000000'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        const certificateIdX = settingsData.certificateIdX
-        const certificateIdY = settingsData.certificateIdY + 8
-        ctx.fillText(certificateId, certificateIdX, certificateIdY)
-        
-        // Set generated image
-        setGeneratedImageUrl(canvas.toDataURL('image/png'))
-        setIsGenerating(false)
-      }
-      
-      img.onerror = () => {
-        console.error('Failed to load template image')
-        setIsGenerating(false)
-      }
-      
-      img.src = settingsData.templateUrl
-      
+      })
     } catch (error) {
       console.error('Failed to generate certificate:', error)
       setIsGenerating(false)
@@ -173,19 +183,19 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         logging: false,
         imageTimeout: 0
       })
-      
+
       const imgData = canvas.toDataURL('image/png', 1.0)
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4'
       })
-      
+
       const pdfWidth = 297
       const pdfHeight = 210
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`Certificate-${certificate.certificateId}.pdf`)
-      
+
     } catch (error) {
       console.error('Error generating certificate:', error)
       alert('Error generating certificate. Please try again.')

@@ -7,8 +7,10 @@ import { Clock, BookOpen, Star, Play } from 'lucide-react'
 import Link from "next/link"
 import { calculateDiscountPercentage, hasDiscount } from '@/lib/discount-utils'
 import { useCourseDurations } from '@/hooks/useYouTubeDuration'
+import { useState } from 'react'
 
 export default function CourseCard({ course, index = 0, variant = 'default', badge = null }) {
+  const [imageLoaded, setImageLoaded] = useState(false)
   const isMyCoursesVariant = variant === 'my-courses'
   const displayTitle = course.title || course.name
   const displayDescription = course.subtitle || course.description
@@ -33,7 +35,8 @@ export default function CourseCard({ course, index = 0, variant = 'default', bad
             <img 
               src={course.thumbnail} 
               alt={course.title || course.name}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImageLoaded(true)}
             />
           ) : (
             course.icon || <Play className="w-12 h-12 text-[#ff6b6b]" />

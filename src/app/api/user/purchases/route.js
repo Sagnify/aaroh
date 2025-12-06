@@ -14,23 +14,38 @@ export async function GET() {
       },
       include: {
         course: {
-          select: {
-            id: true,
-            title: true,
-            subtitle: true,
-            description: true,
-            duration: true,
-            lessons: true,
-            level: true,
-            thumbnail: true,
-            instructor: true
+          include: {
+            curriculum: {
+              include: {
+                videos: true
+              }
+            }
           }
         }
       },
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(purchases)
+    const purchasesWithCompletion = await Promise.all(
+      purchases.map(async (purchase) => {
+        const totalVideos = purchase.course.curriculum.reduce((acc, section) => acc + section.videos.length, 0)
+        const completedCount = await prisma.progress.count({
+          where: {
+            userId: user.id,
+            courseId: purchase.courseId,
+            completed: true
+          }
+        })
+        const isCompleted = totalVideos > 0 && completedCount === totalVideos
+        console.log(`Course ${purchase.course.title}: ${completedCount}/${totalVideos} videos completed, isCompleted: ${isCompleted}`)
+        return {
+          ...purchase,
+          isCompleted
+        }
+      })
+    )
+
+    return NextResponse.json(purchasesWithCompletion)
   } catch (error) {
     return handleApiError(error, 'User purchases fetch')
   }

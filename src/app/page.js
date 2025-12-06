@@ -44,7 +44,11 @@ export default function Home() {
     try {
       const response = await fetch('/api/courses?popular=true')
       const data = await response.json()
-      setCourses(data.slice(0, 3)) // Show only first 3 popular courses
+      if (Array.isArray(data)) {
+        setCourses(data.slice(0, 3)) // Show only first 3 popular courses
+      } else {
+        setCourses([])
+      }
     } catch (error) {
       console.error('Failed to fetch courses:', error)
     }
@@ -246,7 +250,7 @@ export default function Home() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-[#a0303f] font-semibold"
+                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white/10 hover:border-white font-semibold transition-all"
                 onClick={() => document.getElementById('live-classes')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Join a Live Class

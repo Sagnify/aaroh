@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { BookOpen, Play, Clock, Award } from 'lucide-react'
 import CourseCard from '@/components/CourseCard'
 import Link from 'next/link'
+import FadeIn from '@/components/FadeIn'
 
 export default function MyCourses() {
   const { data: session, status } = useSession()
@@ -68,22 +69,26 @@ export default function MyCourses() {
   return (
     <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-[#a0303f] mb-4">My Courses</h1>
-          <p className="text-xl text-gray-600">Continue your musical journey</p>
-        </div>
+        <FadeIn>
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-[#a0303f] mb-4">My Courses</h1>
+            <p className="text-xl text-gray-600">Continue your musical journey</p>
+          </div>
+        </FadeIn>
 
         {courses.length === 0 ? (
-          <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No courses yet</h3>
-            <p className="text-gray-600 mb-6">Start learning by enrolling in a course</p>
-            <Link href="/courses">
-              <Button className="bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white">
-                Browse Courses
-              </Button>
-            </Link>
-          </div>
+          <FadeIn delay={200}>
+            <div className="text-center py-12">
+              <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No courses yet</h3>
+              <p className="text-gray-600 mb-6">Start learning by enrolling in a course</p>
+              <Link href="/courses">
+                <Button className="bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white">
+                  Browse Courses
+                </Button>
+              </Link>
+            </div>
+          </FadeIn>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((purchase, index) => {
@@ -117,19 +122,21 @@ export default function MyCourses() {
               }
 
               return (
-                <div key={purchase.id} className="relative">
-                  <CourseCard 
-                    course={purchase.course} 
-                    index={index}
-                    variant="my-courses"
-                    badge={badge}
-                  />
-                  <div className="mt-2 text-center">
-                    <span className="text-xs text-gray-500">
-                      Purchased on {new Date(purchase.createdAt).toLocaleDateString()}
-                    </span>
+                <FadeIn key={purchase.id} delay={index * 100}>
+                  <div className="relative">
+                    <CourseCard 
+                      course={purchase.course} 
+                      index={index}
+                      variant="my-courses"
+                      badge={badge}
+                    />
+                    <div className="mt-2 text-center">
+                      <span className="text-xs text-gray-500">
+                        Purchased on {new Date(purchase.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </FadeIn>
               )
             })}
           </div>

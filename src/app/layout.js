@@ -5,7 +5,6 @@ import "./globals.css"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import SessionProvider from '@/components/SessionProvider'
-import LoadingProvider from '@/components/LoadingProvider'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { usePathname } from 'next/navigation'
 
@@ -17,14 +16,12 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ErrorBoundary>
           <SessionProvider>
-            <LoadingProvider>
-              {!isAdminRoute && <Navbar />}
-              <main>{children}</main>
-              {!isAdminRoute && <Footer />}
-            </LoadingProvider>
+            {!isAdminRoute && <Navbar />}
+            <main className={`flex-grow ${isAdminRoute ? 'bg-white' : ''}`}>{children}</main>
+            {!isAdminRoute && <Footer />}
           </SessionProvider>
         </ErrorBoundary>
       </body>

@@ -27,7 +27,7 @@ export default function AdminLayout({ children }) {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="relative">
           <div className="w-16 h-16 bg-[#a0303f] rounded-full flex items-center justify-center mx-auto animate-pulse">
             <div className="w-8 h-8 bg-white rounded"></div>
@@ -40,7 +40,7 @@ export default function AdminLayout({ children }) {
 
   if (isLoginPage) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-white">
         {children}
       </div>
     )
@@ -51,7 +51,7 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <AdminNavbar />
       {children}
     </div>

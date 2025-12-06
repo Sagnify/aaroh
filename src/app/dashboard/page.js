@@ -31,6 +31,8 @@ export default function StudentDashboard() {
       const response = await fetch('/api/user/purchases')
       if (response.ok) {
         const data = await response.json()
+        console.log('Dashboard purchases:', data)
+        data.forEach(p => console.log(`${p.course.title} - isCompleted:`, p.isCompleted))
         setPurchases(data)
       }
     } catch (error) {
@@ -41,7 +43,11 @@ export default function StudentDashboard() {
   }
 
   if (status === 'loading' || loading) {
-    return <Loader />
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 pt-16 flex items-center justify-center">
+        <Loader />
+      </div>
+    )
   }
 
   if (!session || session.user.role !== 'USER') {
@@ -88,8 +94,16 @@ export default function StudentDashboard() {
                 ]
                 return (
                   <Card key={purchase.id} className="bg-white/80 backdrop-blur-sm border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    <div className={`h-32 ${gradients[index % gradients.length]} flex items-center justify-center`}>
-                      <BookOpen className="w-12 h-12 text-[#a0303f]" />
+                    <div className={`h-48 ${purchase.course.thumbnail ? '' : gradients[index % gradients.length]} flex items-center justify-center relative overflow-hidden`}>
+                      {purchase.course.thumbnail ? (
+                        <img 
+                          src={purchase.course.thumbnail} 
+                          alt={purchase.course.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <BookOpen className="w-12 h-12 text-[#a0303f]" />
+                      )}
                     </div>
                     <CardHeader>
                       <CardTitle className="text-xl font-bold text-[#a0303f] mb-2">
@@ -115,7 +129,7 @@ export default function StudentDashboard() {
                       <Link href={`/course/${purchase.course.id}`}>
                         <Button className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-3">
                           <Play className="w-4 h-4 mr-2" />
-                          Continue Learning
+                          {purchase.isCompleted ? 'Review Course' : 'Continue Learning'}
                         </Button>
                       </Link>
                     </CardContent>
