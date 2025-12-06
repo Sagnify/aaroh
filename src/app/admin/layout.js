@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import AdminNavbar from '@/components/AdminNavbar'
+import AdminSidebar from '@/components/AdminSidebar'
 
 export default function AdminLayout({ children }) {
   const { data: session, status } = useSession()
@@ -52,8 +52,10 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-white">
-      <AdminNavbar />
-      {children}
+      <AdminSidebar />
+      <div className="lg:pl-64">
+        {children}
+      </div>
     </div>
   )
 }

@@ -29,7 +29,16 @@ export async function GET() {
     const purchasesWithCompletion = await Promise.all(
       purchases.map(async (purchase) => {
         try {
-          const curriculum = purchase.course.curriculum || []
+          let curriculum = purchase.course.curriculum || []
+          // Parse curriculum if it's a JSON string
+          if (typeof curriculum === 'string') {
+            try {
+              curriculum = JSON.parse(curriculum)
+            } catch (e) {
+              console.error('Failed to parse curriculum:', e)
+              curriculum = []
+            }
+          }
           console.log(`Course ${purchase.course.title} curriculum:`, curriculum.length, 'sections')
           const totalVideos = curriculum.reduce((acc, section) => {
             const videoCount = section.videos?.length || 0
