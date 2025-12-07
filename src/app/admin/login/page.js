@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -69,9 +69,8 @@ export default function AdminLogin() {
         setError(result.error === 'CredentialsSignin' ? 'Invalid credentials' : result.error)
         setLoading(false)
       } else if (result?.ok) {
-        // Keep loading state while redirecting
-        router.push('/admin/dashboard')
-        router.refresh()
+        // Force hard redirect to ensure session is loaded
+        window.location.href = '/admin/dashboard'
       } else {
         setError('Login failed. Please try again.')
         setLoading(false)
@@ -124,11 +123,10 @@ export default function AdminLogin() {
                   {session && session.user.role === 'USER' && (
                     <Button
                       type="button"
-                      onClick={() => {
-                        signIn(null, { redirect: false }).then(() => {
-                          setError('')
-                          router.refresh()
-                        })
+                      onClick={async () => {
+                        await signOut({ redirect: false })
+                        setError('')
+                        window.location.reload()
                       }}
                       variant="outline"
                       className="w-full mt-2 text-red-600 border-red-300 hover:bg-red-50"
@@ -214,10 +212,10 @@ export default function AdminLogin() {
                     <Button
                       type="button"
                       onClick={async () => {
-                        await signIn(null, { redirect: false })
+                        await signOut({ redirect: false })
                         setError('')
                         setStep(1)
-                        router.refresh()
+                        window.location.reload()
                       }}
                       variant="outline"
                       className="w-full mt-2 text-red-600 border-red-300 hover:bg-red-50"
