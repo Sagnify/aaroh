@@ -198,13 +198,13 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-[#a0303f] via-[#8b2635] to-[#ff6b6b]">
         {/* Musical notation elements radiating from semi-circle in all directions */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {isClient && Array.from({ length: 15 }, (_, i) => {
+          {isClient && Array.from({ length: 25 }, (_, i) => {
             // Musical notation symbols
             const symbols = ['♪', '♫', '♬', '♭', '♮', '♯', '𝄞', '𝄟', '𝄠', '𝄡'];
             const symbol = symbols[i % symbols.length];
             
             // Full 360-degree distribution from sun center
-            const angle = (i / 15) * 2 * Math.PI + (i % 3 - 1) * 0.1;
+            const angle = (i / 25) * 2 * Math.PI + (i % 3 - 1) * 0.1;
             
             // Start from sun edge (semi-circle is 600px wide, 300px tall)
             const sunRadius = 300; // Half of 600px width
@@ -254,15 +254,15 @@ export default function Home() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
           className="relative z-30 text-center max-w-5xl mx-auto text-white"
         >
           <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="mx-auto mb-8 flex items-center justify-center"
           >
             <Image 

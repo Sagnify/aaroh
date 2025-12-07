@@ -38,6 +38,7 @@ export default function RootLayout({ children }) {
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         
+        <link rel="preload" as="image" href="/logos/logo_light.png" fetchpriority="high" />
         <link rel="preload" href="/_next/static/media/8e9860b6e62d6359-s.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://i.ibb.co" />
         <link rel="preconnect" href="https://i.ibb.co" crossOrigin="anonymous" />
