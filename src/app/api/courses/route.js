@@ -32,17 +32,30 @@ export async function GET(request) {
     })
 
     const coursesWithStats = courses.map(course => {
-      const enrichedCourse = enrichCourseWithStats(course)
-      return {
-        ...enrichedCourse,
-        students: course._count.purchases,
-        thumbnail: course.thumbnail
+      try {
+        const enrichedCourse = enrichCourseWithStats(course)
+        return {
+          ...enrichedCourse,
+          students: course._count.purchases,
+          thumbnail: course.thumbnail
+        }
+      } catch (err) {
+        console.error('Error enriching course:', course.id, err)
+        return {
+          ...course,
+          students: course._count.purchases,
+          thumbnail: course.thumbnail
+        }
       }
     })
 
     return NextResponse.json(coursesWithStats)
   } catch (error) {
-    return handleApiError(error, 'Courses fetch')
+    console.error('Courses API Error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch courses', details: error.message, stack: error.stack },
+      { status: 500 }
+    )
   }
 }
 

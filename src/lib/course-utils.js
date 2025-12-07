@@ -93,21 +93,31 @@ export function calculateSectionStats(videos) {
 export function enrichCourseWithStats(course) {
   if (!course) return course
 
-  const stats = calculateCourseStats(course.curriculum)
-  
-  const enrichedCurriculum = course.curriculum?.map(section => {
-    const sectionStats = calculateSectionStats(section.videos)
-    return {
-      ...section,
-      lessons: sectionStats.lessons,
-      duration: sectionStats.duration
-    }
-  })
+  try {
+    const stats = calculateCourseStats(course.curriculum || [])
+    
+    const enrichedCurriculum = course.curriculum?.map(section => {
+      try {
+        const sectionStats = calculateSectionStats(section.videos || [])
+        return {
+          ...section,
+          lessons: sectionStats.lessons,
+          duration: sectionStats.duration
+        }
+      } catch (err) {
+        console.error('Error calculating section stats:', err)
+        return section
+      }
+    }) || []
 
-  return {
-    ...course,
-    lessons: stats.lessons,
-    duration: stats.duration,
-    curriculum: enrichedCurriculum
+    return {
+      ...course,
+      lessons: stats.lessons,
+      duration: stats.duration,
+      curriculum: enrichedCurriculum
+    }
+  } catch (err) {
+    console.error('Error enriching course with stats:', err)
+    return course
   }
 }
