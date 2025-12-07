@@ -143,11 +143,14 @@ export default function Footer() {
               &copy; {content.footerCopyright || '2025 Aaroh Music Academy by Kashmira Chakraborty. All rights reserved.'}
             </p>
             <div className="flex space-x-6 text-sm">
-              <Link href="#" className="text-[#fdf6e3]/60 hover:text-[#ff6b6b] transition-colors">
+              <Link href="/privacy-policy" className="text-[#fdf6e3]/60 hover:text-[#ff6b6b] transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="#" className="text-[#fdf6e3]/60 hover:text-[#ff6b6b] transition-colors">
+              <Link href="/terms" className="text-[#fdf6e3]/60 hover:text-[#ff6b6b] transition-colors">
                 Terms of Service
+              </Link>
+              <Link href="/refund-policy" className="text-[#fdf6e3]/60 hover:text-[#ff6b6b] transition-colors">
+                Refund Policy
               </Link>
             </div>
           </div>
