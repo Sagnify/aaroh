@@ -335,7 +335,7 @@ export default function Home() {
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h3 className="text-2xl font-bold text-[#a0303f] mb-4">{content.aboutTitle}</h3>
+              <h2 className="text-2xl font-bold text-[#a0303f] mb-4">{content.aboutTitle}</h2>
               <p className="text-lg text-gray-700 mb-4 leading-relaxed">
                 {content.aboutDescription}
               </p>
@@ -402,7 +402,7 @@ export default function Home() {
           
           <div className="text-center mt-12 relative z-50">
             <Link href="/courses">
-              <button className="inline-flex items-center justify-center h-11 px-8 py-3 bg-[#ff6b6b] hover:bg-[#e55a5a] text-white font-semibold rounded-md cursor-pointer pointer-events-auto relative z-50 transition-none">
+              <button aria-label="Explore all available courses" className="inline-flex items-center justify-center h-11 px-8 py-3 bg-[#e63946] hover:bg-[#d62828] text-white font-semibold rounded-md cursor-pointer pointer-events-auto relative z-50 transition-none">
                 Explore All Courses
               </button>
             </Link>
@@ -563,7 +563,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button 
-                  className="w-full !bg-[#87a96b] hover:!bg-[#7a9560] text-white relative z-50 pointer-events-auto !opacity-100"
+                  className="w-full !bg-[#6b8e4e] hover:!bg-[#5a7a3f] text-white relative z-50 pointer-events-auto !opacity-100"
                   onClick={() => handleClassBooking('OFFLINE')}
                 >
                   Book Offline Session
@@ -600,16 +600,10 @@ export default function Home() {
             {whyChoose.map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ 
-                  duration: 0.8, 
-                  delay: index * 0.15,
-                  type: "spring",
-                  stiffness: 100
-                }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -8, scale: 1.02 }}
               >
                 <Card className="h-full text-center p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardContent className="pt-6 h-full flex flex-col">

@@ -34,6 +34,9 @@ export default function RootLayout({ children }) {
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         
+        <link rel="preload" href="/_next/static/media/8e9860b6e62d6359-s.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://i.ibb.co" />
+        <link rel="preconnect" href="https://i.ibb.co" crossOrigin="anonymous" />
         <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />

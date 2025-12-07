@@ -51,16 +51,16 @@ export default function Footer() {
               {content.footerDescription || content.aboutDescription || 'Discover the joy of music with personalized courses and expert guidance from Kashmira Chakraborty.'}
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
+              <a href="#" aria-label="Follow us on Facebook" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
+              <a href="#" aria-label="Follow us on Instagram" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
+              <a href="#" aria-label="Subscribe to our YouTube channel" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
                 <Youtube size={20} />
               </a>
-              <a href={`mailto:${content.contactEmail || 'info@aaroh.com'}`} className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
+              <a href={`mailto:${content.contactEmail || 'info@aaroh.com'}`} aria-label="Email us" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-[#fdf6e3] hover:bg-[#ff6b6b] hover:text-white transition-all duration-300">
                 <Mail size={20} />
               </a>
             </div>

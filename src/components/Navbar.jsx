@@ -65,11 +65,11 @@ export default function Navbar() {
         }`}></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center">
+          <Link href="/" aria-label="Aaroh Music Academy Home" className="flex items-center">
             {(!isHomepage || isScrolled) && (
               <img 
                 src="/logos/logo_dark.png"
-                alt="Aaroh"
+                alt="Aaroh Music Academy"
                 className="h-8 w-auto transition-all duration-300"
               />
             )}
@@ -178,6 +178,7 @@ export default function Navbar() {
           <Button
             variant="ghost"
             size="icon"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
             className={`md:hidden ${
               isScrolled ? 'text-gray-700' : (isHomepage ? 'text-white' : 'text-gray-700')
             }`}
