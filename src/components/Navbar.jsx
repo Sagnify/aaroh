@@ -13,9 +13,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const isHomepage = pathname === '/'
   const isAdminPage = pathname.startsWith('/admin')
+  const isLoading = status === 'loading'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -89,7 +90,11 @@ export default function Navbar() {
             
             {!isAdminPage && (
               <div className="flex items-center space-x-4">
-                {session && session.user.role === 'USER' ? (
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                  </div>
+                ) : session && session.user.role === 'USER' ? (
                   <div className="relative">
                     <Button
                       variant="ghost"
@@ -247,7 +252,11 @@ export default function Navbar() {
                   {/* User Menu */}
                   {!isAdminPage && (
                     <div className="border-t border-gray-200 p-6">
-                      {session && session.user.role === 'USER' ? (
+                      {isLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="w-8 h-8 rounded-full border-2 border-[#ff6b6b] border-t-transparent animate-spin"></div>
+                        </div>
+                      ) : session && session.user.role === 'USER' ? (
                         <div className="space-y-2">
                           <Link
                             href="/profile"

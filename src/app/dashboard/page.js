@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import Loader from '@/components/Loader'
-import { BookOpen, Clock, Play, User } from 'lucide-react'
+import { BookOpen, Clock, Play } from 'lucide-react'
 import Link from 'next/link'
 
 export default function StudentDashboard() {
@@ -14,6 +13,10 @@ export default function StudentDashboard() {
   const router = useRouter()
   const [purchases, setPurchases] = useState([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    document.title = 'My Dashboard - Aaroh'
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -45,7 +48,12 @@ export default function StudentDashboard() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 pt-16 flex items-center justify-center">
-        <Loader />
+        <div className="relative">
+          <div className="w-16 h-16 bg-[#a0303f] rounded-full flex items-center justify-center animate-pulse">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <div className="absolute inset-0 w-16 h-16 border-4 border-[#ff6b6b] border-t-transparent rounded-full animate-spin"></div>
+        </div>
       </div>
     )
   }

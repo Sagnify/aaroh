@@ -16,11 +16,23 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   phone         String?
+  twoFactorSecret String?
+  twoFactorEnabled Boolean      @default(false)
   classBookings ClassBooking[]
   progress      Progress[]
   purchases     Purchase[]
   reviews       Review[]
   certificates  Certificate[]
+}
+
+model Admin {
+  id               String   @id @default("admin")
+  email            String   @unique
+  password         String
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Course {

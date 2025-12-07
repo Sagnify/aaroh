@@ -2,14 +2,16 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import AdminSidebar from '@/components/AdminSidebar'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export default function AdminLayout({ children }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
   const isLoginPage = pathname === '/admin/login'
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -51,11 +53,13 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <AdminSidebar />
-      <div className="lg:pl-64">
-        {children}
+    <ThemeProvider>
+      <div className="min-h-screen bg-white dark:bg-black">
+        <AdminSidebar onCollapseChange={setIsSidebarCollapsed} />
+        <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
+          {children}
+        </div>
       </div>
-    </div>
+    </ThemeProvider>
   )
 }

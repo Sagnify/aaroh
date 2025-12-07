@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import Loader from '@/components/Loader'
 import { Music } from 'lucide-react'
 
@@ -38,17 +39,12 @@ export default function Login() {
       const result = await signIn('credentials', {
         email,
         password,
+        loginType: 'user',
         redirect: false
       })
 
       if (result?.error) {
         setError('Invalid credentials')
-      } else {
-        const session = await fetch('/api/auth/session').then(r => r.json())
-        if (session?.user?.role === 'ADMIN') {
-          await signOut({ redirect: false })
-          setError('Admin users must login through /admin/login')
-        }
       }
     } catch (error) {
       setError('Login failed. Please try again.')
@@ -64,6 +60,10 @@ export default function Login() {
   if (session) {
     return null
   }
+
+  useEffect(() => {
+    document.title = 'Login - Aaroh'
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 pt-16">
@@ -95,8 +95,7 @@ export default function Login() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"

@@ -11,20 +11,54 @@ export const authOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+      async authorize(credentials, req) {
+        if (!credentials?.email) {
           return null
         }
 
         // Check for admin credentials
-        if (credentials.email === process.env.ADMIN_EMAIL && 
-            credentials.password === process.env.ADMIN_PASSWORD) {
-          return {
-            id: 'admin',
-            email: process.env.ADMIN_EMAIL,
-            name: 'Admin',
-            role: 'ADMIN'
+        const isAdminEmail = credentials.email === process.env.ADMIN_EMAIL
+        
+        // Reject admin login on user pages
+        const isUserLogin = credentials.loginType === 'user'
+        if (isAdminEmail && isUserLogin) {
+          return null
+        }
+        
+        if (isAdminEmail && credentials.loginType === 'admin') {
+          // Check if 2FA is enabled
+          const { getAdmin2FASecret } = await import('@/lib/admin2fa')
+          const admin = await getAdmin2FASecret()
+          
+          if (admin?.twoFactorEnabled && admin?.twoFactorSecret && credentials.token) {
+            // Verify 2FA token
+            const speakeasy = (await import('speakeasy')).default
+            const verified = speakeasy.totp.verify({
+              secret: admin.twoFactorSecret,
+              encoding: 'base32',
+              token: credentials.token,
+              window: 2
+            })
+            
+            if (verified) {
+              return {
+                id: 'admin',
+                email: process.env.ADMIN_EMAIL,
+                name: 'Admin',
+                role: 'ADMIN'
+              }
+            }
+            return null
+          } else if (!admin?.twoFactorEnabled && credentials.password === process.env.ADMIN_PASSWORD) {
+            // 2FA not enabled, use password
+            return {
+              id: 'admin',
+              email: process.env.ADMIN_EMAIL,
+              name: 'Admin',
+              role: 'ADMIN'
+            }
           }
+          return null
         }
 
         // Check database for regular users

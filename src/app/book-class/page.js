@@ -16,8 +16,8 @@ function BookClassContent() {
   
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
+  const [fetchingProfile, setFetchingProfile] = useState(true)
   const [userProfile, setUserProfile] = useState(null)
-  const [autoBooking, setAutoBooking] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -36,37 +36,12 @@ function BookClassContent() {
         setUserProfile(profile)
         if (profile.phone) {
           setPhone(profile.phone)
-          // Auto-book if user has phone number
-          handleAutoBooking(profile.phone)
         }
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error)
-    }
-  }
-
-  const handleAutoBooking = async (userPhone) => {
-    setAutoBooking(true)
-    try {
-      const response = await fetch('/api/class-booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          classType,
-          phone: userPhone
-        })
-      })
-
-      if (response.ok) {
-        router.push('/booking-success')
-      } else {
-        const data = await response.json()
-        setError(data.error || 'Auto-booking failed. Please fill the form below.')
-        setAutoBooking(false)
-      }
-    } catch (error) {
-      setError('Network error during auto-booking. Please fill the form below.')
-      setAutoBooking(false)
+    } finally {
+      setFetchingProfile(false)
     }
   }
 
@@ -114,14 +89,14 @@ function BookClassContent() {
 
   if (!session) return null
 
-  if (autoBooking) {
+  if (fetchingProfile) {
     return (
       <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 flex items-center justify-center">
         <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm shadow-xl border-0">
           <CardContent className="text-center py-12">
             <Users className="w-16 h-16 text-[#a0303f] mx-auto mb-4 animate-pulse" />
-            <h2 className="text-xl font-semibold text-[#a0303f] mb-2">Booking Your Class...</h2>
-            <p className="text-gray-600">Using your saved information</p>
+            <h2 className="text-xl font-semibold text-[#a0303f] mb-2">Loading Your Information...</h2>
+            <p className="text-gray-600">Please wait</p>
           </CardContent>
         </Card>
       </div>
@@ -175,9 +150,16 @@ function BookClassContent() {
                   required
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {userProfile?.phone ? 'Using phone number from your profile' : 'We\'ll contact you on this number to schedule your class'}
-              </p>
+              {userProfile?.phone && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Phone number loaded from your profile
+                </p>
+              )}
+              {!userProfile?.phone && (
+                <p className="text-xs text-gray-500 mt-1">
+                  We'll contact you on this number to schedule your class
+                </p>
+              )}
             </div>
 
             {error && (

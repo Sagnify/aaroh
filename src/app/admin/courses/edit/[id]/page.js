@@ -16,6 +16,7 @@ export default function EditCourse() {
   const router = useRouter()
   const params = useParams()
   const [loading, setLoading] = useState(false)
+  const [fetchingData, setFetchingData] = useState(true)
   const [success, setSuccess] = useState(false)
   const [refreshingVideos, setRefreshingVideos] = useState({})
   const [formData, setFormData] = useState({
@@ -70,6 +71,8 @@ export default function EditCourse() {
       }
     } catch (error) {
       console.error('Failed to fetch course:', error)
+    } finally {
+      setFetchingData(false)
     }
   }
 
@@ -153,7 +156,7 @@ export default function EditCourse() {
 
 
 
-  if (status === 'loading') {
+  if (status === 'loading' || fetchingData) {
     return <Loader />
   }
 

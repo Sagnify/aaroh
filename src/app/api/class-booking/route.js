@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, emailTemplates, getContactEmail } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -33,6 +34,40 @@ export async function POST(request) {
         phone
       }
     })
+
+    // Send emails asynchronously (non-blocking)
+    const classTypeLabel = classType === 'PRIVATE' ? '1-on-1 Private' : 
+                           classType === 'GROUP' ? 'Group Class' : 
+                           'Offline (Kolkata)'
+    
+    const contactEmail = await getContactEmail()
+    
+    const emailPromises = Promise.all([
+      // Admin notification
+      contactEmail ? sendEmail({
+        to: contactEmail,
+        ...emailTemplates.adminClassBookingNotification(
+          user.name || 'Student',
+          user.email,
+          phone,
+          classTypeLabel
+        )
+      }).catch(err => console.error('Admin email failed:', err)) : Promise.resolve(),
+      
+      // User confirmation
+      sendEmail({
+        to: user.email,
+        ...emailTemplates.classBookingConfirmation(
+          user.name || 'Student',
+          classTypeLabel
+        )
+      }).catch(err => console.error('User email failed:', err))
+    ])
+
+    // For Vercel serverless - ensure emails complete
+    if (request.waitUntil) {
+      request.waitUntil(emailPromises)
+    }
 
     return NextResponse.json(booking)
   } catch (error) {

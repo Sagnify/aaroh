@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import Loader from '@/components/Loader'
 import { Music } from 'lucide-react'
 
@@ -22,6 +23,10 @@ export default function Signup() {
   const [error, setError] = useState('')
   const router = useRouter()
   const { data: session, status } = useSession()
+
+  useEffect(() => {
+    document.title = 'Sign Up - Aaroh'
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -180,8 +185,7 @@ export default function Signup() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 placeholder="Create a password"
@@ -192,8 +196,7 @@ export default function Signup() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Confirm Password
               </label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                 placeholder="Confirm your password"

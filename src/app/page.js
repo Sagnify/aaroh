@@ -57,9 +57,12 @@ export default function Home() {
   const fetchContent = async () => {
     try {
       const response = await fetch('/api/site-content')
+      if (!response.ok) {
+        console.warn('Site content API returned error, using defaults')
+        setContentLoaded(true)
+        return
+      }
       const data = await response.json()
-      console.log('Site content data:', data)
-      console.log('About image:', data.aboutImage)
       setContent(prev => ({
         ...prev,
         heroTitle: data.heroTitle || prev.heroTitle,
@@ -74,7 +77,8 @@ export default function Home() {
       }))
       setContentLoaded(true)
     } catch (error) {
-      console.error('Failed to fetch content:', error)
+      console.warn('Failed to fetch content, using defaults:', error.message)
+      setContentLoaded(true)
     }
   }
 
@@ -239,16 +243,16 @@ export default function Home() {
               {content.heroDescription}
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-40">
               <button
                 onClick={() => document.getElementById('popular-courses')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-lg px-8 py-4 bg-white text-[#a0303f] hover:bg-white/90 rounded-md font-semibold transition-all"
+                className="text-lg px-8 py-4 bg-white text-[#a0303f] hover:bg-gray-100 rounded-md font-semibold transition-colors cursor-pointer"
               >
                 Explore Courses
               </button>
               <button
                 onClick={() => document.getElementById('live-classes')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white/10 rounded-md font-semibold transition-all"
+                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white/20 rounded-md font-semibold transition-colors cursor-pointer"
               >
                 Join a Live Class
               </button>
@@ -352,11 +356,11 @@ export default function Home() {
             ))}
           </div>
           
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 relative z-50">
             <Link href="/courses">
-              <Button size="lg" className="bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white px-8 py-3">
+              <button className="inline-flex items-center justify-center h-11 px-8 py-3 bg-[#ff6b6b] hover:bg-[#e55a5a] text-white font-semibold rounded-md cursor-pointer pointer-events-auto relative z-50 transition-none">
                 Explore All Courses
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
@@ -407,8 +411,8 @@ export default function Home() {
       </section>
 
       {/* Live Classes Section */}
-      <section id="live-classes" className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
+      <section id="live-classes" className="py-16 px-4 bg-white relative z-20">
+        <div className="max-w-6xl mx-auto relative z-30">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -422,12 +426,12 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* One-on-One Classes */}
-            <Card className="bg-white border shadow-lg">
+            <Card className="bg-white border shadow-lg hover:shadow-2xl transition-shadow relative z-40">
               <CardHeader className="text-center">
                 <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-[#a0303f]">1-on-1 Private Sessions</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center relative z-50">
                 <div className="mb-6">
                   <p className="text-3xl font-bold text-gray-700 mb-2">₹{content.privateSessionPrice}/session</p>
                   <p className="text-gray-600">60 minutes of personalized attention</p>
@@ -447,7 +451,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button 
-                  className="w-full bg-gray-700 hover:bg-gray-800 text-white"
+                  className="w-full !bg-gray-700 hover:!bg-gray-800 text-white relative z-50 pointer-events-auto !opacity-100"
                   onClick={() => handleClassBooking('PRIVATE')}
                 >
                   Book Private Session
@@ -456,12 +460,12 @@ export default function Home() {
             </Card>
 
             {/* Group Classes */}
-            <Card className="bg-white border shadow-lg">
+            <Card className="bg-white border shadow-lg hover:shadow-2xl transition-shadow relative z-40">
               <CardHeader className="text-center">
                 <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-[#a0303f]">Group Classes</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center relative z-50">
                 <div className="mb-6">
                   <p className="text-3xl font-bold text-gray-700 mb-2">₹{content.groupSessionPrice}/session</p>
                   <p className="text-gray-600">90 minutes with 4-6 students</p>
@@ -481,7 +485,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button 
-                  className="w-full bg-gray-700 hover:bg-gray-800 text-white"
+                  className="w-full !bg-gray-700 hover:!bg-gray-800 text-white relative z-50 pointer-events-auto !opacity-100"
                   onClick={() => handleClassBooking('GROUP')}
                 >
                   Join Group Class
@@ -490,12 +494,12 @@ export default function Home() {
             </Card>
 
             {/* Offline Classes */}
-            <Card className="bg-white border shadow-lg">
+            <Card className="bg-white border shadow-lg hover:shadow-2xl transition-shadow relative z-40">
               <CardHeader className="text-center">
                 <Users className="w-12 h-12 text-[#87a96b] mx-auto mb-4" />
                 <CardTitle className="text-2xl text-[#a0303f]">Offline Classes</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center relative z-50">
                 <div className="mb-6">
                   <p className="text-lg font-semibold text-gray-700 mb-2">Available in Kolkata</p>
                   <p className="text-gray-600">In-person sessions with Kashmira</p>
@@ -515,7 +519,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button 
-                  className="w-full bg-[#87a96b] hover:bg-[#87a96b]/90 text-white"
+                  className="w-full !bg-[#87a96b] hover:!bg-[#7a9560] text-white relative z-50 pointer-events-auto !opacity-100"
                   onClick={() => handleClassBooking('OFFLINE')}
                 >
                   Book Offline Session

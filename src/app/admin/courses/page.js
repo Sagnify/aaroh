@@ -7,13 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, Trash2, Star } from 'lucide-react'
 import Link from 'next/link'
+import { useAdminCourses } from '@/hooks/useCachedData'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function ManageCourses() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [courses, setCourses] = useState([])
+  const { data: coursesData, isLoading } = useAdminCourses()
+  const queryClient = useQueryClient()
   const [popularCourses, setPopularCourses] = useState([])
   const [saving, setSaving] = useState(false)
+
+  const courses = coursesData || []
+
+  useEffect(() => {
+    document.title = 'Manage Courses - Admin - Aaroh'
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -21,20 +30,13 @@ export default function ManageCourses() {
       router.push('/admin/login')
       return
     }
-    fetchCourses()
   }, [session, status, router])
 
-  const fetchCourses = async () => {
-    try {
-      const response = await fetch('/api/admin/courses')
-      const data = await response.json()
-      setCourses(Array.isArray(data) ? data : [])
-      setPopularCourses(data.filter(course => course.popular).map(course => course.id))
-    } catch (error) {
-      console.error('Failed to fetch courses:', error)
-      setCourses([])
+  useEffect(() => {
+    if (courses.length > 0) {
+      setPopularCourses(courses.filter(course => course.popular).map(course => course.id))
     }
-  }
+  }, [courses])
 
   const handleDelete = async (courseId) => {
     if (confirm('Are you sure you want to delete this course?')) {
@@ -43,7 +45,7 @@ export default function ManageCourses() {
           method: 'DELETE'
         })
         if (response.ok) {
-          fetchCourses()
+          queryClient.invalidateQueries(['adminCourses'])
         } else {
           alert('Failed to delete course')
         }
@@ -53,29 +55,16 @@ export default function ManageCourses() {
     }
   }
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="relative">
-          <div className="w-16 h-16 bg-[#a0303f] rounded-full flex items-center justify-center mx-auto animate-pulse">
-            <Plus className="w-8 h-8 text-white" />
-          </div>
-          <div className="absolute inset-0 w-16 h-16 border-4 border-[#ff6b6b] border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session || session.user.role !== 'ADMIN') {
+  if (status === 'loading' || !session || session.user.role !== 'ADMIN') {
     return null
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Courses</h1>
-          <p className="text-gray-600">Manage all courses and content</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Courses</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage all courses and content</p>
         </div>
         
         <div className="mb-6">
@@ -88,9 +77,9 @@ export default function ManageCourses() {
         </div>
 
         {/* Popular Courses Section */}
-        <div className="bg-white border shadow-sm rounded-lg mb-6">
+        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg mb-6">
           <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-500" />
               Popular Courses (Max 3)
             </h2>
@@ -141,7 +130,7 @@ export default function ManageCourses() {
                     })
                     if (response.ok) {
                       alert('Popular courses updated successfully!')
-                      fetchCourses()
+                      queryClient.invalidateQueries(['adminCourses'])
                     } else {
                       alert('Failed to update popular courses')
                     }
@@ -161,10 +150,20 @@ export default function ManageCourses() {
           </div>
         </div>
 
-        <div className="bg-white border shadow-sm rounded-lg">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-medium text-gray-900">All Courses</h2>
+        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg relative">
+          <div className="px-6 py-4 border-b dark:border-gray-800">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Courses</h2>
           </div>
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-10 rounded-lg">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center animate-pulse">
+                  <Plus className="w-8 h-8 text-white dark:text-gray-900" />
+                </div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b bg-gray-50">
@@ -194,8 +193,8 @@ export default function ManageCourses() {
                     <td className="py-4 px-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         course.published 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                       }`}>
                         {course.published ? 'Published' : 'Draft'}
                       </span>

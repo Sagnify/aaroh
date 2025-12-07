@@ -111,11 +111,11 @@ export default function ContentManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Content Management</h1>
-          <p className="text-gray-600">Manage homepage content and settings</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Content Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage homepage content and settings</p>
         </div>
 
         <div className="space-y-6">

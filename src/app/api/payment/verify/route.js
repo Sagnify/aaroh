@@ -22,6 +22,34 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing payment details' }, { status: 400 })
     }
 
+    // Check if purchase exists and belongs to user
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    const existingPurchase = await prisma.purchase.findFirst({
+      where: {
+        id: purchaseId,
+        userId: user.id
+      }
+    })
+
+    if (!existingPurchase) {
+      return NextResponse.json({ error: 'Purchase not found' }, { status: 404 })
+    }
+
+    // Check if already completed (idempotency)
+    if (existingPurchase.status === 'completed') {
+      return NextResponse.json({
+        success: true,
+        message: 'Payment already verified',
+        purchase: {
+          id: existingPurchase.id,
+          courseId: existingPurchase.courseId
+        }
+      })
+    }
+
     // Verify signature
     const body = razorpay_order_id + "|" + razorpay_payment_id
     const expectedSignature = crypto
@@ -30,6 +58,12 @@ export async function POST(request) {
       .digest('hex')
 
     if (expectedSignature !== razorpay_signature) {
+      // Mark as failed
+      await prisma.purchase.update({
+        where: { id: purchaseId },
+        data: { status: 'failed' }
+      })
+      console.error(`Invalid signature for purchase ${purchaseId}`)
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 

@@ -6,16 +6,23 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import Loader from '@/components/Loader'
 import { Music } from 'lucide-react'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [token, setToken] = useState('')
+  const [use2FA, setUse2FA] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
   const { data: session, status } = useSession()
+
+  useEffect(() => {
+    document.title = 'Admin Login - Aaroh'
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -30,11 +37,19 @@ export default function AdminLogin() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
+      const credentials = {
+        email: use2FA ? process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@aaroh.com' : email,
+        loginType: 'admin',
         redirect: false
-      })
+      }
+      
+      if (use2FA) {
+        credentials.token = token
+      } else {
+        credentials.password = password
+      }
+      
+      const result = await signIn('credentials', credentials)
 
       if (result?.error) {
         setError('Invalid credentials')
@@ -76,30 +91,47 @@ export default function AdminLogin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@aaroh.com"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                required
-              />
-            </div>
+            {!use2FA && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@aaroh.com"
+                  required
+                />
+              </div>
+            )}
+            {!use2FA ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <PasswordInput
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Authenticator Code
+                </label>
+                <Input
+                  type="text"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                />
+              </div>
+            )}
             {error && (
               <div className="text-red-600 text-sm text-center">{error}</div>
             )}
@@ -111,6 +143,15 @@ export default function AdminLogin() {
               Sign In
             </Button>
           </form>
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => setUse2FA(!use2FA)}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              {use2FA ? 'Use password instead' : 'Use authenticator app'}
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>

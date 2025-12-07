@@ -13,6 +13,7 @@
   "dependencies": {
     "@prisma/client": "^6.18.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@tanstack/react-query": "^5.90.12",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
@@ -24,11 +25,14 @@
     "lucide-react": "^0.460.0",
     "next": "^15.1.6",
     "next-auth": "^4.24.13",
+    "nodemailer": "^7.0.11",
     "prisma": "^6.18.0",
+    "qrcode": "^1.5.4",
     "razorpay": "^2.9.6",
     "react": "^18.3.1",
     "react-confetti": "^6.4.0",
     "react-dom": "^18.3.1",
+    "speakeasy": "^2.0.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7"
   },

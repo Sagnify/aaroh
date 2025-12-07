@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -50,6 +51,17 @@ export async function POST(request) {
         role: 'USER'
       }
     })
+
+    // Send welcome email asynchronously (non-blocking)
+    const emailPromise = sendEmail({
+      to: user.email,
+      ...emailTemplates.welcome(user.name)
+    }).catch(err => console.error('Welcome email failed:', err))
+
+    // For Vercel serverless - ensure email completes
+    if (request.waitUntil) {
+      request.waitUntil(emailPromise)
+    }
 
     return NextResponse.json({ 
       message: 'User created successfully',

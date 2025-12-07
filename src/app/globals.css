@@ -57,13 +57,13 @@
   --secondary: 243 244 246;
   --secondary-foreground: 17 24 39;
   --muted: 243 244 246;
-  --muted-foreground: 107 114 128;
+  --muted-foreground: 156 163 175;
   --accent: 243 244 246;
   --accent-foreground: 17 24 39;
   --destructive: 0 84.2 60.2;
   --border: 20 5.9 90;
   --input: 20 5.9 90;
-  --ring: 43 33 14;
+  --ring: 59 130 246;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -115,13 +115,38 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-gray-300 dark:border-gray-800;
   }
   body {
-    @apply bg-white text-foreground;
+    @apply bg-white dark:bg-black text-gray-900 dark:text-white;
   }
   html {
-    @apply bg-white;
+    @apply bg-white dark:bg-black;
+  }
+  
+  /* Dark mode text colors */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-white;
+  }
+  
+  .dark p, .dark span, .dark div {
+    @apply text-gray-100;
+  }
+  
+  .dark table {
+    @apply bg-gray-900 border-gray-800;
+  }
+  
+  .dark thead {
+    @apply bg-black border-gray-800;
+  }
+  
+  .dark th, .dark td {
+    @apply text-gray-100 border-gray-800;
+  }
+  
+  .dark tr:hover {
+    @apply bg-gray-800;
   }
 }
 
@@ -174,7 +199,17 @@ input, textarea {
   background-color: white !important;
 }
 
-/* Remove yellow hover only from ghost variant buttons */
-button[class*="ghost"]:hover:not([class*="hover:bg"]) {
-  background-color: transparent !important;
+/* Remove all yellow/brown colors from buttons */
+button[class*="ghost"]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Override any ring colors */
+*:focus-visible {
+  outline: 2px solid rgb(156, 163, 175) !important;
+  outline-offset: 2px;
+}
+
+.dark *:focus-visible {
+  outline: 2px solid rgb(75, 85, 99) !important;
 }

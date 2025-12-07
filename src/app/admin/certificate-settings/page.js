@@ -165,7 +165,18 @@ export default function CertificateSettings() {
     }
   }, [resizingElement])
 
-  if (loading) return <div className="p-6">Loading...</div>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="relative">
+          <div className="w-16 h-16 bg-[#a0303f] rounded-full flex items-center justify-center animate-pulse">
+            <Upload className="w-8 h-8 text-white" />
+          </div>
+          <div className="absolute inset-0 w-16 h-16 border-4 border-[#ff6b6b] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -179,13 +190,13 @@ export default function CertificateSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Settings Panel */}
-        <Card className="bg-white">
+        <Card>
           <CardHeader>
             <CardTitle>Template & Positioning</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Certificate Template</Label>
+              <Label className="dark:text-gray-200">Certificate Template</Label>
               <ImageUpload
                 currentImage={settings?.templateUrl && settings.templateUrl !== '/certificates/template.png' ? settings.templateUrl : null}
                 onImageUpload={(url) => updateSetting('templateUrl', url)}
@@ -195,7 +206,7 @@ export default function CertificateSettings() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Student Name X</Label>
+                <Label className="dark:text-gray-200">Student Name X</Label>
                 <Input
                   type="number"
                   value={settings?.studentNameX ?? ''}
@@ -203,7 +214,7 @@ export default function CertificateSettings() {
                 />
               </div>
               <div>
-                <Label>Student Name Y</Label>
+                <Label className="dark:text-gray-200">Student Name Y</Label>
                 <Input
                   type="number"
                   value={settings?.studentNameY ?? ''}
@@ -214,7 +225,7 @@ export default function CertificateSettings() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Course Title X</Label>
+                <Label className="dark:text-gray-200">Course Title X</Label>
                 <Input
                   type="number"
                   value={settings?.courseTitleX ?? ''}
@@ -222,7 +233,7 @@ export default function CertificateSettings() {
                 />
               </div>
               <div>
-                <Label>Course Title Y</Label>
+                <Label className="dark:text-gray-200">Course Title Y</Label>
                 <Input
                   type="number"
                   value={settings?.courseTitleY ?? ''}
@@ -233,7 +244,7 @@ export default function CertificateSettings() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Date X</Label>
+                <Label className="dark:text-gray-200">Date X</Label>
                 <Input
                   type="number"
                   value={settings?.dateX ?? ''}
@@ -241,7 +252,7 @@ export default function CertificateSettings() {
                 />
               </div>
               <div>
-                <Label>Date Y</Label>
+                <Label className="dark:text-gray-200">Date Y</Label>
                 <Input
                   type="number"
                   value={settings?.dateY ?? ''}
@@ -252,7 +263,7 @@ export default function CertificateSettings() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Certificate ID X</Label>
+                <Label className="dark:text-gray-200">Certificate ID X</Label>
                 <Input
                   type="number"
                   value={settings?.certificateIdX ?? ''}
@@ -260,7 +271,7 @@ export default function CertificateSettings() {
                 />
               </div>
               <div>
-                <Label>Certificate ID Y</Label>
+                <Label className="dark:text-gray-200">Certificate ID Y</Label>
                 <Input
                   type="number"
                   value={settings?.certificateIdY ?? ''}
@@ -271,7 +282,7 @@ export default function CertificateSettings() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Instructor Name X</Label>
+                <Label className="dark:text-gray-200">Instructor Name X</Label>
                 <Input
                   type="number"
                   value={settings?.instructorNameX ?? ''}
@@ -279,7 +290,7 @@ export default function CertificateSettings() {
                 />
               </div>
               <div>
-                <Label>Instructor Name Y</Label>
+                <Label className="dark:text-gray-200">Instructor Name Y</Label>
                 <Input
                   type="number"
                   value={settings?.instructorNameY ?? ''}
@@ -289,8 +300,8 @@ export default function CertificateSettings() {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-gray-600">💡 Drag the colored boxes on the template to position text elements</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <p className="text-sm text-gray-600 dark:text-gray-400">💡 Drag the colored boxes on the template to position text elements</p>
+              <div className="grid grid-cols-2 gap-2 text-xs dark:text-gray-300">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded"></div>
                   <span>Student Name</span>
@@ -319,12 +330,12 @@ export default function CertificateSettings() {
         </Card>
 
         {/* Preview Panel */}
-        <Card className="bg-white">
+        <Card>
           <CardHeader>
             <CardTitle>Certificate Preview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="certificate-preview-container relative bg-gray-100 rounded-lg overflow-hidden aspect-[4/3]">
+            <div className="certificate-preview-container relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden aspect-[4/3]">
               {settings?.templateUrl && settings.templateUrl !== '/certificates/template.png' ? (
                 <div className="relative w-full h-full">
                   <img
@@ -417,7 +428,7 @@ export default function CertificateSettings() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                   <div className="text-center">
                     <div className="text-4xl mb-2">📄</div>
                     <p>No template uploaded</p>
@@ -481,7 +492,7 @@ export default function CertificateSettings() {
                 </>
               )}
             </div>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               {previewMode ? 'Showing text positions' : 'Click Preview Mode to see text positions'}
             </p>
           </CardContent>

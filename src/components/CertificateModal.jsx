@@ -203,7 +203,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
       {/* Professional Confetti Animation */}
       {showConfetti && (
         <Confetti
@@ -217,32 +217,32 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         />
       )}
 
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden my-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-6 text-white relative">
+        <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4 sm:p-6 text-white relative">
           <Button
             variant="ghost"
             size="sm"
-            className="absolute top-4 right-4 text-white hover:bg-white/20"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:bg-white/20"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-3">
-            <Award className="w-8 h-8" />
+          <div className="flex items-center gap-2 sm:gap-3 pr-8">
+            <Award className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
             <div>
-              <h1 className="text-2xl font-bold">🎉 Congratulations!</h1>
-              <p className="text-white/90">Your certificate is ready to download</p>
+              <h1 className="text-lg sm:text-2xl font-bold">🎉 Congratulations!</h1>
+              <p className="text-sm sm:text-base text-white/90">Your certificate is ready</p>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row">
           {/* Certificate Preview - Left Side */}
-          <div className="lg:w-[60%] mx-auto p-6 bg-gray-50">
+          <div className="lg:w-[60%] mx-auto p-3 sm:p-6 bg-gray-50">
             <div 
               id="certificate-preview" 
-              className="relative bg-white rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden"
+              className="relative bg-white rounded-lg sm:rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden"
             >
               {isGenerating ? (
                 <div className="flex items-center justify-center h-full">
@@ -270,63 +270,63 @@ export default function CertificateModal({ certificate, userName, onClose }) {
           </div>
 
           {/* Controls - Right Side */}
-          <div className="lg:w-1/3 p-8 bg-white">
-            <div className="space-y-6">
+          <div className="lg:w-1/3 p-4 sm:p-8 bg-white border-t lg:border-t-0 lg:border-l border-gray-200">
+            <div className="space-y-4 sm:space-y-6">
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Customize Your Certificate</h3>
-                <p className="text-gray-600 text-sm">Personalize your certificate before downloading</p>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">Customize Certificate</h3>
+                <p className="text-gray-600 text-xs sm:text-sm">Personalize before downloading</p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="name" className="text-xs sm:text-sm font-medium text-gray-700">
                     Name on Certificate
                   </Label>
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-1">
                     <Input
                       id="name"
                       value={customName}
                       onChange={(e) => setCustomName(e.target.value)}
-                      className="text-lg font-medium flex-1"
+                      className="text-base sm:text-lg font-medium flex-1"
                       placeholder="Enter your name"
                     />
                     <Button
                       onClick={() => generateCertificate()}
                       disabled={isGenerating}
-                      className="bg-[#a0303f] hover:bg-[#8a2a37] text-white px-4"
+                      className="bg-[#a0303f] hover:bg-[#8a2a37] text-white px-4 w-full sm:w-auto"
                     >
                       {isGenerating ? 'Updating...' : 'Update'}
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Click Update to regenerate certificate with new name</p>
+                  <p className="text-xs text-gray-500 mt-1">Click Update to regenerate</p>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-green-800">
-                    <Award className="w-5 h-5" />
-                    <span className="font-medium">Certificate Details</span>
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-sm sm:text-base font-medium">Certificate Details</span>
                   </div>
-                  <div className="mt-2 text-sm text-green-700 space-y-1">
-                    <p><strong>Course:</strong> {certificate.courseTitle || certificate.course?.title}</p>
-                    <p><strong>ID:</strong> {certificate.certificateId}</p>
+                  <div className="mt-2 text-xs sm:text-sm text-green-700 space-y-1">
+                    <p className="break-words"><strong>Course:</strong> {certificate.courseTitle || certificate.course?.title}</p>
+                    <p className="break-all"><strong>ID:</strong> {certificate.certificateId}</p>
                     <p><strong>Date:</strong> {new Date(certificate.issuedAt).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <Button
                   onClick={handleDownload}
-                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-3 text-lg font-medium"
+                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-2.5 sm:py-3 text-base sm:text-lg font-medium"
                   size="lg"
                 >
-                  <Download className="w-5 h-5 mr-2" />
-                  Download Certificate PDF
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  Download PDF
                 </Button>
                 
                 <div className="text-center">
                   <p className="text-xs text-gray-500">
-                    High-quality PDF • Ready to print • Share on LinkedIn
+                    High-quality PDF • Ready to print
                   </p>
                 </div>
               </div>
