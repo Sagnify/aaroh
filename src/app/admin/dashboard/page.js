@@ -48,10 +48,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
+        <div className="mb-10">
         {statsLoading ? (
           <CardSkeleton count={4} />
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-white border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Total Courses</CardTitle>
@@ -93,6 +94,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
         )}
+        </div>
 
         {/* Management Sections */}
         <div className="mb-6">

@@ -189,7 +189,7 @@ export default function ViewPurchases() {
             </div>
         </div>
 
-        {purchases.length === 0 && (
+        {!isLoading && purchases.length === 0 && (
           <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg">
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
