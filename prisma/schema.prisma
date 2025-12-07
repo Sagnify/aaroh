@@ -58,6 +58,9 @@ model Course {
   requirements  String[]
   trailerUrl    String?
   popular       Boolean       @default(false)
+  seoTitle      String?       // Optional: Custom SEO title (defaults to title)
+  seoDescription String?      // Optional: Custom SEO description (defaults to subtitle)
+  seoKeywords   String?       // Optional: SEO keywords
   progress      Progress[]
   purchases     Purchase[]
   curriculum    Section[]

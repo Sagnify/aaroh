@@ -18,6 +18,33 @@ export default function Contact() {
 
   useEffect(() => {
     document.title = 'Contact Us - Aaroh Music Academy'
+    
+    // Update meta description
+    let metaDesc = document.querySelector('meta[name="description"]')
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.name = 'description'
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.content = 'Get in touch with Aaroh Music Academy. Contact us for course inquiries, enrollment information, or any questions about our music programs. We\'re here to help you start your musical journey.'
+    
+    // Update OG tags
+    let ogTitle = document.querySelector('meta[property="og:title"]')
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta')
+      ogTitle.setAttribute('property', 'og:title')
+      document.head.appendChild(ogTitle)
+    }
+    ogTitle.content = 'Contact Us - Aaroh Music Academy'
+    
+    let ogDesc = document.querySelector('meta[property="og:description"]')
+    if (!ogDesc) {
+      ogDesc = document.createElement('meta')
+      ogDesc.setAttribute('property', 'og:description')
+      document.head.appendChild(ogDesc)
+    }
+    ogDesc.content = 'Get in touch with Aaroh Music Academy for course inquiries and enrollment information.'
+    
     fetchContent()
   }, [])
 

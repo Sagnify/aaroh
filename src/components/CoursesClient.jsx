@@ -11,6 +11,33 @@ export default function CoursesClient() {
 
   useEffect(() => {
     document.title = 'All Courses - Aaroh Music Academy'
+    
+    // Update meta description
+    let metaDesc = document.querySelector('meta[name="description"]')
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.name = 'description'
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.content = 'Browse all music courses at Aaroh Music Academy. Learn vocals, keyboard, music theory and more. Comprehensive courses for beginners to advanced students. Enroll now!'
+    
+    // Update OG tags
+    let ogTitle = document.querySelector('meta[property="og:title"]')
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta')
+      ogTitle.setAttribute('property', 'og:title')
+      document.head.appendChild(ogTitle)
+    }
+    ogTitle.content = 'All Courses - Aaroh Music Academy'
+    
+    let ogDesc = document.querySelector('meta[property="og:description"]')
+    if (!ogDesc) {
+      ogDesc = document.createElement('meta')
+      ogDesc.setAttribute('property', 'og:description')
+      document.head.appendChild(ogDesc)
+    }
+    ogDesc.content = 'Discover our comprehensive range of music courses designed to nurture your musical talents. Each course is carefully crafted to provide you with the skills and knowledge you need to excel.'
+    
     fetchCourses()
   }, [])
 

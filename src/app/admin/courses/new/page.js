@@ -29,7 +29,10 @@ export default function AddCourse() {
     thumbnail: '',
     whatYouLearn: [''],
     requirements: [''],
-    curriculum: []
+    curriculum: [],
+    seoTitle: '',
+    seoDescription: '',
+    seoKeywords: ''
   })
 
   useEffect(() => {
@@ -163,6 +166,40 @@ export default function AddCourse() {
                   />
                 </div>
               </div>
+
+              <Card className="bg-white border shadow-sm">
+                <CardHeader className="border-b">
+                  <CardTitle className="text-gray-900 text-lg font-medium">SEO Settings (Optional)</CardTitle>
+                  <p className="text-sm text-gray-500 mt-1">Leave blank to use default values from title/subtitle</p>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">SEO Title</label>
+                    <Input
+                      value={formData.seoTitle}
+                      onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
+                      placeholder="Custom SEO title (defaults to course title)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">SEO Description</label>
+                    <Textarea
+                      value={formData.seoDescription}
+                      onChange={(e) => setFormData({...formData, seoDescription: e.target.value})}
+                      placeholder="Custom SEO description (defaults to subtitle)"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">SEO Keywords</label>
+                    <Input
+                      value={formData.seoKeywords}
+                      onChange={(e) => setFormData({...formData, seoKeywords: e.target.value})}
+                      placeholder="music course, vocal training, online music lessons"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card className="bg-white border shadow-sm">
                 <CardHeader className="border-b">

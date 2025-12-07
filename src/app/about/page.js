@@ -9,6 +9,33 @@ export default function About() {
 
   useEffect(() => {
     document.title = 'About Us - Aaroh Music Academy'
+    
+    // Update meta description
+    let metaDesc = document.querySelector('meta[name="description"]')
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.name = 'description'
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.content = 'Meet Kashmira Chakraborty, passionate music educator with 10+ years of experience. Learn about Aaroh Music Academy\'s mission to make quality music education accessible to everyone.'
+    
+    // Update OG tags
+    let ogTitle = document.querySelector('meta[property="og:title"]')
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta')
+      ogTitle.setAttribute('property', 'og:title')
+      document.head.appendChild(ogTitle)
+    }
+    ogTitle.content = 'About Us - Aaroh Music Academy'
+    
+    let ogDesc = document.querySelector('meta[property="og:description"]')
+    if (!ogDesc) {
+      ogDesc = document.createElement('meta')
+      ogDesc.setAttribute('property', 'og:description')
+      document.head.appendChild(ogDesc)
+    }
+    ogDesc.content = 'Meet Kashmira Chakraborty and learn about our mission to make quality music education accessible to everyone.'
+    
     fetchContent()
   }, [])
 

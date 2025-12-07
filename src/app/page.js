@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Music, Mic, Piano, BookOpen, Users, Heart, Star, Play, Calendar } from "lucide-react"
 import { useEffect, useState } from "react"
+import { OrganizationSchema } from "@/components/StructuredData"
 
 export default function Home() {
   const { data: session } = useSession()
@@ -30,6 +31,41 @@ export default function Home() {
 
   useEffect(() => {
     document.title = 'Aaroh Music Academy - Learn Music Online'
+    
+    // Update meta description
+    let metaDesc = document.querySelector('meta[name="description"]')
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.name = 'description'
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.content = 'Learn music online with Aaroh Music Academy. Expert-led courses in vocals, keyboard, and music theory. Join live classes or learn at your own pace with Kashmira Chakraborty. Enroll today!'
+    
+    // Update OG tags
+    let ogTitle = document.querySelector('meta[property="og:title"]')
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta')
+      ogTitle.setAttribute('property', 'og:title')
+      document.head.appendChild(ogTitle)
+    }
+    ogTitle.content = 'Aaroh Music Academy - Learn Music Online'
+    
+    let ogDesc = document.querySelector('meta[property="og:description"]')
+    if (!ogDesc) {
+      ogDesc = document.createElement('meta')
+      ogDesc.setAttribute('property', 'og:description')
+      document.head.appendChild(ogDesc)
+    }
+    ogDesc.content = 'Discover the joy of music with structured courses and live sessions guided by Kashmira Chakraborty. Designed for singers, learners, and dreamers of all ages.'
+    
+    let ogImage = document.querySelector('meta[property="og:image"]')
+    if (!ogImage) {
+      ogImage = document.createElement('meta')
+      ogImage.setAttribute('property', 'og:image')
+      document.head.appendChild(ogImage)
+    }
+    ogImage.content = '/logos/logo_dark.png'
+    
     setIsClient(true)
     fetchCourses()
     fetchContent()
@@ -154,6 +190,8 @@ export default function Home() {
   }
 
   return (
+    <>
+    <OrganizationSchema />
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-[#a0303f] via-[#8b2635] to-[#ff6b6b]">
@@ -589,5 +627,6 @@ export default function Home() {
 
       </div>
     </div>
+    </>
   )
 }

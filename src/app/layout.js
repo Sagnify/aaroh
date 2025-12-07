@@ -19,6 +19,21 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Learn music online with Aaroh Music Academy. Expert-led courses in vocals, keyboard, and music theory. Join live classes or learn at your own pace with Kashmira Chakraborty." />
+        <meta name="keywords" content="music academy, online music courses, vocal training, keyboard lessons, music theory, learn music online, Kashmira Chakraborty, music classes India, singing lessons" />
+        <meta name="author" content="Kashmira Chakraborty" />
+        <meta name="robots" content="index, follow" />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Aaroh Music Academy" />
+        <meta property="og:locale" content="en_IN" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        
         <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
