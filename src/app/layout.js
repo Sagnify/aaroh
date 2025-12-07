@@ -21,6 +21,10 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style dangerouslySetInnerHTML={{__html: `
+          .hero-section{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(to bottom right,#a0303f,#8b2635,#ff6b6b)}
+          .hero-logo{height:6rem;width:auto;filter:drop-shadow(0 25px 25px rgba(0,0,0,.15))}
+        `}} />
         <meta name="description" content="Learn music online with Aaroh Music Academy. Expert-led courses in vocals, keyboard, and music theory. Join live classes or learn at your own pace with Kashmira Chakraborty." />
         <meta name="keywords" content="music academy, online music courses, vocal training, keyboard lessons, music theory, learn music online, Kashmira Chakraborty, music classes India, singing lessons" />
         <meta name="author" content="Kashmira Chakraborty" />
