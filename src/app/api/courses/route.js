@@ -15,13 +15,17 @@ export async function GET(request) {
     
     const courses = await prisma.course.findMany({
       where: whereClause,
-      include: {
-        curriculum: {
-          include: {
-            videos: true
-          },
-          orderBy: { order: 'asc' }
-        },
+      select: {
+        id: true,
+        title: true,
+        subtitle: true,
+        description: true,
+        price: true,
+        originalPrice: true,
+        duration: true,
+        lessons: true,
+        level: true,
+        thumbnail: true,
         _count: {
           select: {
             purchases: true,
@@ -38,33 +42,23 @@ export async function GET(request) {
     })
 
     const coursesWithStats = courses.map(course => {
-      try {
-        const enrichedCourse = enrichCourseWithStats(course)
-        const avgRating = course.reviews.length > 0
-          ? (course.reviews.reduce((sum, r) => sum + r.rating, 0) / course.reviews.length).toFixed(1)
-          : 0
-        const { rating: _, students: __, ...courseWithoutDefaults } = enrichedCourse
-        return {
-          ...courseWithoutDefaults,
-          rating: parseFloat(avgRating),
-          ratingCount: course._count.reviews,
-          students: course._count.purchases,
-          thumbnail: course.thumbnail
-        }
-      } catch (err) {
-        console.error('Error enriching course:', course.id, err)
-        const { rating: _, students: __, ...courseWithoutDefaults } = course
-        return {
-          ...courseWithoutDefaults,
-          rating: 0,
-          ratingCount: 0,
-          students: course._count.purchases,
-          thumbnail: course.thumbnail
-        }
+      const avgRating = course.reviews.length > 0
+        ? (course.reviews.reduce((sum, r) => sum + r.rating, 0) / course.reviews.length).toFixed(1)
+        : 0
+      const { reviews, _count, ...courseData } = course
+      return {
+        ...courseData,
+        rating: parseFloat(avgRating),
+        ratingCount: _count.reviews,
+        students: _count.purchases
       }
     })
 
-    return NextResponse.json(coursesWithStats)
+    return NextResponse.json(coursesWithStats, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
+    })
   } catch (error) {
     console.error('Courses API Error:', error)
     return NextResponse.json(

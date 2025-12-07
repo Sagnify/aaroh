@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Clock, BookOpen, Star, Play } from 'lucide-react'
 import Link from "next/link"
 import { calculateDiscountPercentage, hasDiscount } from '@/lib/discount-utils'
-import { useCourseDurations } from '@/hooks/useYouTubeDuration'
 import { useState } from 'react'
 
 export default function CourseCard({ course, index = 0, variant = 'default', badge = null }) {
@@ -14,7 +13,6 @@ export default function CourseCard({ course, index = 0, variant = 'default', bad
   const isMyCoursesVariant = variant === 'my-courses'
   const displayTitle = course.title || course.name
   const displayDescription = course.subtitle || course.description
-  const { totalDuration, loading: durationsLoading } = useCourseDurations(course?.curriculum)
   
   return (
     <motion.div
@@ -54,11 +52,11 @@ export default function CourseCard({ course, index = 0, variant = 'default', bad
             <div className="flex items-center justify-between text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>{totalDuration || course.duration || 'Loading...'}</span>
+                <span>{course.duration}</span>
               </div>
               <div className="flex items-center gap-1">
                 <BookOpen className="w-4 h-4" />
-                <span>{course.curriculum?.flatMap(s => s.videos || []).length || course.lessons || 0} lessons</span>
+                <span>{course.lessons} lessons</span>
               </div>
             </div>
             
