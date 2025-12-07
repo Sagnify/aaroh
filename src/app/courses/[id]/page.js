@@ -71,7 +71,7 @@ export default function CourseDetails() {
         ogDesc.setAttribute('property', 'og:description')
         document.head.appendChild(ogDesc)
       }
-      ogDesc.content = seoDesc
+      ogDesc.content = `${seoDesc} • ${course.lessons} lessons • ${course.duration} • ₹${course.price.toLocaleString()}`
       
       let ogImage = document.querySelector('meta[property="og:image"]')
       if (!ogImage) {
@@ -79,7 +79,8 @@ export default function CourseDetails() {
         ogImage.setAttribute('property', 'og:image')
         document.head.appendChild(ogImage)
       }
-      ogImage.content = course.thumbnail || '/logos/logo_dark.png'
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aaroh-beta.vercel.app'
+      ogImage.content = course.thumbnail || `${baseUrl}/logos/logo_dark.png`
       
       // OG image dimensions
       let ogImageWidth = document.querySelector('meta[property="og:image:width"]')
@@ -105,7 +106,7 @@ export default function CourseDetails() {
         ogUrl.setAttribute('property', 'og:url')
         document.head.appendChild(ogUrl)
       }
-      ogUrl.content = `https://aaroh.com/courses/${params.id}`
+      ogUrl.content = `${baseUrl}/courses/${params.id}`
       
       // Twitter Card tags
       let twitterCard = document.querySelector('meta[name="twitter:card"]')
@@ -130,7 +131,7 @@ export default function CourseDetails() {
         twitterDesc.name = 'twitter:description'
         document.head.appendChild(twitterDesc)
       }
-      twitterDesc.content = seoDesc
+      twitterDesc.content = `${seoDesc} • ${course.lessons} lessons • ${course.duration} • ₹${course.price.toLocaleString()}`
       
       let twitterImage = document.querySelector('meta[name="twitter:image"]')
       if (!twitterImage) {
@@ -138,7 +139,7 @@ export default function CourseDetails() {
         twitterImage.name = 'twitter:image'
         document.head.appendChild(twitterImage)
       }
-      twitterImage.content = course.thumbnail || '/logos/logo_dark.png'
+      twitterImage.content = course.thumbnail || `${baseUrl}/logos/logo_dark.png`
     }
   }, [course, params.id])
 
