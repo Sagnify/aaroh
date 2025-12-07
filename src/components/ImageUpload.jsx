@@ -72,7 +72,7 @@ export default function ImageUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">
         {label}
       </label>
       
@@ -99,12 +99,12 @@ export default function ImageUpload({
         </div>
       ) : (
         <div 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
+          className="border-2 border-dashed border-gray-200 dark:border-zinc-700 rounded-lg p-8 text-center hover:border-gray-400 dark:hover:border-zinc-600 transition-colors cursor-pointer bg-gray-50 dark:bg-black"
           onClick={() => fileInputRef.current?.click()}
         >
-          <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">Click to upload an image</p>
-          <p className="text-sm text-gray-500">PNG, JPG, GIF up to 5MB</p>
+          <ImageIcon className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400 mb-2 font-medium">Click to upload an image</p>
+          <p className="text-sm text-gray-500 dark:text-gray-600">PNG, JPG, GIF up to 5MB</p>
         </div>
       )}
 

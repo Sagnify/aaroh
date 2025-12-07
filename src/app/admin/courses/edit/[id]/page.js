@@ -165,30 +165,30 @@ export default function EditCourse() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Edit Course</h1>
-          <p className="text-gray-600">Update course details and content</p>
+    <div className="min-h-screen bg-white dark:bg-black pt-16">
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">Edit Course</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">Update course details and content</p>
           {success && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md animate-pulse">
-              <p className="text-green-800 font-medium flex items-center">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Course updated successfully! All changes have been saved.
+            <div className="mt-6 p-5 bg-green-50 dark:bg-green-500/10 border-l-4 border-green-500 rounded-lg">
+              <p className="text-green-800 dark:text-green-400 font-semibold flex items-center text-base">
+                <span className="w-2.5 h-2.5 bg-green-500 rounded-full mr-3 animate-pulse"></span>
+                Course updated successfully!
               </p>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium">Basic Information</CardTitle>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <Card className="bg-white dark:bg-zinc-950 border-0 dark:border dark:border-zinc-800 shadow-xl dark:shadow-2xl">
+            <CardHeader className="border-b border-gray-100 dark:border-zinc-800 pb-6">
+              <CardTitle className="text-gray-900 dark:text-white text-2xl font-semibold">Basic Information</CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="p-6 pt-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Course Title</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Course Title</label>
                   <Input
                     value={formData.title}
                     onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -196,7 +196,7 @@ export default function EditCourse() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Subtitle</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Subtitle</label>
                   <Input
                     value={formData.subtitle}
                     onChange={(e) => setFormData({...formData, subtitle: e.target.value})}
@@ -205,7 +205,7 @@ export default function EditCourse() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Description</label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -215,7 +215,7 @@ export default function EditCourse() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Course Trailer (YouTube URL)</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Course Trailer (YouTube URL)</label>
                 <Input
                   value={formData.trailerUrl}
                   onChange={(e) => setFormData({...formData, trailerUrl: e.target.value})}
@@ -231,9 +231,9 @@ export default function EditCourse() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Price (₹)</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Price (₹)</label>
                   <Input
                     type="number"
                     value={formData.price}
@@ -242,7 +242,7 @@ export default function EditCourse() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Original Price (₹)</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Original Price (₹)</label>
                   <Input
                     type="number"
                     value={formData.originalPrice}
@@ -251,13 +251,13 @@ export default function EditCourse() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Level</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Level</label>
                   <select
                     value={formData.level}
                     onChange={(e) => setFormData({...formData, level: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-zinc-700 rounded-lg dark:bg-black dark:text-white focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition-all"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
@@ -266,7 +266,7 @@ export default function EditCourse() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Language</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Language</label>
                   <Input
                     value={formData.language}
                     onChange={(e) => setFormData({...formData, language: e.target.value})}
@@ -276,9 +276,9 @@ export default function EditCourse() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium">What You'll Learn</CardTitle>
+          <Card className="bg-white dark:bg-zinc-950 border-0 dark:border dark:border-zinc-800 shadow-lg">
+            <CardHeader className="border-b border-gray-100 dark:border-zinc-800 pb-4">
+              <CardTitle className="text-gray-900 dark:text-white text-xl font-semibold">What You'll Learn</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {formData.whatYouLearn.map((item, index) => (
@@ -286,7 +286,7 @@ export default function EditCourse() {
                   <Input
                     value={item}
                     onChange={(e) => updateWhatYouLearn(index, e.target.value)}
-                    placeholder="What students will learn..."
+                    placeholder="e.g., Master vocal techniques and breathing exercises"
                   />
                   <Button
                     type="button"
@@ -306,9 +306,9 @@ export default function EditCourse() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium">Requirements</CardTitle>
+          <Card className="bg-white dark:bg-zinc-950 border-0 dark:border dark:border-zinc-800 shadow-lg">
+            <CardHeader className="border-b border-gray-100 dark:border-zinc-800 pb-4">
+              <CardTitle className="text-gray-900 dark:text-white text-xl font-semibold">Requirements</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {formData.requirements.map((item, index) => (
@@ -316,7 +316,7 @@ export default function EditCourse() {
                   <Input
                     value={item}
                     onChange={(e) => updateRequirement(index, e.target.value)}
-                    placeholder="Course requirement..."
+                    placeholder="e.g., Basic understanding of music notation"
                   />
                   <Button
                     type="button"
@@ -336,15 +336,15 @@ export default function EditCourse() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium">Course Curriculum</CardTitle>
+          <Card className="bg-white dark:bg-zinc-950 border-0 dark:border dark:border-zinc-800 shadow-lg">
+            <CardHeader className="border-b border-gray-100 dark:border-zinc-800 pb-4">
+              <CardTitle className="text-gray-900 dark:text-white text-xl font-semibold">Course Curriculum</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {formData.curriculum.map((section, sectionIndex) => (
-                <div key={sectionIndex} className="border rounded-lg p-4">
+                <div key={sectionIndex} className="border border-gray-200 dark:border-zinc-800 rounded-xl p-6 bg-gray-50 dark:bg-black">
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-medium text-gray-900">Section {sectionIndex + 1}</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-lg">Section {sectionIndex + 1}</h4>
                     <Button
                       type="button"
                       variant="outline"
@@ -368,15 +368,15 @@ export default function EditCourse() {
                         setFormData({...formData, curriculum: newCurriculum})
                       }}
                     />
-                    <div className="text-sm text-gray-500 mt-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium">
                       {(section.videos || []).length} lessons • Duration auto-calculated
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h5 className="font-medium text-gray-700">Videos</h5>
+                  <div className="space-y-4">
+                    <h5 className="font-semibold text-gray-700 dark:text-gray-300 text-base">Videos</h5>
                     {(section.videos || []).map((video, videoIndex) => (
-                      <div key={videoIndex} className="p-4 bg-gray-50 rounded-lg border">
+                      <div key={videoIndex} className="p-5 bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                           <Input
                             placeholder="Video title"
@@ -402,7 +402,7 @@ export default function EditCourse() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
                             <span>{video.duration ? `Duration: ${video.duration}` : video.youtubeUrl ? 'Duration: Auto-detected' : 'Add YouTube URL to detect duration'}</span>
                             {video.youtubeUrl && (
                               <button
@@ -495,18 +495,19 @@ export default function EditCourse() {
             </CardContent>
           </Card>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4 pt-4">
             <Button
               type="submit"
-              className="bg-gray-900 hover:bg-gray-800 text-white"
+              size="lg"
               disabled={loading}
             >
               <Save className="w-4 h-4 mr-2" />
-              Update Course
+              {loading ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
               type="button"
               variant="outline"
+              size="lg"
               onClick={() => router.push('/admin/courses')}
             >
               Cancel

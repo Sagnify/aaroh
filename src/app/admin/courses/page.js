@@ -78,7 +78,7 @@ export default function ManageCourses() {
         </div>
 
         {/* Popular Courses Section */}
-        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg mb-6">
+        <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg mb-6">
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-500" />
@@ -151,7 +151,7 @@ export default function ManageCourses() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg relative">
+        <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg relative">
           <div className="px-6 py-4 border-b dark:border-gray-800">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Courses</h2>
           </div>
@@ -160,29 +160,29 @@ export default function ManageCourses() {
               <div className="p-6"><TableSkeleton rows={5} columns={5} /></div>
             ) : (
             <table className="w-full">
-              <thead className="border-b bg-gray-50">
+              <thead className="border-b dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900">
                 <tr>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Course</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Price</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Students</th>
-                  <th className="text-left py-4 px-6 font-medium text-gray-900">Status</th>
-                  <th className="text-right py-4 px-6 font-medium text-gray-900">Actions</th>
+                  <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-white">Course</th>
+                  <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-white">Price</th>
+                  <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-white">Students</th>
+                  <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-white">Status</th>
+                  <th className="text-right py-4 px-6 font-medium text-gray-900 dark:text-white">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {(courses || []).map((course) => (
-                  <tr key={course.id} className="border-b hover:bg-gray-50">
+                  <tr key={course.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                     <td className="py-4 px-4">
                       <div>
-                        <div className="font-medium text-gray-900">{course.title}</div>
-                        <div className="text-sm text-gray-500">{course.level} • {course.duration}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{course.title}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{course.level} • {course.duration}</div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="font-medium text-gray-900">₹{course.price.toLocaleString()}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">₹{course.price.toLocaleString()}</div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="text-gray-900">{course._count?.purchases || 0}</div>
+                      <div className="text-gray-900 dark:text-white">{course._count?.purchases || 0}</div>
                     </td>
                     <td className="py-4 px-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${

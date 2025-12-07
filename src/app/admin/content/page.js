@@ -9,12 +9,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Settings, Save } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
+import { FormSkeleton } from '@/components/AdminSkeleton'
 
 export default function ContentManagement() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [content, setContent] = useState({})
   const [loading, setLoading] = useState(false)
+  const [fetchingContent, setFetchingContent] = useState(true)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -66,6 +68,8 @@ export default function ContentManagement() {
       })
     } catch (error) {
       console.error('Failed to fetch content:', error)
+    } finally {
+      setFetchingContent(false)
     }
   }
 
@@ -119,30 +123,36 @@ export default function ContentManagement() {
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium flex items-center gap-2">
+          {fetchingContent ? (
+            <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
+              <CardContent className="p-6"><FormSkeleton /></CardContent>
+            </Card>
+          ) : (
+          <>
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
+            <CardHeader className="border-b dark:border-zinc-800">
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium flex items-center gap-2">
                 <Settings className="w-5 h-5" />
                 Hero Section
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Hero Title</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Hero Title</label>
                 <Input
                   value={content.heroTitle}
                   onChange={(e) => handleChange('heroTitle', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Hero Subtitle</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Hero Subtitle</label>
                 <Input
                   value={content.heroSubtitle}
                   onChange={(e) => handleChange('heroSubtitle', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Hero Description</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Hero Description</label>
                 <Textarea
                   value={content.heroDescription}
                   onChange={(e) => handleChange('heroDescription', e.target.value)}
@@ -152,23 +162,23 @@ export default function ContentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium flex items-center gap-2">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
+            <CardHeader className="border-b dark:border-zinc-800">
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium flex items-center gap-2">
                 <Settings className="w-5 h-5" />
                 About Section
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">About Title</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">About Title</label>
                 <Input
                   value={content.aboutTitle}
                   onChange={(e) => handleChange('aboutTitle', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">About Description</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">About Description</label>
                 <Textarea
                   value={content.aboutDescription}
                   onChange={(e) => handleChange('aboutDescription', e.target.value)}
@@ -176,7 +186,7 @@ export default function ContentManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">About Sub Description</label>
+                <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">About Sub Description</label>
                 <Textarea
                   value={content.aboutSubDescription}
                   onChange={(e) => handleChange('aboutSubDescription', e.target.value)}
@@ -192,7 +202,7 @@ export default function ContentManagement() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Experience</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Experience</label>
                   <Input
                     value={content.aboutExperience}
                     onChange={(e) => handleChange('aboutExperience', e.target.value)}
@@ -200,7 +210,7 @@ export default function ContentManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Students</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Students</label>
                   <Input
                     value={content.aboutStudents}
                     onChange={(e) => handleChange('aboutStudents', e.target.value)}
@@ -208,7 +218,7 @@ export default function ContentManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Courses</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Courses</label>
                   <Input
                     value={content.aboutCourses}
                     onChange={(e) => handleChange('aboutCourses', e.target.value)}
@@ -219,21 +229,21 @@ export default function ContentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium">Contact Information</CardTitle>
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
+            <CardHeader className="border-b dark:border-zinc-800">
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium">Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Contact Email</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Contact Email</label>
                   <Input
                     value={content.contactEmail}
                     onChange={(e) => handleChange('contactEmail', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Contact Phone</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Contact Phone</label>
                   <Input
                     value={content.contactPhone}
                     onChange={(e) => handleChange('contactPhone', e.target.value)}
@@ -242,14 +252,14 @@ export default function ContentManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Address</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Address</label>
                   <Input
                     value={content.contactAddress}
                     onChange={(e) => handleChange('contactAddress', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Business Hours</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Business Hours</label>
                   <Input
                     value={content.contactHours}
                     onChange={(e) => handleChange('contactHours', e.target.value)}
@@ -259,14 +269,14 @@ export default function ContentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-gray-900 text-lg font-medium">Live Classes Pricing</CardTitle>
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
+            <CardHeader className="border-b dark:border-zinc-800">
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium">Live Classes Pricing</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Private Session Price (₹)</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Private Session Price (₹)</label>
                   <Input
                     type="number"
                     value={content.privateSessionPrice}
@@ -274,7 +284,7 @@ export default function ContentManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Group Session Price (₹)</label>
+                  <label className="block text-sm font-semibold mb-3 dark:text-white text-gray-700">Group Session Price (₹)</label>
                   <Input
                     type="number"
                     value={content.groupSessionPrice}
@@ -295,6 +305,8 @@ export default function ContentManagement() {
               Save Changes
             </Button>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

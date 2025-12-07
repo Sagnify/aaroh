@@ -53,43 +53,43 @@ export default function AdminDashboard() {
           <CardSkeleton count={4} />
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Courses</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Courses</CardTitle>
               <BookOpen className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold text-gray-900">{stats.totalCourses}</div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalCourses}</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</CardTitle>
               <Users className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalUsers}</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Purchases</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Purchases</CardTitle>
               <ShoppingCart className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold text-gray-900">{stats.totalPurchases}</div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalPurchases}</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</CardTitle>
               <TrendingUp className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold text-gray-900">₹{stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white">₹{stats.totalRevenue.toLocaleString()}</div>
             </CardContent>
           </Card>
         </div>
@@ -101,9 +101,9 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Management</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-gray-900 text-lg font-medium">Course Management</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium">Course Management</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/courses">
@@ -121,9 +121,9 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-gray-900 text-lg font-medium">User Management</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium">User Management</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/users">
@@ -141,9 +141,9 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border shadow-sm">
+          <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-gray-900 text-lg font-medium">Content Management</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white text-lg font-medium">Content Management</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/content">

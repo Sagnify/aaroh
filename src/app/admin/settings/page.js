@@ -165,9 +165,9 @@ export default function AdminSettings() {
     <div className="p-6 space-y-6 min-h-screen dark:bg-black">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Settings</h1>
 
-      <Card>
+      <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <Key className="w-5 h-5" />
             Change Password
           </CardTitle>
@@ -217,9 +217,9 @@ export default function AdminSettings() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <Shield className="w-5 h-5" />
             Two-Factor Authentication
           </CardTitle>

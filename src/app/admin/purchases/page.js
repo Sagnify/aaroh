@@ -75,7 +75,7 @@ export default function ViewPurchases() {
           <p className="text-gray-600 dark:text-gray-400">View all course purchases and transactions</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg relative">
+        <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg relative">
           <div className="px-6 py-4 border-b dark:border-gray-800">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Purchases</h2>
           </div>
@@ -84,7 +84,7 @@ export default function ViewPurchases() {
               <div className="p-6"><TableSkeleton rows={5} columns={6} /></div>
             ) : (
               <table className="w-full">
-                <thead className="border-b dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
+                <thead className="border-b dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900">
                   <tr>
                     <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">User</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Course</th>
@@ -96,21 +96,21 @@ export default function ViewPurchases() {
                 </thead>
                 <tbody>
                   {purchases.map((purchase) => (
-                    <tr key={purchase.id} className="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <tr key={purchase.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                       <td className="py-4 px-6">
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-gray-200">{purchase.user?.name || 'No Name'}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">{purchase.user?.name || 'No Name'}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.user?.email}</div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-gray-200">{purchase.course?.title}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">{purchase.course?.title}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.course?.level}</div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="font-medium text-gray-900 dark:text-gray-200">₹{purchase.amount.toLocaleString()}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">₹{purchase.amount.toLocaleString()}</div>
                       </td>
                       <td className="py-4 px-6">
                         {editingId === purchase.id ? (
@@ -140,7 +140,7 @@ export default function ViewPurchases() {
                       </td>
                       <td className="py-4 px-6">
                         <div>
-                          <div className="text-gray-900 dark:text-gray-200">{new Date(purchase.createdAt).toLocaleDateString()}</div>
+                          <div className="text-gray-900 dark:text-white">{new Date(purchase.createdAt).toLocaleDateString()}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">{new Date(purchase.createdAt).toLocaleTimeString()}</div>
                         </div>
                       </td>
@@ -190,7 +190,7 @@ export default function ViewPurchases() {
         </div>
 
         {!isLoading && purchases.length === 0 && (
-          <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 shadow-sm rounded-lg">
+          <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg">
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400">No purchases found</p>

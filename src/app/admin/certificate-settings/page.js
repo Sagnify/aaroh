@@ -190,7 +190,7 @@ export default function CertificateSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Settings Panel */}
-        <Card>
+        <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
           <CardHeader>
             <CardTitle>Template & Positioning</CardTitle>
           </CardHeader>
@@ -330,7 +330,7 @@ export default function CertificateSettings() {
         </Card>
 
         {/* Preview Panel */}
-        <Card>
+        <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
           <CardHeader>
             <CardTitle>Certificate Preview</CardTitle>
           </CardHeader>
