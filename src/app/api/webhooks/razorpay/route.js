@@ -3,7 +3,11 @@ import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { sendEmail, emailTemplates, getContactEmail } from '@/lib/email'
 
+export const runtime = 'edge'
+export const maxDuration = 30
+
 export async function POST(request) {
+  const startTime = Date.now()
   try {
     const body = await request.text()
     const signature = request.headers.get('x-razorpay-signature')
@@ -154,9 +158,15 @@ export async function POST(request) {
       }
     }
 
-    return NextResponse.json({ status: 'ok' })
+    const duration = Date.now() - startTime
+    console.log(`Webhook processed successfully in ${duration}ms`)
+    return NextResponse.json({ status: 'ok', processed_in_ms: duration })
   } catch (error) {
-    console.error('Webhook error:', error)
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+    const duration = Date.now() - startTime
+    console.error('Webhook error:', error, `(failed after ${duration}ms)`)
+    return NextResponse.json({ 
+      error: 'Webhook processing failed', 
+      message: error.message 
+    }, { status: 500 })
   }
 }

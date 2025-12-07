@@ -204,14 +204,23 @@ export default function Signup() {
               />
             </div>
             {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm text-center">{error}</p>
+              </div>
             )}
             <Button
               type="submit"
               className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
               disabled={loading}
             >
-              Create Account
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating account...</span>
+                </div>
+              ) : (
+                'Create Account'
+              )}
             </Button>
           </form>
           <div className="mt-6 text-center">

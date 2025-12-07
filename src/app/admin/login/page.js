@@ -29,6 +29,9 @@ export default function AdminLogin() {
     if (session && session.user.role === 'ADMIN') {
       router.push('/admin/dashboard')
     }
+    if (session && session.user.role === 'USER') {
+      setError('Another user is logged in. Please logout first.')
+    }
   }, [session, status, router])
 
   const handleEmailSubmit = async (e) => {
@@ -63,13 +66,18 @@ export default function AdminLogin() {
       })
 
       if (result?.error) {
-        setError('Invalid credentials')
+        setError(result.error === 'CredentialsSignin' ? 'Invalid credentials' : result.error)
+        setLoading(false)
       } else if (result?.ok) {
+        // Keep loading state while redirecting
         router.push('/admin/dashboard')
+        router.refresh()
+      } else {
+        setError('Login failed. Please try again.')
+        setLoading(false)
       }
     } catch (error) {
       setError('Login failed. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
@@ -111,12 +119,30 @@ export default function AdminLogin() {
                 />
               </div>
               {error && (
-                <div className="text-red-600 text-sm text-center">{error}</div>
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-600 text-sm text-center">{error}</p>
+                  {session && session.user.role === 'USER' && (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        signIn(null, { redirect: false }).then(() => {
+                          setError('')
+                          router.refresh()
+                        })
+                      }}
+                      variant="outline"
+                      className="w-full mt-2 text-red-600 border-red-300 hover:bg-red-50"
+                      size="sm"
+                    >
+                      Logout Current User
+                    </Button>
+                  )}
+                </div>
               )}
               <Button
                 type="submit"
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white"
-                disabled={loading}
+                disabled={loading || (session && session.user.role === 'USER')}
               >
                 Continue
               </Button>
@@ -182,14 +208,39 @@ export default function AdminLogin() {
                 )}
               </div>
               {error && (
-                <div className="text-red-600 text-sm text-center">{error}</div>
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-600 text-sm text-center">{error}</p>
+                  {session && session.user.role === 'USER' && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        await signIn(null, { redirect: false })
+                        setError('')
+                        setStep(1)
+                        router.refresh()
+                      }}
+                      variant="outline"
+                      className="w-full mt-2 text-red-600 border-red-300 hover:bg-red-50"
+                      size="sm"
+                    >
+                      Logout Current User
+                    </Button>
+                  )}
+                </div>
               )}
               <Button
                 type="submit"
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white"
-                disabled={loading}
+                disabled={loading || (session && session.user.role === 'USER')}
               >
-                Sign In
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
           )}

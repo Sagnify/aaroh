@@ -210,9 +210,9 @@ export default function Navbar() {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 h-screen w-80 bg-gradient-to-br from-white to-gray-50 shadow-2xl z-[70] md:hidden overflow-y-auto overscroll-contain"
+            className="fixed top-0 left-0 h-screen w-80 bg-gradient-to-br from-white to-gray-50 shadow-2xl z-[70] md:hidden flex flex-col"
           >
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full overflow-hidden">
                   {/* Header */}
                   <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -248,7 +248,7 @@ export default function Navbar() {
                   </div>
                   
                   {/* Navigation */}
-                  <div className="flex-1 p-6">
+                  <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-1">
                     {(isAdminPage ? adminNavItems : navItems).map((item) => (
                       <Link
@@ -269,7 +269,7 @@ export default function Navbar() {
                   
                   {/* User Menu */}
                   {!isAdminPage && (
-                    <div className="border-t border-gray-200 p-6">
+                    <div className="border-t border-gray-200 p-6 flex-shrink-0">
                       {isLoading ? (
                         <div className="flex items-center justify-center py-4">
                           <div className="w-8 h-8 rounded-full border-2 border-[#ff6b6b] border-t-transparent animate-spin"></div>

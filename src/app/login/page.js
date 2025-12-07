@@ -27,7 +27,7 @@ export default function Login() {
     if (status === 'loading') return
     if (session) {
       if (session.user.role === 'ADMIN') {
-        router.push('/admin/dashboard')
+        setError('Admin is logged in. Please logout first.')
       } else {
         router.push('/dashboard')
       }
@@ -48,11 +48,17 @@ export default function Login() {
       })
 
       if (result?.error) {
-        setError('Invalid credentials')
+        setError(result.error === 'CredentialsSignin' ? 'Invalid email or password' : result.error)
+        setLoading(false)
+      } else if (result?.ok) {
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        setError('Login failed. Please try again.')
+        setLoading(false)
       }
     } catch (error) {
       setError('Login failed. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
@@ -103,14 +109,38 @@ export default function Login() {
               />
             </div>
             {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm text-center">{error}</p>
+                {session && session.user.role === 'ADMIN' && (
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      await signOut({ redirect: false })
+                      setError('')
+                      router.refresh()
+                    }}
+                    variant="outline"
+                    className="w-full mt-2 text-red-600 border-red-300 hover:bg-red-50"
+                    size="sm"
+                  >
+                    Logout Admin
+                  </Button>
+                )}
+              </div>
             )}
             <Button
               type="submit"
               className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
-              disabled={loading}
+              disabled={loading || (session && session.user.role === 'ADMIN')}
             >
-              Sign In
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Signing in...</span>
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
           <div className="mt-6 text-center">
