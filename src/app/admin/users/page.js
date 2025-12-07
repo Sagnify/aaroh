@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Mail, Calendar } from 'lucide-react'
 import { useAdminUsers } from '@/hooks/useCachedData'
+import { TableSkeleton } from '@/components/AdminSkeleton'
 
 export default function ManageUsers() {
   const { data: session, status } = useSession()

@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import Loader from '@/components/Loader'
 import { Users, BookOpen, ShoppingCart, TrendingUp, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useAdminStats } from '@/hooks/useCachedData'
+import { CardSkeleton } from '@/components/AdminSkeleton'
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
@@ -48,17 +48,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative">
-          {statsLoading && (
-            <div className="absolute inset-0 bg-gray-50/80 dark:bg-black/80 flex items-center justify-center z-10 rounded-lg">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center animate-pulse">
-                  <TrendingUp className="w-6 h-6 text-white dark:text-gray-900" />
-                </div>
-                <div className="absolute inset-0 w-12 h-12 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            </div>
-          )}
+        {statsLoading ? (
+          <CardSkeleton count={4} />
+        ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <Card className="bg-white border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Total Courses</CardTitle>
@@ -99,6 +92,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Management Sections */}
         <div className="mb-6">

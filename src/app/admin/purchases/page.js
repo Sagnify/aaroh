@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShoppingCart, User, BookOpen, Calendar, IndianRupee, Edit3, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { TableSkeleton } from '@/components/AdminSkeleton'
 
 export default function ViewPurchases() {
   const { data: session, status } = useSession()
@@ -78,17 +79,10 @@ export default function ViewPurchases() {
           <div className="px-6 py-4 border-b dark:border-gray-800">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Purchases</h2>
           </div>
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-10 rounded-lg">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center animate-pulse">
-                  <ShoppingCart className="w-8 h-8 text-white dark:text-gray-900" />
-                </div>
-                <div className="absolute inset-0 w-16 h-16 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            </div>
-          )}
           <div className="overflow-x-auto">
+            {isLoading ? (
+              <div className="p-6"><TableSkeleton rows={5} columns={6} /></div>
+            ) : (
               <table className="w-full">
                 <thead className="border-b dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
                   <tr>
@@ -191,6 +185,7 @@ export default function ViewPurchases() {
                   ))}
                 </tbody>
               </table>
+            )}
             </div>
         </div>
 

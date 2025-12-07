@@ -9,6 +9,7 @@ import { Plus, Edit, Trash2, Star } from 'lucide-react'
 import Link from 'next/link'
 import { useAdminCourses } from '@/hooks/useCachedData'
 import { useQueryClient } from '@tanstack/react-query'
+import { TableSkeleton } from '@/components/AdminSkeleton'
 
 export default function ManageCourses() {
   const { data: session, status } = useSession()
@@ -154,17 +155,10 @@ export default function ManageCourses() {
           <div className="px-6 py-4 border-b dark:border-gray-800">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Courses</h2>
           </div>
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-10 rounded-lg">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center animate-pulse">
-                  <Plus className="w-8 h-8 text-white dark:text-gray-900" />
-                </div>
-                <div className="absolute inset-0 w-16 h-16 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            </div>
-          )}
           <div className="overflow-x-auto">
+            {isLoading ? (
+              <div className="p-6"><TableSkeleton rows={5} columns={5} /></div>
+            ) : (
             <table className="w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
@@ -220,6 +214,7 @@ export default function ManageCourses() {
                 ))}
               </tbody>
             </table>
+            )}
           </div>
         </div>
       </div>
