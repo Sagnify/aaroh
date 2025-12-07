@@ -58,12 +58,32 @@ export async function POST(request) {
       .digest('hex')
 
     if (expectedSignature !== razorpay_signature) {
-      // Mark as failed
-      await prisma.purchase.update({
+      // Mark as failed and get purchase details for email
+      const failedPurchase = await prisma.purchase.update({
         where: { id: purchaseId },
-        data: { status: 'failed' }
+        data: { status: 'failed' },
+        include: {
+          user: true,
+          course: true
+        }
       })
       console.error(`Invalid signature for purchase ${purchaseId}`)
+
+      // Send payment failed email asynchronously
+      const { sendEmail, emailTemplates } = await import('@/lib/email')
+      const emailPromise = sendEmail({
+        to: failedPurchase.user.email,
+        ...emailTemplates.paymentFailed(
+          failedPurchase.user.name || 'Student',
+          failedPurchase.course.title,
+          failedPurchase.amount
+        )
+      }).catch(err => console.error('Payment failed email error:', err))
+
+      if (request.waitUntil) {
+        request.waitUntil(emailPromise)
+      }
+
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 

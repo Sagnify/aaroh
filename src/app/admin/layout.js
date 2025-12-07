@@ -14,6 +14,14 @@ export default function AdminLayout({ children }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch((err) => console.log('Service Worker registration failed:', err))
+    }
+  }, [])
+
+  useEffect(() => {
     if (status === 'loading') return
 
     if (!session || session.user.role !== 'ADMIN') {

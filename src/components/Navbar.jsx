@@ -72,8 +72,8 @@ export default function Navbar() {
                 href={item.href}
                 className={`relative px-3 py-2 text-sm font-medium transition-colors ${
                   pathname === item.href
-                    ? (isAdminPage ? "text-gray-900" : (isScrolled ? "text-[#ff6b6b]" : (isHomepage ? "text-[#e6b800]" : "text-[#ff6b6b]")))
-                    : (isAdminPage ? "text-gray-600 hover:text-gray-900" : (isScrolled ? "text-gray-700 hover:text-[#ff6b6b]" : (isHomepage ? "text-white/80 hover:text-white" : "text-[#a0303f] hover:text-[#ff6b6b]")))
+                    ? (isAdminPage ? "!text-gray-900" : (isScrolled ? "!text-gray-900" : (isHomepage ? "!text-white" : "!text-gray-900")))
+                    : (isAdminPage ? "!text-gray-600 hover:!text-gray-900" : (isScrolled ? "!text-gray-700 hover:!text-gray-900" : (isHomepage ? "!text-white/80 hover:!text-white" : "!text-gray-700 hover:!text-gray-900")))
                 }`}
               >
                 {item.label}
@@ -100,7 +100,7 @@ export default function Navbar() {
                       variant="ghost"
                       size="sm"
                       className={`flex items-center space-x-2 ${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b] hover:bg-gray-100' : (isHomepage ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-[#a0303f] hover:text-[#ff6b6b] hover:bg-gray-100')
+                        isScrolled ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : (isHomepage ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100')
                       }`}
                       onClick={() => setProfileOpen(!profileOpen)}
                     >
@@ -144,14 +144,14 @@ export default function Navbar() {
                   <>
                     <Link href="/login">
                       <Button variant="ghost" size="sm" className={`${
-                        isScrolled ? 'text-gray-700 hover:text-[#ff6b6b] hover:bg-gray-100' : (isHomepage ? 'text-white/80 hover:text-white hover:bg-white/10 border-white/20' : 'text-[#a0303f] hover:text-[#ff6b6b] hover:bg-gray-100')
+                        isScrolled ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : (isHomepage ? 'text-white/80 hover:text-white hover:bg-white/10 border-white/20' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100')
                       }`}>
                         Login
                       </Button>
                     </Link>
                     <Link href="/signup">
                       <Button size="sm" className={`${
-                        isScrolled ? 'bg-[#ff6b6b] hover:bg-[#e55a5a] text-white' : (isHomepage ? 'bg-[#e6b800] hover:bg-[#d4a600] text-black' : 'bg-[#ff6b6b] hover:bg-[#e55a5a] text-white')
+                        isScrolled ? 'bg-gray-900 hover:bg-gray-800 text-white' : (isHomepage ? 'bg-white hover:bg-gray-100 text-gray-900' : 'bg-gray-900 hover:bg-gray-800 text-white')
                       }`}>
                         Sign Up
                       </Button>
@@ -167,7 +167,7 @@ export default function Navbar() {
             variant="ghost"
             size="icon"
             className={`md:hidden ${
-              isScrolled ? 'text-gray-700' : (isHomepage ? 'text-white' : 'text-[#a0303f]')
+              isScrolled ? 'text-gray-700' : (isHomepage ? 'text-white' : 'text-gray-700')
             }`}
             onClick={() => setIsOpen(!isOpen)}
           >

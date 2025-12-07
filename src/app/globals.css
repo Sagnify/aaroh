@@ -124,6 +124,11 @@
     @apply bg-white dark:bg-black;
   }
   
+  /* Remove default link colors (except in nav) */
+  a:not(nav a) {
+    @apply text-gray-900 dark:text-gray-100 no-underline;
+  }
+  
   /* Dark mode text colors */
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
     @apply text-white;
@@ -212,4 +217,9 @@ button[class*="ghost"]:hover {
 
 .dark *:focus-visible {
   outline: 2px solid rgb(75, 85, 99) !important;
+}
+
+/* Remove visited link purple color */
+a:visited {
+  color: inherit;
 }

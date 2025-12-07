@@ -113,7 +113,11 @@ export async function POST(request) {
       }
       
       const purchase = await prisma.purchase.findFirst({
-        where: { razorpayOrderId: payment.order_id }
+        where: { razorpayOrderId: payment.order_id },
+        include: {
+          user: true,
+          course: true
+        }
       })
       
       if (!purchase) {
@@ -131,6 +135,20 @@ export async function POST(request) {
           }
         })
         console.log(`Payment failed for purchase ${purchase.id}, reason: ${payment.error_description || 'Unknown'}`)
+
+        // Send payment failed email asynchronously
+        const emailPromise = sendEmail({
+          to: purchase.user.email,
+          ...emailTemplates.paymentFailed(
+            purchase.user.name || 'Student',
+            purchase.course.title,
+            purchase.amount
+          )
+        }).catch(err => console.error('Payment failed email error:', err))
+
+        if (request.waitUntil) {
+          request.waitUntil(emailPromise)
+        }
       } else {
         console.log(`Ignoring failed event for completed purchase ${purchase.id}`)
       }

@@ -116,6 +116,23 @@ export const emailTemplates = {
     text: `Congratulations ${userName}! You've completed ${courseName}. Download your certificate: ${certificateUrl}`
   }),
 
+  // Course completion (without certificate)
+  courseCompletion: (userName, courseName, courseId) => ({
+    subject: 'Course Completed! Get Your Certificate - Aaroh Music Academy',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #1f2937;">Congratulations! 🎉</h1>
+        <p>Hi ${userName},</p>
+        <p>Amazing work! You've successfully completed <strong>${courseName}</strong>!</p>
+        <p>Your certificate of completion is ready to be generated. Click the button below to view your course and download your certificate.</p>
+        <a href="${process.env.NEXTAUTH_URL}/courses/${courseId}" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Get Your Certificate</a>
+        <p>We're proud of your achievement and hope you continue your musical journey with us.</p>
+        <p>Best regards,<br>Aaroh Music Academy Team</p>
+      </div>
+    `,
+    text: `Congratulations ${userName}! You've completed ${courseName}. Get your certificate at ${process.env.NEXTAUTH_URL}/courses/${courseId}`
+  }),
+
   // Password reset
   passwordReset: (userName, resetUrl) => ({
     subject: 'Reset Your Password - Aaroh Music Academy',
