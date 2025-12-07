@@ -24,7 +24,13 @@ export async function GET(request) {
         },
         _count: {
           select: {
-            purchases: true
+            purchases: true,
+            reviews: true
+          }
+        },
+        reviews: {
+          select: {
+            rating: true
           }
         }
       },
@@ -34,15 +40,24 @@ export async function GET(request) {
     const coursesWithStats = courses.map(course => {
       try {
         const enrichedCourse = enrichCourseWithStats(course)
+        const avgRating = course.reviews.length > 0
+          ? (course.reviews.reduce((sum, r) => sum + r.rating, 0) / course.reviews.length).toFixed(1)
+          : 0
+        const { rating: _, students: __, ...courseWithoutDefaults } = enrichedCourse
         return {
-          ...enrichedCourse,
+          ...courseWithoutDefaults,
+          rating: parseFloat(avgRating),
+          ratingCount: course._count.reviews,
           students: course._count.purchases,
           thumbnail: course.thumbnail
         }
       } catch (err) {
         console.error('Error enriching course:', course.id, err)
+        const { rating: _, students: __, ...courseWithoutDefaults } = course
         return {
-          ...course,
+          ...courseWithoutDefaults,
+          rating: 0,
+          ratingCount: 0,
           students: course._count.purchases,
           thumbnail: course.thumbnail
         }

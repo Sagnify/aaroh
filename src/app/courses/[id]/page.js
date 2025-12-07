@@ -217,8 +217,8 @@ export default function CourseDetails() {
               <div className="flex flex-wrap items-center gap-4 mb-8">
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 text-[#e6b800] fill-current" />
-                  <span className="font-semibold">{course.rating}</span>
-                  <span className="text-gray-600">({course.students?.toLocaleString() || 0} students)</span>
+                  <span className="font-semibold">{course.rating || 0}</span>
+                  <span className="text-gray-600">({course.ratingCount || 0})</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-5 h-5 text-[#ffb088]" />

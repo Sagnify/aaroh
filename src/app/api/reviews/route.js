@@ -52,18 +52,6 @@ export async function POST(request) {
       WHERE r."userId" = ${user.id} AND r."courseId" = ${courseId}
     `
 
-    // Update course average rating
-    const reviews = await prisma.$queryRaw`
-      SELECT rating FROM "Review" WHERE "courseId" = ${courseId}
-    `
-
-    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-
-    await prisma.course.update({
-      where: { id: courseId },
-      data: { rating: Math.round(avgRating * 10) / 10 }
-    })
-
     return NextResponse.json(review)
   } catch (error) {
     return handleApiError(error, 'Review creation')

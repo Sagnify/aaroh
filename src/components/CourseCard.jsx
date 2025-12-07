@@ -62,13 +62,11 @@ export default function CourseCard({ course, index = 0, variant = 'default', bad
               </div>
             </div>
             
-            {!isMyCoursesVariant && course.rating && (
+            {!isMyCoursesVariant && (
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-[#e6b800] fill-current" />
-                <span className="font-medium">{course.rating}</span>
-                {course.students && (
-                  <span className="text-gray-500">({course.students?.toLocaleString()} students)</span>
-                )}
+                <span className="font-medium">{course.rating || 0}</span>
+                <span className="text-gray-500">({course.ratingCount || 0})</span>
               </div>
             )}
             

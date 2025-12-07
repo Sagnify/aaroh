@@ -20,6 +20,17 @@ export async function GET(request, { params }) {
             }
           },
           orderBy: { order: 'asc' }
+        },
+        _count: {
+          select: {
+            purchases: true,
+            reviews: true
+          }
+        },
+        reviews: {
+          select: {
+            rating: true
+          }
         }
       }
     })
@@ -29,7 +40,18 @@ export async function GET(request, { params }) {
     }
 
     const enrichedCourse = enrichCourseWithStats(course)
-    return NextResponse.json(enrichedCourse)
+    const avgRating = course.reviews.length > 0
+      ? (course.reviews.reduce((sum, r) => sum + r.rating, 0) / course.reviews.length).toFixed(1)
+      : 0
+    
+    const { rating: _, students: __, ...courseWithoutDefaults } = enrichedCourse
+    
+    return NextResponse.json({
+      ...courseWithoutDefaults,
+      rating: parseFloat(avgRating),
+      ratingCount: course._count.reviews,
+      students: course._count.purchases
+    })
     
   } catch (error) {
     return handleApiError(error, 'Course fetch')
