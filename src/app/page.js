@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
+import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -264,9 +265,13 @@ export default function Home() {
             transition={{ duration: 1, delay: 0.2 }}
             className="mx-auto mb-8 flex items-center justify-center"
           >
-            <img 
+            <Image 
               src="/logos/logo_light.png"
-              alt="Aaroh"
+              alt="Aaroh Music Academy Logo"
+              width={428}
+              height={168}
+              priority
+              fetchPriority="high"
               className="h-24 w-auto drop-shadow-2xl"
             />
           </motion.div>
