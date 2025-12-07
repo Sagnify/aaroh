@@ -20,6 +20,10 @@ export default function Login() {
   const { data: session, status } = useSession()
 
   useEffect(() => {
+    document.title = 'Login - Aaroh'
+  }, [])
+
+  useEffect(() => {
     if (status === 'loading') return
     if (session) {
       if (session.user.role === 'ADMIN') {
@@ -60,10 +64,6 @@ export default function Login() {
   if (session) {
     return null
   }
-
-  useEffect(() => {
-    document.title = 'Login - Aaroh'
-  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 pt-16">

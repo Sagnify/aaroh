@@ -7,8 +7,10 @@ import { useEffect, useState } from "react"
 
 export default function CoursesClient() {
   const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    document.title = 'All Courses - Aaroh Music Academy'
     fetchCourses()
   }, [])
 
@@ -25,6 +27,8 @@ export default function CoursesClient() {
     } catch (error) {
       console.error('Failed to fetch courses:', error)
       setCourses([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -72,8 +76,26 @@ export default function CoursesClient() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {courses.map((course, index) => {
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-200"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="flex justify-between items-center pt-4">
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    <div className="h-10 bg-gray-200 rounded w-24"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {courses.map((course, index) => {
             console.log(`Course ${index} thumbnail:`, course.thumbnail)
             const courseWithVisuals = {
               ...course,
@@ -84,13 +106,14 @@ export default function CoursesClient() {
               fallbackClass: getThumbnailForCourse(index),
               icon: getIconForCourse(index)
             }
-            return (
-              <CourseCard key={course.id} course={courseWithVisuals} index={index} />
-            )
-          })}
-        </div>
+              return (
+                <CourseCard key={course.id} course={courseWithVisuals} index={index} />
+              )
+            })}
+          </div>
+        )}
         
-        {courses.length === 0 && (
+        {!loading && courses.length === 0 && (
           <div className="text-center py-12">
             <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No courses available at the moment.</p>

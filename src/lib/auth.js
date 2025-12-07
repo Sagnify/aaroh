@@ -11,27 +11,20 @@ export const authOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email) {
           return null
         }
 
-        // Check for admin credentials
         const isAdminEmail = credentials.email === process.env.ADMIN_EMAIL
+        const isAdminLogin = credentials.loginType === 'admin'
         
-        // Reject admin login on user pages
-        const isUserLogin = credentials.loginType === 'user'
-        if (isAdminEmail && isUserLogin) {
-          return null
-        }
-        
-        if (isAdminEmail && credentials.loginType === 'admin') {
-          // Check if 2FA is enabled
+        if (isAdminEmail && isAdminLogin) {
           const { getAdmin2FASecret } = await import('@/lib/admin2fa')
           const admin = await getAdmin2FASecret()
           
-          if (admin?.twoFactorEnabled && admin?.twoFactorSecret && credentials.token) {
-            // Verify 2FA token
+          if (admin?.twoFactorEnabled && admin?.twoFactorSecret) {
+            if (!credentials.token) return null
             const speakeasy = (await import('speakeasy')).default
             const verified = speakeasy.totp.verify({
               secret: admin.twoFactorSecret,
@@ -39,50 +32,40 @@ export const authOptions = {
               token: credentials.token,
               window: 2
             })
-            
-            if (verified) {
-              return {
-                id: 'admin',
-                email: process.env.ADMIN_EMAIL,
-                name: 'Admin',
-                role: 'ADMIN'
-              }
-            }
-            return null
-          } else if (!admin?.twoFactorEnabled && credentials.password === process.env.ADMIN_PASSWORD) {
-            // 2FA not enabled, use password
-            return {
-              id: 'admin',
-              email: process.env.ADMIN_EMAIL,
-              name: 'Admin',
-              role: 'ADMIN'
-            }
+            if (!verified) return null
+          } else {
+            if (credentials.password !== process.env.ADMIN_PASSWORD) return null
           }
-          return null
+          
+          return {
+            id: 'admin',
+            email: process.env.ADMIN_EMAIL,
+            name: 'Admin',
+            role: 'ADMIN'
+          }
         }
+        
+        if (isAdminEmail && !isAdminLogin) return null
+        if (!isAdminLogin && credentials.password) {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        // Check database for regular users
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
+          if (!user) return null
 
-        if (!user) {
-          return null
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+          if (!isPasswordValid) return null
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            role: user.role
+          }
         }
-
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          phone: user.phone,
-          role: user.role
-        }
+        
+        return null
       }
     })
   ],

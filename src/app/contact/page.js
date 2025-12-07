@@ -17,6 +17,7 @@ export default function Contact() {
   const [content, setContent] = useState({})
 
   useEffect(() => {
+    document.title = 'Contact Us - Aaroh Music Academy'
     fetchContent()
   }, [])
 

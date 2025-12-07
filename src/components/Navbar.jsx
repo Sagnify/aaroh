@@ -26,6 +26,17 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/courses", label: "Courses" },
@@ -42,7 +53,8 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="fixed top-0 w-full z-50 transition-all duration-500 ease-in-out">
+    <>
+    <nav className="fixed top-0 w-full z-40 transition-all duration-500 ease-in-out">
       <div className={`transition-all duration-500 ease-in-out ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-md shadow-lg' 
@@ -175,25 +187,30 @@ export default function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile Sidebar */}
-        <AnimatePresence>
-          {isOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                onClick={() => setIsOpen(false)}
-              />
-              
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed top-0 left-0 h-full w-80 bg-gradient-to-br from-white to-gray-50 shadow-2xl z-50 md:hidden overflow-y-auto"
-              >
+        {/* Mobile Sidebar - Moved outside to cover full screen */}
+      </div>
+      </div>
+    </nav>
+    
+    {/* Mobile Sidebar */}
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-[60] md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed top-0 left-0 h-screen w-80 bg-gradient-to-br from-white to-gray-50 shadow-2xl z-[70] md:hidden overflow-y-auto overscroll-contain"
+          >
                 <div className="flex flex-col h-full">
                   {/* Header */}
                   <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-6">
@@ -312,12 +329,10 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
-      </div>
-    </nav>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   )
 }

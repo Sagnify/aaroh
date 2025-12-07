@@ -116,7 +116,7 @@ export default function AdminSidebar({ onCollapseChange }) {
                     onClick={() => setIsMobileOpen(false)}
                     className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-gray-900 dark:bg-gray-800 text-white'
+                        ? 'bg-gray-900 dark:bg-gray-800 !text-white'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-white'
                     } ${isCollapsed ? 'justify-center' : ''}`}
                     title={isCollapsed ? item.name : ''}

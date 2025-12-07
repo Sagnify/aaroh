@@ -5,8 +5,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AdminSidebar from '@/components/AdminSidebar'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import SessionProvider from '@/components/SessionProvider'
 
-export default function AdminLayout({ children }) {
+function AdminLayoutContent({ children }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
@@ -69,5 +70,13 @@ export default function AdminLayout({ children }) {
         </div>
       </div>
     </ThemeProvider>
+  )
+}
+
+export default function AdminLayout({ children }) {
+  return (
+    <SessionProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </SessionProvider>
   )
 }

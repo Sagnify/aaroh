@@ -28,6 +28,12 @@ export default function CourseDetails() {
     }
   }, [params.id, session])
 
+  useEffect(() => {
+    if (course) {
+      document.title = `${course.title} - Aaroh Music Academy`
+    }
+  }, [course])
+
   const fetchCourse = async (id) => {
     try {
       const response = await fetch(`/api/courses/${id}`)

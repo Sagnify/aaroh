@@ -8,6 +8,7 @@ export default function About() {
   const [content, setContent] = useState({})
 
   useEffect(() => {
+    document.title = 'About Us - Aaroh Music Academy'
     fetchContent()
   }, [])
 

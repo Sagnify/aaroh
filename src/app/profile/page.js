@@ -19,6 +19,10 @@ export default function Profile() {
   })
 
   useEffect(() => {
+    document.title = 'My Profile - Aaroh'
+  }, [])
+
+  useEffect(() => {
     if (status === 'loading') return
     if (!session) {
       router.push('/login')

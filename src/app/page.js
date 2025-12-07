@@ -29,6 +29,7 @@ export default function Home() {
   const [contentLoaded, setContentLoaded] = useState(false)
 
   useEffect(() => {
+    document.title = 'Aaroh Music Academy - Learn Music Online'
     setIsClient(true)
     fetchCourses()
     fetchContent()
