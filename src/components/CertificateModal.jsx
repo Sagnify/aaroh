@@ -18,6 +18,10 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   const [settings, setSettings] = useState(null)
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [downloadState, setDownloadState] = useState('idle') // idle, downloading, downloaded
+  const [fillProgress, setFillProgress] = useState(0)
+  const [showImageReveal, setShowImageReveal] = useState(false)
+  const [revealComplete, setRevealComplete] = useState(false)
 
   useEffect(() => {
     const updateWindowDimensions = () => {
@@ -52,6 +56,49 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       console.error('Failed to fetch settings:', error)
     }
   }
+
+  useEffect(() => {
+    if (isGenerating) {
+      setFillProgress(0)
+      const interval = setInterval(() => {
+        setFillProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(interval)
+            return 95
+          }
+          return prev + 2
+        })
+      }, 30)
+      return () => clearInterval(interval)
+    } else if (fillProgress > 0) {
+      setFillProgress(100)
+      setTimeout(() => setFillProgress(0), 300)
+    }
+  }, [isGenerating])
+
+  useEffect(() => {
+    if (generatedImageUrl && !isGenerating) {
+      setShowImageReveal(true)
+      setFillProgress(0)
+      setRevealComplete(false)
+      
+      const interval = setInterval(() => {
+        setFillProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval)
+            setTimeout(() => {
+              setShowImageReveal(false)
+              setRevealComplete(true)
+            }, 800)
+            return 100
+          }
+          return prev + 0.8
+        })
+      }, 30)
+      
+      return () => clearInterval(interval)
+    }
+  }, [generatedImageUrl, isGenerating])
 
   const generateCertificate = async (settingsData = settings) => {
     const courseTitle = certificate?.courseTitle || certificate?.course?.title
@@ -187,6 +234,8 @@ export default function CertificateModal({ certificate, userName, onClose }) {
 
   const handleDownload = async () => {
     try {
+      setDownloadState('downloading')
+      
       const element = document.getElementById('certificate-preview')
       const canvas = await html2canvas(element, {
         scale: 4,
@@ -209,14 +258,18 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`Certificate-${certificate.certificateId}.pdf`)
 
+      setDownloadState('downloaded')
+      setTimeout(() => setDownloadState('idle'), 2000)
+
     } catch (error) {
       console.error('Error generating certificate:', error)
       alert('Error generating certificate. Please try again.')
+      setDownloadState('idle')
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-hidden">
       {/* Professional Confetti Animation */}
       {showConfetti && (
         <Confetti
@@ -230,7 +283,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         />
       )}
 
-      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4 sm:p-6 text-white relative">
           <Button
@@ -258,19 +311,119 @@ export default function CertificateModal({ certificate, userName, onClose }) {
               className="relative bg-white rounded-lg sm:rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden"
             >
               {isGenerating ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6b6b] mx-auto mb-4"></div>
-                    <p className="text-gray-600">Generating certificate...</p>
+                <div className="relative h-full w-full overflow-hidden bg-white">
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#ff6b6b] via-[#ff8a8a] to-[#ffb0b0] transition-all duration-300 ease-out"
+                    style={{ height: `${fillProgress}%` }}
+                  >
+                    <div className="absolute inset-0 opacity-30">
+                      <div className="absolute top-0 left-0 right-0 h-8 bg-white/20 rounded-[50%] animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="text-center px-4">
+                      <Award className="w-16 h-16 text-[#a0303f] mx-auto mb-4 drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} />
+                      <p className="text-xl font-semibold text-gray-800 mb-1 drop-shadow-sm">Crafting Certificate</p>
+                      <p className="text-3xl font-bold text-[#a0303f] drop-shadow-sm">{fillProgress}%</p>
+                    </div>
                   </div>
                 </div>
               ) : generatedImageUrl ? (
-                <img
-                  src={generatedImageUrl}
-                  alt="Generated Certificate"
-                  className="w-full h-full object-contain"
-                  draggable="false"
-                />
+                <div className="relative w-full h-full overflow-hidden bg-white">
+                  <div className="absolute inset-0">
+                    <img
+                      src={generatedImageUrl}
+                      alt="Generated Certificate"
+                      className="w-full h-full object-contain"
+                      draggable="false"
+                    />
+                  </div>
+                  {showImageReveal && (() => {
+                    const dampen = fillProgress > 75 ? Math.max(0, (100 - fillProgress) / 25) : 1
+                    
+                    return (
+                      <div 
+                        className="absolute left-0 right-0 bg-white transition-all ease-out pointer-events-none"
+                        style={{ 
+                          top: 0,
+                          bottom: `${fillProgress}%`,
+                          transitionDuration: '100ms'
+                        }}
+                      >
+                        <svg 
+                          className="absolute bottom-0 w-full transition-all duration-500" 
+                          style={{ 
+                            height: `${80 * dampen}px`, 
+                            transform: `translateY(${79 * dampen}px)`,
+                            opacity: dampen
+                          }} 
+                          viewBox="0 0 1200 80" 
+                          preserveAspectRatio="none"
+                        >
+                          <defs>
+                            <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#ff6b6b" />
+                              <stop offset="20%" stopColor="#ffa07a" />
+                              <stop offset="40%" stopColor="#ffd700" />
+                              <stop offset="60%" stopColor="#98fb98" />
+                              <stop offset="80%" stopColor="#87ceeb" />
+                              <stop offset="100%" stopColor="#da70d6" />
+                            </linearGradient>
+                          </defs>
+                          {(() => {
+                          const convergeTo = 40
+                          const wave1Pos = 30 + (convergeTo - 30) * (1 - dampen)
+                          const wave2Pos = 45 + (convergeTo - 45) * (1 - dampen)
+                          const wave3Pos = 58 + (convergeTo - 58) * (1 - dampen)
+                          const minAmplitude = 0.3
+                          const amplitudeFactor = minAmplitude + (dampen * (1 - minAmplitude))
+                          const wave1Min = 5 * amplitudeFactor
+                          const wave1Max = 55 * amplitudeFactor
+                          const wave2Min = 22 * amplitudeFactor
+                          const wave2Max = 68 * amplitudeFactor
+                          const wave3Min = 38 * amplitudeFactor
+                          const wave3Max = 78 * amplitudeFactor
+                          
+                          return (
+                            <>
+                              <path 
+                                fill="url(#wave-gradient)" 
+                                opacity="0.9"
+                              >
+                                <animate attributeName="d" dur="2.5s" repeatCount="indefinite" values={
+                                  `M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos - wave1Min} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z;
+                                  M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos + wave1Max} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z;
+                                  M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos - wave1Min} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z`
+                                } />
+                              </path>
+                              <path 
+                                fill="url(#wave-gradient)" 
+                                opacity="0.75"
+                              >
+                                <animate attributeName="d" dur="3s" repeatCount="indefinite" values={
+                                  `M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos - wave2Min} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z;
+                                  M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos + wave2Max} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z;
+                                  M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos - wave2Min} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z`
+                                } />
+                              </path>
+                              <path 
+                                fill="url(#wave-gradient)" 
+                                opacity="0.6"
+                              >
+                                <animate attributeName="d" dur="3.5s" repeatCount="indefinite" values={
+                                  `M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos - wave3Min} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z;
+                                  M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos + wave3Max} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z;
+                                  M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos - wave3Min} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z`
+                                } />
+                              </path>
+                            </>
+                            )
+                          })()}
+                        </svg>
+                      </div>
+                    )
+                  })()}
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   <div className="text-center">
@@ -336,12 +489,28 @@ export default function CertificateModal({ certificate, userName, onClose }) {
               <div className="space-y-2 sm:space-y-3">
                 <Button
                   onClick={handleDownload}
-                  disabled={isGenerating || !generatedImageUrl}
-                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-2.5 sm:py-3 text-base sm:text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGenerating || !generatedImageUrl || downloadState !== 'idle' || !revealComplete}
+                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-2.5 sm:py-3 text-base sm:text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   size="lg"
                 >
-                  <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  {isGenerating ? 'Generating...' : 'Download PDF'}
+                  {downloadState === 'downloading' ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                      Downloading...
+                    </>
+                  ) : downloadState === 'downloaded' ? (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Downloaded!
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                      Download PDF
+                    </>
+                  )}
                 </Button>
                 
                 <div className="text-center">
