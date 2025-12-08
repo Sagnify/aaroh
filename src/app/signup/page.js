@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/ui/password-input'
 import Loader from '@/components/Loader'
-import { Music } from 'lucide-react'
+import { Music, Mail, ArrowLeft } from 'lucide-react'
 
 export default function Signup() {
+  const [step, setStep] = useState(1)
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
     password: '',
     confirmPassword: ''
@@ -38,6 +40,56 @@ export default function Signup() {
       }
     }
   }, [session, status, router])
+
+  const handleSendOTP = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      if (response.ok) {
+        setStep(2)
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Failed to send OTP')
+      }
+    } catch (error) {
+      setError('Failed to send OTP. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      })
+
+      if (response.ok) {
+        setStep(3)
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Invalid OTP')
+      }
+    } catch (error) {
+      setError('Failed to verify OTP. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const validatePassword = (password) => {
     if (password.length < 8) {
@@ -96,7 +148,7 @@ export default function Signup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
+          email: email,
           phone: formData.phone,
           password: formData.password
         })
@@ -104,13 +156,15 @@ export default function Signup() {
 
       if (response.ok) {
         const result = await signIn('credentials', {
-          email: formData.email,
+          email: email,
           password: formData.password,
           redirect: false
         })
 
         if (!result?.error) {
           router.push('/dashboard')
+        } else {
+          setError('Registration successful but login failed. Please login manually.')
         }
       } else {
         const data = await response.json()
@@ -139,98 +193,191 @@ export default function Signup() {
             <Music className="w-6 h-6 text-white" />
           </div>
           <div>
-            <CardTitle className="text-xl font-semibold text-gray-900">Create Account</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">Join Aaroh and start learning</p>
+            <CardTitle className="text-xl font-semibold text-gray-900">
+              {step === 1 ? 'Create Account' : step === 2 ? 'Verify Email' : 'Complete Profile'}
+            </CardTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              {step === 1 ? 'Join Aaroh and start learning' : step === 2 ? 'Enter the code sent to your email' : 'Fill in your details'}
+            </p>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <Input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                placeholder="Enter your phone number"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <PasswordInput
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                placeholder="Create a password"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <PasswordInput
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                placeholder="Confirm your password"
-                required
-              />
-            </div>
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-red-600 text-sm text-center">{error}</p>
+          {step === 1 && (
+            <form onSubmit={handleSendOTP} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
               </div>
-            )}
-            <Button
-              type="submit"
-              className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creating account...</span>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-600 text-sm text-center">{error}</p>
                 </div>
-              ) : (
-                'Create Account'
               )}
-            </Button>
-          </form>
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/login" className="text-[#ff6b6b] hover:text-[#e55a5a] font-medium">
-                Sign in
-              </Link>
-            </p>
-          </div>
+              <Button
+                type="submit"
+                className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Sending OTP...</span>
+                  </div>
+                ) : (
+                  <><Mail className="w-4 h-4 mr-2" />Send Verification Code</>
+                )}
+              </Button>
+            </form>
+          )}
+
+          {step === 2 && (
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                <p className="text-blue-800 text-sm text-center">
+                  We sent a 6-digit code to <strong>{email}</strong>
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Verification Code
+                </label>
+                <Input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                  required
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-600 text-sm text-center">{error}</p>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { setStep(1); setOtp(''); setError('') }}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />Change Email
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
+                  disabled={loading || otp.length !== 6}
+                >
+                  {loading ? 'Verifying...' : 'Verify'}
+                </Button>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleSendOTP}
+                className="w-full text-sm"
+                disabled={loading}
+              >
+                Resend Code
+              </Button>
+            </form>
+          )}
+
+          {step === 3 && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+                <p className="text-green-800 text-sm text-center">
+                  Email verified: <strong>{email}</strong>
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <Input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <Input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="Enter 10-digit mobile number"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <PasswordInput
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  placeholder="Create a password"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Min 8 chars with uppercase, lowercase & number</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <PasswordInput
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-600 text-sm text-center">{error}</p>
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creating account...</span>
+                  </div>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </form>
+          )}
+
+          {step !== 3 && (
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <Link href="/login" className="text-[#ff6b6b] hover:text-[#e55a5a] font-medium">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -33,17 +33,12 @@ export async function POST(request) {
     const { user, error } = await getAuthenticatedUser('USER')
     if (error) return error
 
-    const body = await request.json()
-    console.log('Progress POST body:', body)
+    const { courseId, videoId, completed } = await request.json()
     
-    const { courseId, videoId, timestamp, completed } = body
-    
-    if (!courseId || !videoId || timestamp === undefined) {
-      console.log('Validation failed:', { courseId, videoId, timestamp })
+    if (!courseId || !videoId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Use raw SQL to work with video_progress table
     const existingProgress = await prisma.$queryRaw`
       SELECT * FROM "video_progress" 
       WHERE "userId" = ${user.id} AND "courseId" = ${courseId} AND "videoId" = ${videoId}
@@ -51,58 +46,20 @@ export async function POST(request) {
     `
 
     if (existingProgress.length > 0) {
-      // Update existing progress
       await prisma.$executeRaw`
         UPDATE "video_progress" 
-        SET "timestamp" = ${Math.floor(timestamp)}, "completed" = ${completed || false}, "updatedAt" = NOW()
+        SET "completed" = ${completed || false}, "updatedAt" = NOW()
         WHERE "userId" = ${user.id} AND "courseId" = ${courseId} AND "videoId" = ${videoId}
       `
     } else {
-      // Create new progress
       const id = `prog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       await prisma.$executeRaw`
         INSERT INTO "video_progress" ("id", "userId", "courseId", "videoId", "timestamp", "completed", "createdAt", "updatedAt")
-        VALUES (${id}, ${user.id}, ${courseId}, ${videoId}, ${Math.floor(timestamp)}, ${completed || false}, NOW(), NOW())
+        VALUES (${id}, ${user.id}, ${courseId}, ${videoId}, 0, ${completed || false}, NOW(), NOW())
       `
     }
 
-    // Check if course is completed and send email
-    if (completed) {
-      const allProgress = await prisma.$queryRaw`
-        SELECT * FROM "video_progress" 
-        WHERE "userId" = ${user.id} AND "courseId" = ${courseId}
-      `
-      
-      const course = await prisma.course.findUnique({
-        where: { id: courseId },
-        include: { videos: true }
-      })
-
-      if (course && course.videos.length > 0) {
-        const completedVideos = allProgress.filter(p => p.completed).length
-        const totalVideos = course.videos.length
-        
-        // If all videos are completed, send completion email
-        if (completedVideos === totalVideos) {
-          const { sendEmail, emailTemplates } = await import('@/lib/email')
-          const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-          const emailPromise = sendEmail({
-            to: user.email,
-            ...emailTemplates(baseUrl).courseCompletion(
-              user.name || 'Student',
-              course.title,
-              course.id
-            )
-          }).catch(err => console.error('Course completion email error:', err))
-
-          if (request.waitUntil) {
-            request.waitUntil(emailPromise)
-          }
-        }
-      }
-    }
-
-    return NextResponse.json({ message: 'Progress saved successfully' })
+    return NextResponse.json({ message: 'Progress saved' })
   } catch (error) {
     console.error('Progress API Error:', error)
     return NextResponse.json({ error: 'Failed to save progress' }, { status: 500 })

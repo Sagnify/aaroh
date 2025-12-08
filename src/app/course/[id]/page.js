@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Loader from '@/components/Loader'
@@ -23,8 +23,7 @@ function CoursePageContent() {
   const [loading, setLoading] = useState(true)
   const [currentVideo, setCurrentVideo] = useState(null)
   const [progress, setProgress] = useState([])
-  const [currentTimestamp, setCurrentTimestamp] = useState(0)
-  const [hasUnsavedProgress, setHasUnsavedProgress] = useState(false)
+
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [showCertificateModal, setShowCertificateModal] = useState(false)
   const [userReview, setUserReview] = useState(null)
@@ -35,6 +34,7 @@ function CoursePageContent() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 })
+  const videoListRef = useRef(null)
 
   // Check for review submission success
   useEffect(() => {
@@ -54,83 +54,7 @@ function CoursePageContent() {
     }
   }, [searchParams])
 
-  // Handle beforeunload and route changes
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (hasUnsavedProgress && currentVideo && currentTimestamp > 0) {
-        e.preventDefault()
-        e.returnValue = 'You have unsaved progress. Are you sure you want to leave?'
-        // Save progress synchronously before leaving
-        navigator.sendBeacon('/api/user/progress', JSON.stringify({
-          courseId: String(params.id),
-          videoId: String(currentVideo.id),
-          timestamp: Math.floor(currentTimestamp),
-          completed: false
-        }))
-        return e.returnValue
-      }
-    }
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && hasUnsavedProgress && currentVideo && currentTimestamp > 0) {
-        // Save progress when tab becomes hidden
-        saveCurrentProgress()
-      }
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      // Save progress on cleanup
-      if (hasUnsavedProgress && currentVideo && currentTimestamp > 0) {
-        saveCurrentProgress()
-      }
-    }
-  }, [hasUnsavedProgress, currentVideo, currentTimestamp, params.id])
-
-  const saveCurrentProgress = async () => {
-    if (!currentVideo || currentTimestamp <= 0) return
-    
-    try {
-      const response = await fetch('/api/user/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId: String(params.id),
-          videoId: String(currentVideo.id),
-          timestamp: Math.floor(currentTimestamp),
-          completed: false
-        })
-      })
-      
-      if (response.ok) {
-        setHasUnsavedProgress(false)
-      }
-    } catch (error) {
-      console.error('Failed to save progress:', error)
-    }
-  }
-
-  const handleProgressUpdate = (timestamp) => {
-    setCurrentTimestamp(timestamp)
-    if (timestamp > 0) {
-      setHasUnsavedProgress(true)
-    }
-  }
-
-  // Auto-save progress every 10 seconds
-  useEffect(() => {
-    if (!hasUnsavedProgress || !currentVideo || currentTimestamp <= 0) return
-
-    const autoSaveInterval = setInterval(() => {
-      saveCurrentProgress()
-    }, 10000) // Save every 10 seconds
-
-    return () => clearInterval(autoSaveInterval)
-  }, [hasUnsavedProgress, currentVideo, currentTimestamp])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -147,28 +71,7 @@ function CoursePageContent() {
     checkCertificate()
   }, [session, status, router, params.id])
 
-  // Handle URL parameters for resume watching
-  useEffect(() => {
-    if (!course?.curriculum) return
-    
-    const videoId = searchParams.get('video')
-    const timestamp = searchParams.get('t')
-    
-    console.log('URL params:', { videoId, timestamp })
-    
-    if (videoId) {
-      const video = findVideoById(videoId)
-      console.log('Found video:', video)
-      if (video) {
-        setCurrentVideo(video)
-        if (timestamp) {
-          const time = parseInt(timestamp)
-          console.log('Setting timestamp:', time)
-          setCurrentTimestamp(time)
-        }
-      }
-    }
-  }, [course, searchParams])
+
 
   // Update completion stats when progress changes
   useEffect(() => {
@@ -205,25 +108,26 @@ function CoursePageContent() {
     }
   }
 
-  const getNextVideo = () => {
-    if (!course?.curriculum || !currentVideo) return null
-    
-    let found = false
-    for (const section of course.curriculum) {
-      for (const video of section.videos || []) {
-        if (found) return video
-        if (video.id === currentVideo.id) found = true
-      }
-    }
-    return null
+  const getAllVideos = () => {
+    if (!course?.curriculum) return []
+    return course.curriculum.flatMap(section => section.videos || [])
   }
 
-  const isLastVideo = () => {
-    if (!course?.curriculum || !currentVideo) return false
-    
-    const allVideos = course.curriculum.flatMap(section => section.videos || [])
-    const lastVideo = allVideos[allVideos.length - 1]
-    return currentVideo.id === lastVideo?.id
+  const getCurrentVideoIndex = () => {
+    const allVideos = getAllVideos()
+    return allVideos.findIndex(v => v.id === currentVideo?.id)
+  }
+
+  const getPrevVideo = () => {
+    const allVideos = getAllVideos()
+    const currentIndex = getCurrentVideoIndex()
+    return currentIndex > 0 ? allVideos[currentIndex - 1] : null
+  }
+
+  const getNextVideo = () => {
+    const allVideos = getAllVideos()
+    const currentIndex = getCurrentVideoIndex()
+    return currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null
   }
 
   const handleOpenCertificate = () => {
@@ -247,16 +151,12 @@ function CoursePageContent() {
         const progressData = await response.json()
         setProgress(progressData)
         
-        // Resume from last watched video if no current video set and no URL params
-        if (!currentVideo && progressData.length > 0 && !searchParams.get('video')) {
-          // Find the most recently updated incomplete video, or the first incomplete video
-          const incompleteProgress = progressData.filter(p => !p.completed)
-          const lastWatched = incompleteProgress.length > 0 ? incompleteProgress[0] : progressData[0]
-          
+        // Resume from last watched video if no current video set
+        if (!currentVideo && progressData.length > 0) {
+          const lastWatched = progressData[0] // Most recent by updatedAt
           const video = findVideoById(lastWatched.videoId)
           if (video) {
             setCurrentVideo(video)
-            setCurrentTimestamp(lastWatched.timestamp)
           }
         }
       }
@@ -277,19 +177,33 @@ function CoursePageContent() {
     return null
   }
 
-  const handleVideoEnd = () => {
-    const nextVideo = getNextVideo()
-    if (nextVideo) {
-      setCurrentVideo(nextVideo)
-      setCurrentTimestamp(0)
+  const handleVideoChange = async (video) => {
+    setCurrentVideo(video)
+    // Save current video as last watched
+    try {
+      await fetch('/api/user/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: String(params.id),
+          videoId: String(video.id),
+          completed: false
+        })
+      })
+    } catch (error) {
+      console.error('Failed to save progress:', error)
     }
   }
 
-  const handleVideoChange = (video) => {
-    setCurrentVideo(video)
-    const videoProgress = progress.find(p => p.videoId === video.id)
-    setCurrentTimestamp(videoProgress?.timestamp || 0)
-  }
+  // Scroll to current video in list
+  useEffect(() => {
+    if (currentVideo && videoListRef.current) {
+      const videoElement = document.getElementById(`video-${currentVideo.id}`)
+      if (videoElement) {
+        videoElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    }
+  }, [currentVideo])
 
   const loadReviews = async () => {
     try {
@@ -328,63 +242,26 @@ function CoursePageContent() {
     setCompletionStats({ completed: completedCount, total: allVideos.length })
   }
 
-  const isVideoUnlocked = (video) => {
-    if (!course?.curriculum) return false
-    
-    const allVideos = course.curriculum.flatMap(section => section.videos || [])
-    const videoIndex = allVideos.findIndex(v => v.id === video.id)
-    
-    if (videoIndex === 0) return true // First video is always unlocked
-    
-    // Check if previous video is completed
-    const previousVideo = allVideos[videoIndex - 1]
-    const previousProgress = progress.find(p => p.videoId === previousVideo.id)
-    
-    return previousProgress?.completed || false
-  }
 
-  const getNextUnlockedVideo = () => {
-    if (!course?.curriculum) return null
-    
-    const allVideos = course.curriculum.flatMap(section => section.videos || [])
-    
-    for (const video of allVideos) {
-      const videoProgress = progress.find(p => p.videoId === video.id)
-      if (!videoProgress?.completed && isVideoUnlocked(video)) {
-        return video
-      }
-    }
-    
-    return null // All videos completed
-  }
 
-  const handleVideoComplete = async (videoId) => {
+  const handleVideoComplete = async () => {
+    if (!currentVideo) return
     try {
       const response = await fetch('/api/user/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseId: String(params.id),
-          videoId: String(videoId),
-          timestamp: 0,
+          videoId: String(currentVideo.id),
           completed: true
         })
       })
       
       if (response.ok) {
-        // Refresh progress
         await loadProgress()
       }
     } catch (error) {
       console.error('Failed to mark video as complete:', error)
-    }
-  }
-
-  const handleNextVideo = () => {
-    const nextVideo = getNextUnlockedVideo()
-    if (nextVideo) {
-      setCurrentVideo(nextVideo)
-      setCurrentTimestamp(0)
     }
   }
 
@@ -529,16 +406,6 @@ function CoursePageContent() {
                   <VideoPlayer 
                     youtubeUrl={currentVideo.youtubeUrl}
                     title={currentVideo.title}
-                    onVideoEnd={handleVideoEnd}
-                    courseId={params.id}
-                    videoId={currentVideo.id}
-                    initialTimestamp={currentTimestamp}
-                    onProgressUpdate={handleProgressUpdate}
-                    onVideoComplete={(videoId) => {
-                      loadProgress() // Refresh progress to update UI
-                    }}
-                    isLastVideo={isLastVideo()}
-                    onOpenCertificate={handleOpenCertificate}
                   />
                 ) : (
                   <div className="aspect-video bg-gradient-to-br from-[#ff6b6b]/20 to-[#ffb088]/20 flex items-center justify-center rounded-t-lg">
@@ -549,54 +416,49 @@ function CoursePageContent() {
                   </div>
                 )}
                 <div className="p-4 lg:p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-3 lg:space-y-0">
-                    <div className="flex-1">
-                      <h2 className="text-lg lg:text-2xl font-bold text-[#a0303f] mb-1 lg:mb-2">
-                        {currentVideo?.title || 'Welcome to Your Course'}
-                      </h2>
-                      <p className="text-sm lg:text-base text-gray-600 line-clamp-2 lg:line-clamp-none">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
-                    </div>
-                    {currentVideo && (
-                      <div className="flex items-center space-x-2 lg:space-x-3 lg:ml-4">
-                        {(() => {
-                          const videoProgress = progress.find(p => p.videoId === currentVideo.id)
-                          const isCompleted = videoProgress?.completed
-                          
-                          return (
-                            <Button
-                              onClick={() => handleVideoComplete(currentVideo.id)}
-                              variant={isCompleted ? "default" : "outline"}
-                              size="sm"
-                              className={`text-xs lg:text-sm ${isCompleted ? 
-                                "bg-green-500 text-white hover:bg-green-600" : 
-                                "border-green-500 text-green-600 hover:bg-green-50"
-                              }`}
-                              disabled={isCompleted}
-                            >
-                              <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                              <span className="hidden sm:inline">{isCompleted ? 'Completed' : 'Mark Complete'}</span>
-                              <span className="sm:hidden">{isCompleted ? 'Done' : 'Complete'}</span>
-                            </Button>
-                          )
-                        })()}
-                        {!isLastVideo() && (
-                          <Button
-                            onClick={handleNextVideo}
-                            size="sm"
-                            disabled={!getNextUnlockedVideo()}
-                            className={`text-xs lg:text-sm ${
-                              getNextUnlockedVideo() 
-                                ? 'bg-[#ff6b6b] hover:bg-[#e55a5a]' 
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
-                            }`}
-                          >
-                            <span className="hidden sm:inline">Next Video</span>
-                            <span className="sm:hidden">Next</span>
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                  <div className="mb-4">
+                    <h2 className="text-lg lg:text-2xl font-bold text-[#a0303f] mb-1 lg:mb-2">
+                      {currentVideo?.title || 'Welcome to Your Course'}
+                    </h2>
+                    <p className="text-sm lg:text-base text-gray-600">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
                   </div>
+                  {currentVideo && (
+                    <div className="flex items-center justify-between gap-2">
+                      <Button
+                        onClick={() => handleVideoChange(getPrevVideo())}
+                        disabled={!getPrevVideo()}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        ← Previous
+                      </Button>
+                      {(() => {
+                        const videoProgress = progress.find(p => p.videoId === currentVideo.id)
+                        const isCompleted = videoProgress?.completed
+                        return (
+                          <Button
+                            onClick={handleVideoComplete}
+                            variant={isCompleted ? "default" : "outline"}
+                            size="sm"
+                            className={`flex-1 ${isCompleted ? "bg-green-500 hover:bg-green-600" : "border-green-500 text-green-600 hover:bg-green-50"}`}
+                            disabled={isCompleted}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            {isCompleted ? 'Completed' : 'Complete'}
+                          </Button>
+                        )
+                      })()}
+                      <Button
+                        onClick={() => handleVideoChange(getNextVideo())}
+                        disabled={!getNextVideo()}
+                        size="sm"
+                        className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a]"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -619,7 +481,7 @@ function CoursePageContent() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="lg:max-h-96 lg:overflow-y-auto">
+                <div ref={videoListRef} className="lg:max-h-96 lg:overflow-y-auto">
                   {course.curriculum?.map((section, sectionIndex) => (
                     <div key={section.id} className="border-b border-gray-100 last:border-b-0">
                       <div className="p-3 lg:p-4 bg-gradient-to-r from-[#fdf6e3] to-[#f7f0e8]">
@@ -636,35 +498,28 @@ function CoursePageContent() {
                         </p>
                       </div>
                       <div>
-                        {section.videos?.map((video, videoIndex) => {
+                        {section.videos?.map((video) => {
                           const videoProgress = progress.find(p => p.videoId === video.id)
                           const isCompleted = videoProgress?.completed
-                          const hasProgress = videoProgress && videoProgress.timestamp > 0
-                          const isUnlocked = isVideoUnlocked(video)
                           
                           return (
                             <button
                               key={video.id}
-                              onClick={() => isUnlocked ? handleVideoChange(video) : null}
-                              disabled={!isUnlocked}
+                              id={`video-${video.id}`}
+                              onClick={() => handleVideoChange(video)}
                               className={`w-full text-left p-3 lg:p-4 transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
-                                !isUnlocked ? 'opacity-50 cursor-not-allowed bg-gray-50' :
-                                currentVideo?.id === video.id ? 'bg-gradient-to-r from-[#ff6b6b]/20 to-[#ffb088]/20 border-[#ff6b6b]/30' :
+                                currentVideo?.id === video.id ? 'bg-gradient-to-r from-[#ff6b6b]/20 to-[#ffb088]/20 border-l-4 border-l-[#ff6b6b]' :
                                 'hover:bg-gradient-to-r hover:from-[#ff6b6b]/10 hover:to-[#ffb088]/10'
                               }`}
                             >
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2 lg:space-x-3">
+                                <div className="flex items-center space-x-2 lg:space-x-3 flex-1">
                                   <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                    !isUnlocked ? 'bg-gray-300 text-gray-500' :
                                     isCompleted ? 'bg-green-500 text-white' :
                                     currentVideo?.id === video.id ? 'bg-[#ff6b6b] text-white' : 
-                                    hasProgress ? 'bg-yellow-500 text-white' :
                                     'bg-gradient-to-br from-[#a0303f]/20 to-[#ff6b6b]/20 text-[#a0303f]'
                                   }`}>
-                                    {!isUnlocked ? (
-                                      <Lock className="w-3 h-3 lg:w-4 lg:h-4" />
-                                    ) : isCompleted ? (
+                                    {isCompleted ? (
                                       <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" />
                                     ) : (
                                       <Play className="w-3 h-3 lg:w-4 lg:h-4" />
@@ -672,31 +527,14 @@ function CoursePageContent() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className={`text-xs lg:text-sm font-medium truncate ${
-                                      !isUnlocked ? 'text-gray-500' :
-                                      currentVideo?.id === video.id ? 'text-[#a0303f]' : 'text-gray-900'
+                                      currentVideo?.id === video.id ? 'text-[#a0303f] font-bold' : 'text-gray-900'
                                     }`}>{video.title}</p>
-                                    <div className="flex items-center space-x-1 lg:space-x-2 flex-wrap">
-                                      <p className={`text-[10px] lg:text-xs ${
-                                        !isUnlocked ? 'text-gray-400' : 'text-gray-600'
-                                      }`}>{durations[video.id]?.duration || video.duration || 'Loading...'}</p>
-                                      {!isUnlocked && (
-                                        <span className="text-[10px] lg:text-xs bg-gray-100 text-gray-600 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
-                                          Locked
-                                        </span>
-                                      )}
-                                      {isUnlocked && hasProgress && !isCompleted && (
-                                        <span className="text-[10px] lg:text-xs bg-yellow-100 text-yellow-800 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
-                                          In Progress
-                                        </span>
-                                      )}
-                                      {isCompleted && (
-                                        <span className="text-[10px] lg:text-xs bg-green-100 text-green-800 px-1.5 lg:px-2 py-0.5 rounded-full whitespace-nowrap">
-                                          ✓ Completed
-                                        </span>
-                                      )}
-                                    </div>
+                                    <p className="text-[10px] lg:text-xs text-gray-600">{durations[video.id]?.duration || video.duration || 'Loading...'}</p>
                                   </div>
                                 </div>
+                                {isCompleted && (
+                                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                )}
                               </div>
                             </button>
                           )
@@ -714,19 +552,7 @@ function CoursePageContent() {
                       </p>
                     </div>
                     <button
-                      onClick={() => {
-                        if (completionStats.completed === completionStats.total && completionStats.total > 0) {
-                          if (userReview) {
-                            if (certificate) {
-                              setShowCertificateModal(true)
-                            } else {
-                              handleGenerateCertificate()
-                            }
-                          } else {
-                            setShowReviewModal(true)
-                          }
-                        }
-                      }}
+                      onClick={handleOpenCertificate}
                       disabled={completionStats.completed !== completionStats.total || completionStats.total === 0}
                       className={`w-full text-left p-3 lg:p-4 transition-all duration-200 ${
                         completionStats.completed !== completionStats.total || completionStats.total === 0

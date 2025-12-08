@@ -25,12 +25,11 @@ export default function Login() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (session) {
-      if (session.user.role === 'ADMIN') {
-        setError('Admin is logged in. Please logout first.')
-      } else {
-        router.push('/dashboard')
-      }
+    if (session && session.user.role !== 'ADMIN') {
+      router.push('/dashboard')
+    }
+    if (session && session.user.role === 'ADMIN') {
+      setError('Admin is logged in. Please logout first.')
     }
   }, [session, status, router])
 
@@ -67,7 +66,7 @@ export default function Login() {
     return <Loader />
   }
 
-  if (session) {
+  if (session && session.user.role !== 'ADMIN') {
     return null
   }
 

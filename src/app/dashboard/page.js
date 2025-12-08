@@ -47,12 +47,30 @@ export default function StudentDashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 pt-16 flex items-center justify-center">
-        <div className="relative">
-          <div className="w-16 h-16 bg-[#a0303f] rounded-full flex items-center justify-center animate-pulse">
-            <BookOpen className="w-8 h-8 text-white" />
+      <div className="min-h-screen bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 pt-16">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="mb-8">
+            <div className="h-10 bg-gray-200 rounded w-64 mb-4 animate-pulse" />
+            <div className="h-6 bg-gray-200 rounded w-48 animate-pulse" />
           </div>
-          <div className="absolute inset-0 w-16 h-16 border-4 border-[#ff6b6b] border-t-transparent rounded-full animate-spin"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="bg-white/80 backdrop-blur-sm border shadow-lg animate-pulse">
+                <div className="h-48 bg-gray-200" />
+                <CardHeader>
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded w-full" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="h-4 bg-gray-200 rounded w-24" />
+                    <div className="h-4 bg-gray-200 rounded w-20" />
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     )

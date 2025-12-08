@@ -179,7 +179,43 @@ export default function CourseDetails() {
   }
 
   if (loading) {
-    return <Loader />
+    return (
+      <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="h-8 bg-gray-200 rounded w-32 animate-pulse" />
+              <div className="h-10 bg-gray-200 rounded w-3/4 animate-pulse" />
+              <div className="h-6 bg-gray-200 rounded w-full animate-pulse" />
+              <div className="flex gap-4">
+                <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
+                <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
+              </div>
+              <Card className="bg-white/80 backdrop-blur-sm">
+                <CardContent className="p-6 space-y-4">
+                  <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-6 bg-gray-200 rounded w-full animate-pulse" />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+            <div className="lg:col-span-1">
+              <Card className="bg-white shadow-xl">
+                <div className="h-48 bg-gray-200 animate-pulse" />
+                <CardContent className="p-6 space-y-4">
+                  <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
+                  <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-6 bg-gray-200 rounded w-full animate-pulse" />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!course) {
