@@ -212,43 +212,47 @@ export default function Navbar() {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed top-0 left-0 h-screen w-80 bg-gradient-to-br from-white to-gray-50 shadow-2xl z-[70] md:hidden flex flex-col"
           >
-                <div className="flex flex-col h-full overflow-hidden">
-                  {/* Header */}
-                  <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <Link 
-                        href="/" 
-                        className="flex items-center"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <img 
-                          src="/logos/logo_light.png"
-                          alt="Aaroh"
-                          className="h-8 w-auto"
-                        />
-                      </Link>
-                      <button
-                        onClick={() => setIsOpen(false)}
-                        className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                      >
-                        <X size={24} />
-                      </button>
-                    </div>
-                    {session && session.user.role === 'USER' && (
-                      <div className="flex items-center space-x-3 mt-3 p-2.5 bg-white/10 rounded-lg backdrop-blur-sm">
-                        <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-white font-medium text-sm">{session.user.name || 'User'}</p>
-                          <p className="text-white/70 text-xs truncate">{session.user.email}</p>
-                        </div>
-                      </div>
-                    )}
+                {/* Header - Fixed */}
+                <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <Link 
+                      href="/" 
+                      className="flex items-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <img 
+                        src="/logos/logo_light.png"
+                        alt="Aaroh"
+                        className="h-8 w-auto"
+                      />
+                    </Link>
+                    <button
+                      onClick={() => setIsOpen(false)}
+                      className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      <X size={24} />
+                    </button>
                   </div>
-                  
-                  {/* Navigation */}
-                  <div className="flex-1 overflow-y-auto py-4 px-4">
+                  {session && session.user.role === 'USER' && (
+                    <div className="flex items-center space-x-3 mt-3 p-2.5 bg-white/10 rounded-lg backdrop-blur-sm">
+                      <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">{session.user.name || 'User'}</p>
+                        <p className="text-white/70 text-xs truncate">{session.user.email}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Navigation - Scrollable Middle (40%) */}
+                <div className="flex-1 overflow-y-auto py-4 px-4 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                  <style jsx>{`
+                    div::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
                   <div className="space-y-1">
                     {(isAdminPage ? adminNavItems : navItems).map((item) => (
                       <Link
@@ -265,17 +269,17 @@ export default function Navbar() {
                       </Link>
                     ))}
                   </div>
-                  </div>
-                  
-                  {/* User Menu */}
-                  {!isAdminPage && (
-                    <div className="border-t border-gray-200 p-4 flex-shrink-0">
+                </div>
+                
+                {/* User Menu - Fixed Bottom (30%) */}
+                {!isAdminPage && (
+                  <div className="border-t border-gray-200 p-4 flex-shrink-0" style={{minHeight: '30vh'}}>
                       {isLoading ? (
                         <div className="flex items-center justify-center py-4">
                           <div className="w-8 h-8 rounded-full border-2 border-[#ff6b6b] border-t-transparent animate-spin"></div>
                         </div>
                       ) : session && session.user.role === 'USER' ? (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 pb-4">
                           <Link
                             href="/profile"
                             className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
@@ -310,7 +314,7 @@ export default function Navbar() {
                           </button>
                         </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-2 pb-4">
                           <Link
                             href="/login"
                             className="block w-full px-4 py-2.5 text-center rounded-xl border-2 border-[#ff6b6b] text-[#ff6b6b] text-sm font-semibold hover:bg-[#ff6b6b] hover:text-white transition-all shadow-sm"
@@ -329,7 +333,6 @@ export default function Navbar() {
                       )}
                     </div>
                   )}
-                </div>
           </motion.div>
         </>
       )}
