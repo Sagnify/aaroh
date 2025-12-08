@@ -9,12 +9,17 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { usePathname } from 'next/navigation'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
+import { useEffect } from 'react'
 
 const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({ children }) {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith('/admin')
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   return (
     <html lang="en">
