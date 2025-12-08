@@ -496,11 +496,16 @@ function CoursePageContent() {
                             </Button>
                           )
                         })()}
-                        {getNextUnlockedVideo() && (
+                        {!isLastVideo() && (
                           <Button
                             onClick={handleNextVideo}
                             size="sm"
-                            className="bg-[#ff6b6b] hover:bg-[#e55a5a] text-xs lg:text-sm"
+                            disabled={!getNextUnlockedVideo()}
+                            className={`text-xs lg:text-sm ${
+                              getNextUnlockedVideo() 
+                                ? 'bg-[#ff6b6b] hover:bg-[#e55a5a]' 
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
+                            }`}
                           >
                             <span className="hidden sm:inline">Next Video</span>
                             <span className="sm:hidden">Next</span>
