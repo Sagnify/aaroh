@@ -58,8 +58,8 @@ export async function getContactEmail() {
   }
 }
 
-// Email templates
-export const emailTemplates = {
+// Email templates - pass baseUrl dynamically
+export const emailTemplates = (baseUrl) => ({
   // Welcome email
   welcome: (userName) => ({
     subject: 'Welcome to Aaroh Music Academy!',
@@ -69,12 +69,12 @@ export const emailTemplates = {
         <p>Hi ${userName},</p>
         <p>Thank you for joining Aaroh Music Academy. We're excited to have you on your musical journey!</p>
         <p>You can now browse our courses and start learning.</p>
-        <a href="${process.env.NEXTAUTH_URL}/courses" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Browse Courses</a>
+        <a href="${baseUrl}/courses" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Browse Courses</a>
         <p>If you have any questions, feel free to reach out to us.</p>
         <p>Best regards,<br>Aaroh Music Academy Team</p>
       </div>
     `,
-    text: `Welcome to Aaroh Music Academy! Hi ${userName}, Thank you for joining us. Browse our courses at ${process.env.NEXTAUTH_URL}/courses`
+    text: `Welcome to Aaroh Music Academy! Hi ${userName}, Thank you for joining us. Browse our courses at ${baseUrl}/courses`
   }),
 
   // Purchase confirmation
@@ -91,12 +91,12 @@ export const emailTemplates = {
           <p><strong>Amount Paid:</strong> ₹${amount.toLocaleString()}</p>
         </div>
         <p>You can now access your course from your dashboard.</p>
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
+        <a href="${baseUrl}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
         <p>Happy learning!</p>
         <p>Best regards,<br>Aaroh Music Academy Team</p>
       </div>
     `,
-    text: `Purchase Confirmed! Hi ${userName}, Your payment for ${courseName} (₹${amount}) has been processed. Access your course at ${process.env.NEXTAUTH_URL}/dashboard`
+    text: `Purchase Confirmed! Hi ${userName}, Your payment for ${courseName} (₹${amount}) has been processed. Access your course at ${baseUrl}/dashboard`
   }),
 
   // Certificate generated
@@ -125,12 +125,12 @@ export const emailTemplates = {
         <p>Hi ${userName},</p>
         <p>Amazing work! You've successfully completed <strong>${courseName}</strong>!</p>
         <p>Your certificate of completion is ready to be generated. Click the button below to view your course and download your certificate.</p>
-        <a href="${process.env.NEXTAUTH_URL}/courses/${courseId}" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Get Your Certificate</a>
+        <a href="${baseUrl}/courses/${courseId}" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Get Your Certificate</a>
         <p>We're proud of your achievement and hope you continue your musical journey with us.</p>
         <p>Best regards,<br>Aaroh Music Academy Team</p>
       </div>
     `,
-    text: `Congratulations ${userName}! You've completed ${courseName}. Get your certificate at ${process.env.NEXTAUTH_URL}/courses/${courseId}`
+    text: `Congratulations ${userName}! You've completed ${courseName}. Get your certificate at ${baseUrl}/courses/${courseId}`
   }),
 
   // Password reset
@@ -178,7 +178,7 @@ export const emailTemplates = {
           <p><strong>Course:</strong> ${courseName}</p>
           <p><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
         </div>
-        <a href="${process.env.NEXTAUTH_URL}/admin/purchases" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">View in Admin Panel</a>
+        <a href="${baseUrl}/admin/purchases" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">View in Admin Panel</a>
       </div>
     `,
     text: `New purchase: ${userName} (${userEmail}) bought ${courseName} for ₹${amount}`
@@ -235,7 +235,7 @@ export const emailTemplates = {
             </div>
 
             <div style="text-align: center; margin-top: 20px;">
-              <a href="${process.env.NEXTAUTH_URL}/admin/users" style="display: inline-block; background-color: #f3f4f6; color: #1f2937; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #e5e7eb;">
+              <a href="${baseUrl}/admin/users" style="display: inline-block; background-color: #f3f4f6; color: #1f2937; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #e5e7eb;">
                 📊 View in Admin Panel
               </a>
             </div>
@@ -246,7 +246,7 @@ export const emailTemplates = {
           </div>
         </div>
       `,
-      text: `New ${classType} class application from ${userName}\n\nEmail: ${userEmail}\nPhone: ${phone}\n\nContact on WhatsApp: ${whatsappUrl}\nView in admin panel: ${process.env.NEXTAUTH_URL}/admin/users`
+      text: `New ${classType} class application from ${userName}\n\nEmail: ${userEmail}\nPhone: ${phone}\n\nContact on WhatsApp: ${whatsappUrl}\nView in admin panel: ${baseUrl}/admin/users`
     }
   },
 
@@ -262,7 +262,7 @@ export const emailTemplates = {
           <div style="background-color: #1f2937; height: 24px; border-radius: 6px; width: ${progress}%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${progress}%</div>
         </div>
         <p>Keep up the excellent work! You're doing amazing.</p>
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Continue Learning</a>
+        <a href="${baseUrl}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Continue Learning</a>
         <p>Best regards,<br>Aaroh Music Academy Team</p>
       </div>
     `,
@@ -278,12 +278,12 @@ export const emailTemplates = {
         <p>Hi ${userName},</p>
         <p>It's been ${daysInactive} days since you last accessed <strong>${courseName}</strong>.</p>
         <p>Don't let your progress go to waste! Continue your musical journey today.</p>
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Resume Course</a>
+        <a href="${baseUrl}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Resume Course</a>
         <p>Need help? Reply to this email and we'll assist you.</p>
         <p>Best regards,<br>Aaroh Music Academy Team</p>
       </div>
     `,
-    text: `Hi ${userName}, It's been ${daysInactive} days since you accessed ${courseName}. Resume your course at ${process.env.NEXTAUTH_URL}/dashboard`
+    text: `Hi ${userName}, It's been ${daysInactive} days since you accessed ${courseName}. Resume your course at ${baseUrl}/dashboard`
   }),
 
   // Payment failed notification
@@ -298,11 +298,11 @@ export const emailTemplates = {
           <p style="margin: 0;"><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
         </div>
         <p>Please try again or contact us if you need assistance.</p>
-        <a href="${process.env.NEXTAUTH_URL}/courses" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Try Again</a>
+        <a href="${baseUrl}/courses" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Try Again</a>
         <p>Best regards,<br>Aaroh Music Academy Team</p>
       </div>
     `,
-    text: `Hi ${userName}, Your payment for ${courseName} (₹${amount}) failed. Please try again at ${process.env.NEXTAUTH_URL}/courses`
+    text: `Hi ${userName}, Your payment for ${courseName} (₹${amount}) failed. Please try again at ${baseUrl}/courses`
   }),
 
   // New course announcement
@@ -341,4 +341,4 @@ export const emailTemplates = {
     `,
     text: `Contact form: ${name} (${email}, ${phone}) - ${message}`
   }),
-}
+})

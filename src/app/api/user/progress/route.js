@@ -85,9 +85,10 @@ export async function POST(request) {
         // If all videos are completed, send completion email
         if (completedVideos === totalVideos) {
           const { sendEmail, emailTemplates } = await import('@/lib/email')
+          const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
           const emailPromise = sendEmail({
             to: user.email,
-            ...emailTemplates.courseCompletion(
+            ...emailTemplates(baseUrl).courseCompletion(
               user.name || 'Student',
               course.title,
               course.id

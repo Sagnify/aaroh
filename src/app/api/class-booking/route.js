@@ -41,12 +41,13 @@ export async function POST(request) {
                            'Offline (Kolkata)'
     
     const contactEmail = await getContactEmail()
+    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
     
     const emailPromises = Promise.all([
       // Admin notification
       contactEmail ? sendEmail({
         to: contactEmail,
-        ...emailTemplates.adminClassBookingNotification(
+        ...emailTemplates(baseUrl).adminClassBookingNotification(
           user.name || 'Student',
           user.email,
           phone,
@@ -57,7 +58,7 @@ export async function POST(request) {
       // User confirmation
       sendEmail({
         to: user.email,
-        ...emailTemplates.classBookingConfirmation(
+        ...emailTemplates(baseUrl).classBookingConfirmation(
           user.name || 'Student',
           classTypeLabel
         )

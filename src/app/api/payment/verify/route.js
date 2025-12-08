@@ -71,9 +71,10 @@ export async function POST(request) {
 
       // Send payment failed email asynchronously
       const { sendEmail, emailTemplates } = await import('@/lib/email')
+      const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
       const emailPromise = sendEmail({
         to: failedPurchase.user.email,
-        ...emailTemplates.paymentFailed(
+        ...emailTemplates(baseUrl).paymentFailed(
           failedPurchase.user.name || 'Student',
           failedPurchase.course.title,
           failedPurchase.amount

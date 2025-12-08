@@ -73,12 +73,13 @@ export async function POST(request) {
 
       // Send emails asynchronously (non-blocking)
       const contactEmail = await getContactEmail()
+      const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
       
       const emailPromises = Promise.all([
         // User confirmation
         sendEmail({
           to: updatedPurchase.user.email,
-          ...emailTemplates.purchaseConfirmation(
+          ...emailTemplates(baseUrl).purchaseConfirmation(
             updatedPurchase.user.name || 'Student',
             updatedPurchase.course.title,
             updatedPurchase.amount
@@ -88,7 +89,7 @@ export async function POST(request) {
         // Admin notification
         contactEmail ? sendEmail({
           to: contactEmail,
-          ...emailTemplates.adminPurchaseNotification(
+          ...emailTemplates(baseUrl).adminPurchaseNotification(
             updatedPurchase.user.name || 'Student',
             updatedPurchase.user.email,
             updatedPurchase.course.title,
@@ -137,9 +138,10 @@ export async function POST(request) {
         console.log(`Payment failed for purchase ${purchase.id}, reason: ${payment.error_description || 'Unknown'}`)
 
         // Send payment failed email asynchronously
+        const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
         const emailPromise = sendEmail({
           to: purchase.user.email,
-          ...emailTemplates.paymentFailed(
+          ...emailTemplates(baseUrl).paymentFailed(
             purchase.user.name || 'Student',
             purchase.course.title,
             purchase.amount

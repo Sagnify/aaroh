@@ -53,9 +53,10 @@ export async function POST(request) {
     })
 
     // Send welcome email asynchronously (non-blocking)
+    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
     const emailPromise = sendEmail({
       to: user.email,
-      ...emailTemplates.welcome(user.name)
+      ...emailTemplates(baseUrl).welcome(user.name)
     }).catch(err => console.error('Welcome email failed:', err))
 
     // For Vercel serverless - ensure email completes
