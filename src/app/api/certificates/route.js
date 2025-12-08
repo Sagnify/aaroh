@@ -72,7 +72,7 @@ export async function POST(request) {
       WHERE c."userId" = ${user.id} AND c."courseId" = ${courseId}
     `
 
-    return NextResponse.json(certificate)
+    return NextResponse.json(certificate[0] || certificate)
   } catch (error) {
     return handleApiError(error, 'Certificate generation')
   }

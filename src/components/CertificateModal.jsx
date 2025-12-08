@@ -43,7 +43,10 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       if (response.ok) {
         const data = await response.json()
         setSettings(data)
-        await generateCertificate(data)
+        // Only generate if we have all required data
+        if (certificate?.certificateId && certificate?.issuedAt && (certificate?.courseTitle || certificate?.course?.title)) {
+          await generateCertificate(data)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error)
@@ -51,8 +54,15 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   }
 
   const generateCertificate = async (settingsData = settings) => {
-    if (!settingsData || !certificate || !certificate.certificateId || !certificate.issuedAt) {
-      console.log('Missing data for certificate generation')
+    const courseTitle = certificate?.courseTitle || certificate?.course?.title
+    if (!settingsData || !certificate || !certificate.certificateId || !certificate.issuedAt || !courseTitle) {
+      console.log('Missing data for certificate generation:', { 
+        hasSettings: !!settingsData, 
+        hasCertificate: !!certificate,
+        hasCertId: !!certificate?.certificateId,
+        hasDate: !!certificate?.issuedAt,
+        hasCourseTitle: !!courseTitle
+      })
       return
     }
 
@@ -206,7 +216,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
       {/* Professional Confetti Animation */}
       {showConfetti && (
         <Confetti
@@ -220,7 +230,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         />
       )}
 
-      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden my-auto">
+      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4 sm:p-6 text-white relative">
           <Button
@@ -326,11 +336,12 @@ export default function CertificateModal({ certificate, userName, onClose }) {
               <div className="space-y-2 sm:space-y-3">
                 <Button
                   onClick={handleDownload}
-                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-2.5 sm:py-3 text-base sm:text-lg font-medium"
+                  disabled={isGenerating || !generatedImageUrl}
+                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white py-2.5 sm:py-3 text-base sm:text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   size="lg"
                 >
                   <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Download PDF
+                  {isGenerating ? 'Generating...' : 'Download PDF'}
                 </Button>
                 
                 <div className="text-center">

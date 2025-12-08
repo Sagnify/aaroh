@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BookOpen, Clock, Play } from 'lucide-react'
+import { BookOpen, Clock, Play, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function StudentDashboard() {
@@ -130,6 +130,12 @@ export default function StudentDashboard() {
                       ) : (
                         <BookOpen className="w-12 h-12 text-[#a0303f]" />
                       )}
+                      {purchase.isCompleted && (
+                        <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
+                          <CheckCircle className="w-3 h-3" />
+                          Completed
+                        </div>
+                      )}
                     </div>
                     <CardHeader>
                       <CardTitle className="text-xl font-bold text-[#a0303f] mb-2">
@@ -140,6 +146,18 @@ export default function StudentDashboard() {
                       </p>
                     </CardHeader>
                     <CardContent>
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                          <span>Progress</span>
+                          <span className="font-semibold">{purchase.completedVideos || 0}/{purchase.totalVideos || 0} lessons</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-[#ff6b6b] to-[#ffb088] h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${purchase.totalVideos ? (purchase.completedVideos / purchase.totalVideos * 100) : 0}%` }}
+                          />
+                        </div>
+                      </div>
                       <div className="flex items-center justify-between text-sm text-gray-600 mb-6">
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-1">

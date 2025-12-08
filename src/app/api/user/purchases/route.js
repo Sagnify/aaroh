@@ -21,7 +21,6 @@ export async function GET() {
     const purchasesWithCompletion = await Promise.all(
       purchases.map(async (purchase) => {
         try {
-          // Get curriculum with videos separately
           const courseWithCurriculum = await prisma.course.findUnique({
             where: { id: purchase.courseId },
             include: {
@@ -42,16 +41,20 @@ export async function GET() {
             }
           })
           const isCompleted = totalVideos > 0 && completedCount === totalVideos
-          console.log(`Course ${purchase.course.title}: ${completedCount}/${totalVideos} videos, isCompleted: ${isCompleted}`)
+          
           return {
             ...purchase,
-            isCompleted
+            isCompleted,
+            totalVideos,
+            completedVideos: completedCount
           }
         } catch (err) {
           console.error(`Error processing purchase ${purchase.id}:`, err.message)
           return {
             ...purchase,
-            isCompleted: false
+            isCompleted: false,
+            totalVideos: 0,
+            completedVideos: 0
           }
         }
       })

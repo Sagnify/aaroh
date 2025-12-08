@@ -34,6 +34,7 @@ function CoursePageContent() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 })
+  const [isGeneratingCert, setIsGeneratingCert] = useState(false)
   const videoListRef = useRef(null)
 
   // Check for review submission success
@@ -205,6 +206,24 @@ function CoursePageContent() {
     }
   }, [currentVideo])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      
+      if (e.key === 'ArrowLeft' && getPrevVideo()) {
+        e.preventDefault()
+        handleVideoChange(getPrevVideo())
+      } else if (e.key === 'ArrowRight' && getNextVideo()) {
+        e.preventDefault()
+        handleVideoChange(getNextVideo())
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [currentVideo, course])
+
   const loadReviews = async () => {
     try {
       const response = await fetch(`/api/reviews?courseId=${params.id}`)
@@ -266,6 +285,7 @@ function CoursePageContent() {
   }
 
   const handleGenerateCertificate = async () => {
+    setIsGeneratingCert(true)
     try {
       const response = await fetch('/api/certificates', {
         method: 'POST',
@@ -275,7 +295,14 @@ function CoursePageContent() {
       
       if (response.ok) {
         const cert = await response.json()
-        setCertificate(cert)
+        const certWithCourse = {
+          ...cert,
+          courseTitle: cert.courseTitle || course?.title,
+          userName: cert.userName || session?.user?.name
+        }
+        setCertificate(certWithCourse)
+        // Small delay for smooth transition
+        await new Promise(resolve => setTimeout(resolve, 300))
         setShowCertificateModal(true)
       } else {
         const error = await response.json()
@@ -283,6 +310,8 @@ function CoursePageContent() {
       }
     } catch (error) {
       alert('Failed to generate certificate')
+    } finally {
+      setIsGeneratingCert(false)
     }
   }
 
@@ -344,8 +373,8 @@ function CoursePageContent() {
       )}
       
       {showSuccessMessage && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md bg-white">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-md bg-white animate-in zoom-in-95 duration-300">
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center space-x-3">
@@ -375,14 +404,25 @@ function CoursePageContent() {
                     setShowSuccessMessage(false)
                     handleGenerateCertificate()
                   }}
-                  className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a]"
+                  disabled={isGeneratingCert}
+                  className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a] disabled:opacity-50"
                 >
-                  <Award className="w-4 h-4 mr-2" />
-                  Get Certificate
+                  {isGeneratingCert ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Award className="w-4 h-4 mr-2" />
+                      Get Certificate
+                    </>
+                  )}
                 </Button>
                 <Button
                   onClick={() => setShowSuccessMessage(false)}
                   variant="outline"
+                  disabled={isGeneratingCert}
                 >
                   Later
                 </Button>
@@ -423,41 +463,47 @@ function CoursePageContent() {
                     <p className="text-sm lg:text-base text-gray-600">{currentVideo?.description || 'Choose a lesson from the curriculum to begin your learning journey.'}</p>
                   </div>
                   {currentVideo && (
-                    <div className="flex items-center justify-between gap-2">
-                      <Button
-                        onClick={() => handleVideoChange(getPrevVideo())}
-                        disabled={!getPrevVideo()}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                      >
-                        ← Previous
-                      </Button>
-                      {(() => {
-                        const videoProgress = progress.find(p => p.videoId === currentVideo.id)
-                        const isCompleted = videoProgress?.completed
-                        return (
-                          <Button
-                            onClick={handleVideoComplete}
-                            variant={isCompleted ? "default" : "outline"}
-                            size="sm"
-                            className={`flex-1 ${isCompleted ? "bg-green-500 hover:bg-green-600" : "border-green-500 text-green-600 hover:bg-green-50"}`}
-                            disabled={isCompleted}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            {isCompleted ? 'Completed' : 'Complete'}
-                          </Button>
-                        )
-                      })()}
-                      <Button
-                        onClick={() => handleVideoChange(getNextVideo())}
-                        disabled={!getNextVideo()}
-                        size="sm"
-                        className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a]"
-                      >
-                        Next →
-                      </Button>
-                    </div>
+                    <>
+                      <div className="flex items-center justify-between gap-2 mb-4">
+                        <Button
+                          onClick={() => handleVideoChange(getPrevVideo())}
+                          disabled={!getPrevVideo()}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          ← Previous
+                        </Button>
+                        {(() => {
+                          const videoProgress = progress.find(p => p.videoId === currentVideo.id)
+                          const isCompleted = videoProgress?.completed
+                          return (
+                            <Button
+                              onClick={handleVideoComplete}
+                              variant={isCompleted ? "default" : "outline"}
+                              size="sm"
+                              className={`flex-1 ${isCompleted ? "bg-green-500 hover:bg-green-600" : "border-green-500 text-green-600 hover:bg-green-50"}`}
+                              disabled={isCompleted}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              {isCompleted ? 'Completed' : 'Complete'}
+                            </Button>
+                          )
+                        })()}
+                        <Button
+                          onClick={() => handleVideoChange(getNextVideo())}
+                          disabled={!getNextVideo()}
+                          size="sm"
+                          className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a]"
+                        >
+                          Next →
+                        </Button>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-600 mb-1">💡 Quick Tip</p>
+                        <p className="text-sm text-gray-700">Use keyboard shortcuts: ← Previous | → Next | Space Play/Pause</p>
+                      </div>
+                    </>
                   )}
                 </div>
               </CardContent>
