@@ -214,8 +214,8 @@ export default function Navbar() {
           >
                 <div className="flex flex-col h-full overflow-hidden">
                   {/* Header */}
-                  <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4">
+                    <div className="flex items-center justify-between mb-3">
                       <Link 
                         href="/" 
                         className="flex items-center"
@@ -235,26 +235,26 @@ export default function Navbar() {
                       </button>
                     </div>
                     {session && session.user.role === 'USER' && (
-                      <div className="flex items-center space-x-3 mt-4 p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-white" />
+                      <div className="flex items-center space-x-3 mt-3 p-2.5 bg-white/10 rounded-lg backdrop-blur-sm">
+                        <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-white font-medium">{session.user.name || 'User'}</p>
-                          <p className="text-white/70 text-xs">{session.user.email}</p>
+                          <p className="text-white font-medium text-sm">{session.user.name || 'User'}</p>
+                          <p className="text-white/70 text-xs truncate">{session.user.email}</p>
                         </div>
                       </div>
                     )}
                   </div>
                   
                   {/* Navigation */}
-                  <div className="flex-1 overflow-y-auto p-6">
+                  <div className="flex-1 overflow-y-auto py-4 px-4">
                   <div className="space-y-1">
                     {(isAdminPage ? adminNavItems : navItems).map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${
+                        className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                           pathname === item.href
                             ? "bg-gradient-to-r from-[#ff6b6b] to-[#ff8585] text-white shadow-md"
                             : "text-gray-700 hover:bg-white hover:shadow-sm"
@@ -269,30 +269,30 @@ export default function Navbar() {
                   
                   {/* User Menu */}
                   {!isAdminPage && (
-                    <div className="border-t border-gray-200 p-6 flex-shrink-0">
+                    <div className="border-t border-gray-200 p-4 flex-shrink-0">
                       {isLoading ? (
                         <div className="flex items-center justify-center py-4">
                           <div className="w-8 h-8 rounded-full border-2 border-[#ff6b6b] border-t-transparent animate-spin"></div>
                         </div>
                       ) : session && session.user.role === 'USER' ? (
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Link
                             href="/profile"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
+                            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
                             onClick={() => setIsOpen(false)}
                           >
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <Settings size={18} className="text-gray-600" />
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <Settings size={16} className="text-gray-600" />
                             </div>
                             <span>My Profile</span>
                           </Link>
                           <Link
                             href="/dashboard"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
+                            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
                             onClick={() => setIsOpen(false)}
                           >
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <BookOpen size={18} className="text-gray-600" />
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <BookOpen size={16} className="text-gray-600" />
                             </div>
                             <span>My Courses</span>
                           </Link>
@@ -301,26 +301,26 @@ export default function Navbar() {
                               signOut()
                               setIsOpen(false)
                             }}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all w-full text-left"
+                            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all w-full text-left"
                           >
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <LogOut size={18} className="text-gray-600" />
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <LogOut size={16} className="text-gray-600" />
                             </div>
                             <span>Logout</span>
                           </button>
                         </div>
                       ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <Link
                             href="/login"
-                            className="block w-full px-4 py-3 text-center rounded-xl border-2 border-[#ff6b6b] text-[#ff6b6b] font-semibold hover:bg-[#ff6b6b] hover:text-white transition-all shadow-sm"
+                            className="block w-full px-4 py-2.5 text-center rounded-xl border-2 border-[#ff6b6b] text-[#ff6b6b] text-sm font-semibold hover:bg-[#ff6b6b] hover:text-white transition-all shadow-sm"
                             onClick={() => setIsOpen(false)}
                           >
                             Login
                           </Link>
                           <Link
                             href="/signup"
-                            className="block w-full px-4 py-3 text-center rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8585] text-white font-semibold hover:shadow-lg transition-all"
+                            className="block w-full px-4 py-2.5 text-center rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8585] text-white text-sm font-semibold hover:shadow-lg transition-all"
                             onClick={() => setIsOpen(false)}
                           >
                             Sign Up
