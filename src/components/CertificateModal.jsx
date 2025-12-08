@@ -122,7 +122,10 @@ export default function CertificateModal({ certificate, userName, onClose }) {
 
             // Date - center aligned, larger font size, moved down
             const issuedDate = certificate.issuedAt ? new Date(certificate.issuedAt) : new Date()
-            const dateText = issuedDate.toLocaleDateString()
+            const day = String(issuedDate.getDate()).padStart(2, '0')
+            const month = String(issuedDate.getMonth() + 1).padStart(2, '0')
+            const year = issuedDate.getFullYear()
+            const dateText = `${day}/${month}/${year}`
             const dateWidth = settingsData.dateWidth || 150
             const dateHeight = settingsData.dateHeight || 30
             const dateFontSize = calculateMaxFontSize(dateText, dateWidth, dateHeight, 10)
@@ -309,7 +312,13 @@ export default function CertificateModal({ certificate, userName, onClose }) {
                   <div className="mt-2 text-xs sm:text-sm text-green-700 space-y-1">
                     <p className="break-words"><strong>Course:</strong> {certificate.courseTitle || certificate.course?.title}</p>
                     <p className="break-all"><strong>ID:</strong> {certificate.certificateId}</p>
-                    <p><strong>Date:</strong> {new Date(certificate.issuedAt).toLocaleDateString()}</p>
+                    <p><strong>Date:</strong> {(() => {
+                      const d = new Date(certificate.issuedAt)
+                      const day = String(d.getDate()).padStart(2, '0')
+                      const month = String(d.getMonth() + 1).padStart(2, '0')
+                      const year = d.getFullYear()
+                      return `${day}/${month}/${year}`
+                    })()}</p>
                   </div>
                 </div>
               </div>

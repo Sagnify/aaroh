@@ -10,7 +10,8 @@ import VideoPlayer from '@/components/VideoPlayer'
 import ReviewModal from '@/components/ReviewModal'
 import CertificateModal from '@/components/CertificateModal'
 import { useCourseDurations } from '@/hooks/useYouTubeDuration'
-import { Play, Lock, CheckCircle, Clock, BookOpen, Star, Award } from 'lucide-react'
+import { Play, Lock, CheckCircle, Clock, BookOpen, Star, Award, X } from 'lucide-react'
+import Confetti from 'react-confetti'
 
 function CoursePageContent() {
   const { data: session, status } = useSession()
@@ -31,6 +32,27 @@ function CoursePageContent() {
   const [courseReviews, setCourseReviews] = useState([])
   const [completionStats, setCompletionStats] = useState({ completed: 0, total: 0 })
   const { durations, totalDuration, loading: durationsLoading } = useCourseDurations(course?.curriculum)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 })
+
+  // Check for review submission success
+  useEffect(() => {
+    if (searchParams.get('reviewSubmitted') === 'true') {
+      setShowSuccessMessage(true)
+      setShowConfetti(true)
+      setWindowDimensions({ width: window.innerWidth, height: window.innerHeight })
+      
+      const timer = setTimeout(() => {
+        setShowConfetti(false)
+      }, 4000)
+      
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
 
   // Handle beforeunload and route changes
   useEffect(() => {
@@ -432,6 +454,67 @@ function CoursePageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 pt-16">
+      {showConfetti && (
+        <Confetti
+          width={windowDimensions.width}
+          height={windowDimensions.height}
+          recycle={false}
+          numberOfPieces={200}
+          colors={['#ff6b6b', '#ffb088', '#a0303f', '#e55a5a', '#ff69b4', '#4ecdc4']}
+          gravity={0.3}
+          initialVelocityY={-20}
+        />
+      )}
+      
+      {showSuccessMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md bg-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Star className="w-6 h-6 text-green-600 fill-current" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Thank You!</h3>
+                    <p className="text-sm text-gray-600">Review submitted successfully</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSuccessMessage(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-gray-700 mb-2">🎉 Your review helps us improve!</p>
+                <p className="text-sm text-gray-600">You can now generate your certificate by clicking the Certificate section below.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setShowSuccessMessage(false)
+                    handleGenerateCertificate()
+                  }}
+                  className="flex-1 bg-[#ff6b6b] hover:bg-[#e55a5a]"
+                >
+                  <Award className="w-4 h-4 mr-2" />
+                  Get Certificate
+                </Button>
+                <Button
+                  onClick={() => setShowSuccessMessage(false)}
+                  variant="outline"
+                >
+                  Later
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto lg:px-6 lg:py-8">
         <div className="mb-8 hidden lg:block px-6">
           <h1 className="text-3xl font-bold text-[#a0303f] mb-2">{course.title}</h1>

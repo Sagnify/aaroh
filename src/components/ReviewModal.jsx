@@ -28,6 +28,7 @@ export default function ReviewModal({ courseId, onClose, onSubmit, existingRevie
         const review = await response.json()
         onSubmit(review)
         onClose()
+        window.location.href = window.location.pathname + '?reviewSubmitted=true'
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to submit review')
