@@ -69,3 +69,31 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
   }
 }
+
+export async function DELETE(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (user.role !== 'ADMIN' && session.user.email !== process.env.ADMIN_EMAIL) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { id } = await params
+
+    await prisma.shopOrder.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting order:', error)
+    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 })
+  }
+}

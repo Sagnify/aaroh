@@ -208,7 +208,7 @@ export default function AdminShopPage() {
 
   const handleUpdateOrderStatus = async (orderId, status) => {
     try {
-      await fetch(`/api/shop/orders/${orderId}`, {
+      await fetch(`/api/admin/shop-orders/${orderId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -216,6 +216,36 @@ export default function AdminShopPage() {
       fetchOrders()
     } catch (error) {
       console.error('Error updating order status:', error)
+    }
+  }
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) return
+    try {
+      const response = await fetch(`/api/admin/shop-orders/${orderId}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        fetchOrders()
+        alert('Order deleted successfully')
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      alert('Failed to delete order')
+    }
+  }
+
+  const handleDeleteCustomSong = async (songId) => {
+    if (!confirm('Are you sure you want to delete this custom song order? This action cannot be undone.')) return
+    try {
+      const response = await fetch(`/api/admin/custom-songs/${songId}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        fetchCustomSongs()
+        alert('Custom song deleted successfully')
+      }
+    } catch (error) {
+      console.error('Error deleting custom song:', error)
+      alert('Failed to delete custom song')
     }
   }
 
@@ -581,6 +611,10 @@ export default function AdminShopPage() {
                           Mark Delivered
                         </Button>
                       )}
+                      <Button size="sm" variant="outline" className="border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteOrder(order.id)}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
                     </div>
                     </>
                     )}
@@ -842,6 +876,10 @@ export default function AdminShopPage() {
                           Mark Complete
                         </Button>
                       )}
+                      <Button size="sm" variant="outline" className="border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteCustomSong(song.id)}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
                     </div>
                     </>
                     )}

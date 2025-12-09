@@ -7,6 +7,34 @@ import nodemailer from 'nodemailer'
 const prisma = new PrismaClient()
 
 // Admin API to update custom song with preview/full links
+export async function DELETE(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (user.role !== 'ADMIN' && session.user.email !== process.env.ADMIN_EMAIL) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { id } = await params
+
+    await prisma.customSongOrder.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting custom song:', error)
+    return NextResponse.json({ error: 'Failed to delete custom song' }, { status: 500 })
+  }
+}
+
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions)
