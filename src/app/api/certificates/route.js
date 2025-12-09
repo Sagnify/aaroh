@@ -72,7 +72,24 @@ export async function POST(request) {
       WHERE c."userId" = ${user.id} AND c."courseId" = ${courseId}
     `
 
-    return NextResponse.json(certificate[0] || certificate)
+    // Send certificate email
+    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
+    const certData = certificate[0] || certificate
+    const { sendEmail, emailTemplates } = await import('@/lib/email')
+    const emailPromise = sendEmail({
+      to: user.email,
+      ...emailTemplates(baseUrl).certificateGenerated(
+        user.name || 'Student',
+        course.title,
+        `${baseUrl}/dashboard`
+      )
+    }).catch(err => console.error('Certificate email failed:', err))
+
+    if (request.waitUntil) {
+      request.waitUntil(emailPromise)
+    }
+
+    return NextResponse.json(certData)
   } catch (error) {
     return handleApiError(error, 'Certificate generation')
   }

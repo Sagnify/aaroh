@@ -59,6 +59,47 @@ export async function POST(request) {
       `
     }
 
+    // Check if course is completed and send email
+    if (completed) {
+      const course = await prisma.course.findUnique({
+        where: { id: courseId },
+        include: {
+          curriculum: {
+            include: {
+              videos: true
+            }
+          }
+        }
+      })
+
+      if (course) {
+        const allVideos = course.curriculum.flatMap(section => section.videos)
+        const completedVideos = await prisma.$queryRaw`
+          SELECT COUNT(*) as count FROM "video_progress" 
+          WHERE "userId" = ${user.id} AND "courseId" = ${courseId} AND "completed" = true
+        `
+        const completedCount = Number(completedVideos[0].count)
+
+        // If all videos completed, send congratulations email
+        if (completedCount === allVideos.length) {
+          const { sendEmail, emailTemplates } = await import('@/lib/email')
+          const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
+          const emailPromise = sendEmail({
+            to: user.email,
+            ...emailTemplates(baseUrl).courseCompletion(
+              user.name || 'Student',
+              course.title,
+              courseId
+            )
+          }).catch(err => console.error('Course completion email failed:', err))
+
+          if (request.waitUntil) {
+            request.waitUntil(emailPromise)
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ message: 'Progress saved' })
   } catch (error) {
     console.error('Progress API Error:', error)

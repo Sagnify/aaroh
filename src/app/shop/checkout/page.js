@@ -25,14 +25,28 @@ export default function CheckoutPage() {
     state: '',
     pincode: ''
   })
+  const [paymentMethod, setPaymentMethod] = useState('online')
+  const [processingPayment, setProcessingPayment] = useState(false)
+  const [verifyingPayment, setVerifyingPayment] = useState(false)
 
   useEffect(() => {
     document.title = 'Checkout | Aaroh Story Shop'
+    
+    // Load Razorpay script
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.body.appendChild(script)
+    
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/checkout')
     } else if (status === 'authenticated') {
       fetchUserProfile()
       fetchCart()
+    }
+    
+    return () => {
+      document.body.removeChild(script)
     }
   }, [status])
 
@@ -101,36 +115,94 @@ export default function CheckoutPage() {
   }
 
   const handleProceedToPayment = async () => {
+    setProcessingPayment(true)
     try {
-      const response = await fetch('/api/shop/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: cart.items.map(item => ({
-            product: item.configuration.product,
-            recipientName: item.configuration.recipientName,
-            customText: item.configuration.customText,
-            variant: item.configuration.variant
-          })),
-          totalAmount: calculateTotal(),
-          shippingAddress: {
-            name: addressForm.name,
-            phone: addressForm.phone,
-            address: addressForm.address,
-            city: addressForm.city,
-            state: addressForm.state,
-            pincode: addressForm.pincode
-          }
+      const orderData = {
+        items: cart.items.map(item => ({
+          productId: item.configuration.product.id,
+          productName: item.configuration.product.name,
+          price: item.configuration.product.price,
+          recipientName: item.configuration.recipientName,
+          customText: item.configuration.customText,
+          variant: item.configuration.variant,
+          songData: item.configuration.songData
+        })),
+        totalAmount: calculateTotal(),
+        paymentMethod,
+        shippingAddress: {
+          name: addressForm.name,
+          phone: addressForm.phone,
+          address: addressForm.address,
+          city: addressForm.city,
+          state: addressForm.state,
+          pincode: addressForm.pincode
+        }
+      }
+
+      if (paymentMethod === 'cod') {
+        // Direct order creation for COD
+        const response = await fetch('/api/shop/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
         })
-      })
-      const data = await response.json()
-      if (data.success) {
-        // TODO: Integrate with Razorpay payment
-        alert('Order created! Payment integration pending')
-        router.push(`/orders/${data.orderId}`)
+        const data = await response.json()
+        if (data.success) {
+          router.push(`/shop/orders/${data.orderId}?success=true`)
+        }
+      } else {
+        // Razorpay payment
+        const response = await fetch('/api/shop/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...orderData, createRazorpayOrder: true })
+        })
+        const data = await response.json()
+        
+        if (data.success) {
+          const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            amount: data.razorpayOrder.amount,
+            currency: 'INR',
+            name: 'Aaroh Story Shop',
+            description: 'Music-Powered Gifts',
+            order_id: data.razorpayOrder.id,
+            handler: async (response) => {
+              setVerifyingPayment(true)
+              try {
+                const verifyResponse = await fetch('/api/shop/orders/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    orderId: data.orderId,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature
+                  })
+                })
+                const verifyData = await verifyResponse.json()
+                if (verifyData.success) {
+                  router.push(`/shop/orders/${data.orderId}?success=true`)
+                }
+              } catch (error) {
+                console.error('Payment verification error:', error)
+                setVerifyingPayment(false)
+              }
+            },
+            prefill: {
+              name: addressForm.name,
+              email: session.user.email,
+              contact: addressForm.phone
+            }
+          }
+          const rzp = new window.Razorpay(options)
+          rzp.open()
+        }
       }
     } catch (error) {
-      console.error('Error creating order:', error)
+      console.error('Error processing payment:', error)
+    } finally {
+      setProcessingPayment(false)
     }
   }
 
@@ -303,12 +375,59 @@ export default function CheckoutPage() {
                     <span className="font-bold text-blue-600">₹{calculateTotal()}</span>
                   </div>
                 </div>
+                
+                {/* Payment Method Selection */}
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Payment Method</h3>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="online"
+                        checked={paymentMethod === 'online'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-500"
+                      />
+                      <div>
+                        <div className="font-medium">Online Payment</div>
+                        <div className="text-xs text-gray-500">Pay securely with Razorpay</div>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cod"
+                        checked={paymentMethod === 'cod'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-500"
+                      />
+                      <div>
+                        <div className="font-medium">Cash on Delivery</div>
+                        <div className="text-xs text-gray-500">Pay when you receive</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
                 <Button
                   onClick={handleProceedToPayment}
-                  disabled={!isAddressComplete() || editingAddress}
-                  className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 py-6"
+                  disabled={!isAddressComplete() || editingAddress || processingPayment || verifyingPayment}
+                  className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 py-6 disabled:opacity-70"
                 >
-                  Proceed to Payment
+                  {verifyingPayment ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Confirming Payment...
+                    </>
+                  ) : processingPayment ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    paymentMethod === 'cod' ? 'Place Order' : 'Pay Now'
+                  )}
                 </Button>
                 {!isAddressComplete() && (
                   <p className="text-xs text-red-500 mt-2 text-center">
@@ -320,6 +439,17 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+      
+      {/* Payment Verification Overlay */}
+      {verifyingPayment && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8 max-w-sm mx-4 text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirming Payment</h3>
+            <p className="text-gray-600 text-sm">Please wait while we verify your payment...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

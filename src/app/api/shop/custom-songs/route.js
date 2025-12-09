@@ -3,9 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    
+    const whereClause = status ? { status } : {}
+    
     const songs = await prisma.customSongOrder.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' }
     })
     return NextResponse.json({ success: true, songs })

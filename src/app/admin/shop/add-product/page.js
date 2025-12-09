@@ -91,23 +91,35 @@ export default function AddProductPage() {
     seoTitle: '',
     seoDescription: '',
     seoKeywords: '',
-    variants: [{ name: 'Standard', price: null }]
+    variants: [{ name: 'Standard', price: null, images: [], isDefault: true }]
   })
+  const [activeImageTab, setActiveImageTab] = useState('variant-0')
+
 
   const handleImageUpload = (url) => {
-    setFormData({ ...formData, images: [...formData.images, url] })
+    const variantIndex = parseInt(activeImageTab.split('-')[1])
+    const newVariants = [...formData.variants]
+    if (!newVariants[variantIndex]) return
+    if (!newVariants[variantIndex].images) newVariants[variantIndex].images = []
+    newVariants[variantIndex].images = [...newVariants[variantIndex].images, url]
+    setFormData({ ...formData, variants: newVariants })
   }
 
   const removeImage = (index) => {
-    setFormData({ ...formData, images: formData.images.filter((_, i) => i !== index) })
+    const variantIndex = parseInt(activeImageTab.split('-')[1])
+    const newVariants = [...formData.variants]
+    if (newVariants[variantIndex] && newVariants[variantIndex].images) {
+      newVariants[variantIndex].images = newVariants[variantIndex].images.filter((_, i) => i !== index)
+      setFormData({ ...formData, variants: newVariants })
+    }
   }
 
   const addVariant = () => {
-    setFormData({ ...formData, variants: [...formData.variants, { name: '', price: null }] })
+    setFormData({ ...formData, variants: [...formData.variants, { name: '', price: null, images: [] }] })
   }
 
   const removeVariant = (index) => {
-    if (formData.variants.length > 1) {
+    if (index > 0) { // Can't remove the first (main) variant
       setFormData({ ...formData, variants: formData.variants.filter((_, i) => i !== index) })
     }
   }
@@ -116,6 +128,9 @@ export default function AddProductPage() {
     e.preventDefault()
     setLoading(true)
     
+    console.log('Submitting form data:', formData)
+    console.log('Variants being submitted:', formData.variants.map(v => ({ name: v.name, images: v.images })))
+    
     const response = await fetch('/api/shop/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -123,6 +138,7 @@ export default function AddProductPage() {
     })
     
     const data = await response.json()
+    console.log('API response:', data)
     if (data.success) {
       router.push('/admin/shop')
     }
@@ -304,40 +320,87 @@ export default function AddProductPage() {
                 </div>
               </CardHeader>
               {openSections.variants && (
-                <CardContent className="space-y-4">
-                  {formData.variants.map((variant, index) => (
-                    <div key={index} className="flex gap-3">
+                <CardContent className="space-y-6">
+                  {/* Default Variant - Always Present */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <Label className="text-sm font-semibold text-blue-700 dark:text-blue-300">Default Variant (Always Present)</Label>
+                    </div>
+                    <div className="flex gap-3">
                       <Input
-                        placeholder="Variant name (e.g., Small, Medium, Large)"
-                        value={variant.name}
+                        placeholder="Default variant name (e.g., Standard, Regular, Original)"
+                        value={formData.variants[0]?.name || ''}
                         onChange={(e) => {
                           const newVariants = [...formData.variants]
-                          newVariants[index].name = e.target.value
+                          newVariants[0].name = e.target.value
                           setFormData({ ...formData, variants: newVariants })
                         }}
                         required
+                        className="bg-white dark:bg-gray-800"
                       />
                       <Input
                         type="number"
                         placeholder="Price override (optional)"
-                        value={variant.price || ''}
+                        value={formData.variants[0]?.price || ''}
                         onChange={(e) => {
                           const newVariants = [...formData.variants]
-                          newVariants[index].price = e.target.value ? parseFloat(e.target.value) : null
+                          newVariants[0].price = e.target.value ? parseFloat(e.target.value) : null
                           setFormData({ ...formData, variants: newVariants })
                         }}
+                        className="bg-white dark:bg-gray-800"
                       />
-                      {formData.variants.length > 1 && (
-                        <Button type="button" variant="outline" size="icon" onClick={() => removeVariant(index)}>
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
-                  ))}
-                  <Button type="button" onClick={addVariant} variant="outline" className="w-full">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Variant
-                  </Button>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">This is the main product variant. If no price is set, it uses the main product price.</p>
+                  </div>
+
+                  {/* Additional Variants */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Variants</Label>
+                      <Button type="button" onClick={addVariant} variant="outline" size="sm">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Variant
+                      </Button>
+                    </div>
+                    
+                    {formData.variants.length > 1 ? (
+                      <div className="space-y-3">
+                        {formData.variants.slice(1).map((variant, index) => (
+                          <div key={index + 1} className="flex gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <Input
+                              placeholder="Variant name (e.g., Small, Medium, Large)"
+                              value={variant.name}
+                              onChange={(e) => {
+                                const newVariants = [...formData.variants]
+                                newVariants[index + 1].name = e.target.value
+                                setFormData({ ...formData, variants: newVariants })
+                              }}
+                              required
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Price override (optional)"
+                              value={variant.price || ''}
+                              onChange={(e) => {
+                                const newVariants = [...formData.variants]
+                                newVariants[index + 1].price = e.target.value ? parseFloat(e.target.value) : null
+                                setFormData({ ...formData, variants: newVariants })
+                              }}
+                            />
+                            <Button type="button" variant="outline" size="icon" onClick={() => removeVariant(index + 1)}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                        <p className="text-sm">No additional variants added</p>
+                        <p className="text-xs mt-1">Click "Add Variant" to create size, color, or other options</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               )}
             </Card>
@@ -406,45 +469,66 @@ export default function AddProductPage() {
               <Card className="dark:bg-gray-900 dark:border-gray-800">
                 <CardHeader>
                   <CardTitle className="dark:text-white">Product Gallery</CardTitle>
+                  {/* Image Tabs */}
+                  <div className="flex gap-1 mt-4 overflow-x-auto">
+                    {formData.variants.map((variant, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setActiveImageTab(`variant-${index}`)}
+                        className={`px-3 py-1 text-sm rounded transition-colors whitespace-nowrap ${
+                          activeImageTab === `variant-${index}`
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {variant.name || `Variant ${index + 1}`} ({variant.images?.length || 0})
+                      </button>
+                    ))}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {formData.images.length === 0 ? (
-                    <ImageUpload onImageUpload={handleImageUpload} />
-                  ) : (
-                    <>
-                      {/* Main Image */}
-                      <div className="relative aspect-square bg-gradient-to-br from-blue-100 to-teal-100 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden group">
-                        <img src={formData.images[0]} alt="Main" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(0)}
-                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Thumbnails + Upload Box */}
-                      <div className="grid grid-cols-4 gap-2">
-                        {formData.images.slice(1).map((img, index) => (
-                          <div key={index + 1} className="relative group aspect-square">
-                            <img src={img} alt={`${index + 2}`} className="w-full h-full object-cover rounded-lg" />
-                            <button
-                              type="button"
-                              onClick={() => removeImage(index + 1)}
-                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                        {/* Dotted Upload Box */}
-                        <div className="aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer">
-                          <ImageUpload compact onImageUpload={handleImageUpload} />
+                  {(() => {
+                    const currentImages = formData.variants[parseInt(activeImageTab.split('-')[1])]?.images || []
+                    
+                    return currentImages.length === 0 ? (
+                      <ImageUpload onImageUpload={handleImageUpload} />
+                    ) : (
+                      <>
+                        {/* Main Image */}
+                        <div className="relative aspect-square bg-gradient-to-br from-blue-100 to-teal-100 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden group">
+                          <img src={currentImages[0]} alt="Main" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(0)}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                      </div>
-                    </>
-                  )}
+
+                        {/* Thumbnails + Upload Box */}
+                        <div className="grid grid-cols-4 gap-2">
+                          {currentImages.slice(1).map((img, index) => (
+                            <div key={index + 1} className="relative group aspect-square">
+                              <img src={img} alt={`${index + 2}`} className="w-full h-full object-cover rounded-lg" />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index + 1)}
+                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                          {/* Dotted Upload Box */}
+                          <div className="aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer">
+                            <ImageUpload compact onImageUpload={handleImageUpload} />
+                          </div>
+                        </div>
+                      </>
+                    )
+                  })()} 
                 </CardContent>
               </Card>
             </div>

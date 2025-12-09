@@ -64,7 +64,11 @@ export async function PUT(request, { params }) {
         categoryId: categoryId || null,
         images: images || [],
         variants: {
-          create: (variants || []).map(v => ({ name: v.name, price: v.price }))
+          create: (variants || []).map(variant => ({
+            name: variant.name,
+            price: variant.price,
+            images: variant.images || []
+          }))
         },
         tags: {
           set: tagIds ? tagIds.map(id => ({ id })) : []
@@ -83,9 +87,16 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params
+    
+    // Delete related records first
+    await prisma.productConfiguration.deleteMany({
+      where: { productId: id }
+    })
+    
     await prisma.shopProduct.delete({
       where: { id }
     })
+    
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting product:', error)

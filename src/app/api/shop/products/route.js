@@ -38,7 +38,11 @@ export async function POST(request) {
         seoKeywords,
         isActive: true,
         variants: {
-          create: variants || []
+          create: (variants || []).map(variant => ({
+            name: variant.name,
+            price: variant.price,
+            images: variant.images || []
+          }))
         },
         tags: tagIds && tagIds.length > 0 ? {
           connect: tagIds.map(id => ({ id }))
@@ -46,7 +50,6 @@ export async function POST(request) {
       },
       include: { variants: true, category: true, tags: true }
     })
-
     return NextResponse.json({ success: true, product })
   } catch (error) {
     console.error('Error creating product:', error)

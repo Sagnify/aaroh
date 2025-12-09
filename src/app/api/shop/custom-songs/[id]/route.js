@@ -1,19 +1,35 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function PATCH(request, { params }) {
   try {
-    const body = await request.json()
-    const { status } = body
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    const song = await prisma.customSongOrder.update({
-      where: { id: params.id },
+    const { id } = params
+    const { status } = await request.json()
+
+    const updatedSong = await prisma.customSongOrder.update({
+      where: { id },
       data: { status }
     })
 
-    return NextResponse.json({ success: true, song })
+    return NextResponse.json({ 
+      success: true, 
+      song: updatedSong 
+    })
+
   } catch (error) {
-    console.error('Error updating song:', error)
-    return NextResponse.json({ success: false, error: 'Failed to update' }, { status: 500 })
+    console.error('Update song status error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to update song status' 
+    }, { status: 500 })
   }
 }

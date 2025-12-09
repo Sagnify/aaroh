@@ -252,12 +252,13 @@ model ProductVariant {
   productId String
   name      String
   price     Float?
+  images    String[]    @default([])
   product   ShopProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model CustomSongOrder {
   id            String       @id @default(cuid())
-  userId        String?
+  userEmail     String
   occasion      String
   recipientName String
   story         String
@@ -265,15 +266,23 @@ model CustomSongOrder {
   style         String
   language      String       @default("English")
   length        String
-  deadline      String
-  price         Float
+  deliveryType  String
+  amount        Int
   status        String       @default("pending")
-  paymentStatus String       @default("pending")
   previewUrl    String?
   fullAudioUrl  String?
+  posterUrl     String?
+  razorpayOrderId String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  songSources   SongSource[]
+}
+
+model CustomSongSettings {
+  id            Int      @id @default(1)
+  standardPrice Int      @default(2999)
+  expressPrice  Int      @default(4499)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model SongSource {
@@ -282,9 +291,7 @@ model SongSource {
   fileUrl           String?
   externalUrl       String?
   metadata          Json              @default("{}")
-  customSongOrderId String?
   createdAt         DateTime          @default(now())
-  customSongOrder   CustomSongOrder?  @relation(fields: [customSongOrderId], references: [id])
   configurations    ProductConfiguration[]
 }
 
@@ -325,12 +332,16 @@ model ShopOrder {
   id                String    @id @default(cuid())
   userId            String
   user              User      @relation(fields: [userId], references: [id])
+  customerName      String
+  customerEmail     String
+  customerPhone     String
   items             Json
-  totalAmount       Float
+  amount            Float
+  paymentMethod     String    @default("online")
   status            String    @default("pending")
   paymentStatus     String    @default("pending")
   shippingAddress   Json
-  trackingNumber    String?
+  trackingId        String?
   trackingUrl       String?
   razorpayOrderId   String?
   razorpayPaymentId String?

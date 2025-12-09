@@ -1,27 +1,36 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { PrismaClient } from '@prisma/client'
 
-export async function GET() {
+const prisma = new PrismaClient()
+
+export async function GET(request) {
   try {
     const session = await getServerSession(authOptions)
+    
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    })
-
     const songs = await prisma.customSongOrder.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' }
+      where: {
+        userEmail: session.user.email
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
-    return NextResponse.json({ success: true, songs })
+    return NextResponse.json({ 
+      success: true, 
+      songs 
+    })
+
   } catch (error) {
-    console.error('Error fetching songs:', error)
-    return NextResponse.json({ error: 'Failed to fetch songs' }, { status: 500 })
+    console.error('Fetch library error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch library' 
+    }, { status: 500 })
   }
 }

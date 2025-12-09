@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Music, Plus, Play, Download, Lock, Clock } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import Script from 'next/script'
 
 export default function MusicLibraryPage() {
   const { data: session, status } = useSession()
@@ -35,21 +36,84 @@ export default function MusicLibraryPage() {
     }
   }
 
+  const [paymentLoading, setPaymentLoading] = useState(null)
+
   const handlePayment = async (songId) => {
-    alert('Payment integration pending')
+    setPaymentLoading(songId)
+    try {
+      // Create payment order
+      const response = await fetch('/api/shop/custom-songs/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customSongId: songId })
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        // Initialize Razorpay
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: data.amount,
+          currency: data.currency,
+          name: 'Aaroh Music',
+          description: 'Custom Song Payment',
+          order_id: data.orderId,
+          handler: async (response) => {
+            // Verify payment
+            const verifyResponse = await fetch('/api/shop/custom-songs/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                customSongId: data.customSongId
+              })
+            })
+            
+            if (verifyResponse.ok) {
+              fetchSongs() // Refresh the list
+              alert('Payment successful! You can now download your full song.')
+            } else {
+              alert('Payment verification failed. Please contact support.')
+            }
+          },
+          prefill: {
+            name: session?.user?.name || '',
+            email: session?.user?.email || ''
+          },
+          theme: {
+            color: '#8B5CF6'
+          },
+          modal: {
+            ondismiss: () => setPaymentLoading(null)
+          }
+        }
+        
+        const rzp = new window.Razorpay(options)
+        rzp.open()
+      } else {
+        alert(data.error || 'Failed to create payment order')
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      alert('Payment failed. Please try again.')
+    } finally {
+      setPaymentLoading(null)
+    }
   }
 
   const getStatusBadge = (song) => {
-    if (song.status === 'completed' && song.paymentStatus === 'paid') {
-      return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Ready</span>
+    if (song.status === 'completed') {
+      return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Completed</span>
     }
-    if (song.status === 'completed' && song.paymentStatus === 'pending') {
-      return <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Payment Pending</span>
+    if (song.status === 'ready') {
+      return <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Ready for Preview</span>
     }
     if (song.status === 'in_progress') {
       return <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">In Production</span>
     }
-    return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">Processing (2-3 days)</span>
+    return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">Pending (2-4 days)</span>
   }
 
   if (loading || status === 'loading') {
@@ -61,7 +125,9 @@ export default function MusicLibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-50 pt-28 pb-20 px-4">
+    <>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-50 pt-28 pb-20 px-4">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -98,8 +164,12 @@ export default function MusicLibraryPage() {
             {songs.map((song) => (
               <Card key={song.id} className="bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all">
                 <CardContent className="p-6">
-                  <div className="w-full aspect-square bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 flex items-center justify-center">
-                    <Music className="w-16 h-16 text-purple-300" />
+                  <div className="w-full aspect-square bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                    {song.posterUrl ? (
+                      <img src={song.posterUrl} alt={`${song.occasion} Song`} className="w-full h-full object-cover" />
+                    ) : (
+                      <Music className="w-16 h-16 text-purple-300" />
+                    )}
                   </div>
                   
                   <div className="mb-3">
@@ -107,7 +177,8 @@ export default function MusicLibraryPage() {
                   </div>
 
                   <h3 className="text-lg font-bold text-gray-900 mb-1">{song.occasion} Song</h3>
-                  <p className="text-sm text-gray-600 mb-3">For: {song.recipientName}</p>
+                  <p className="text-sm text-gray-600 mb-1">For: {song.recipientName}</p>
+                  <p className="text-xs text-gray-500 mb-3">{song.style} • {song.mood}</p>
                   
                   {song.status === 'pending' && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
@@ -116,7 +187,7 @@ export default function MusicLibraryPage() {
                     </div>
                   )}
 
-                  {song.status === 'completed' && song.paymentStatus === 'pending' && (
+                  {song.status === 'ready' && (
                     <div className="space-y-2 mb-4">
                       {song.previewUrl && (
                         <Button
@@ -133,14 +204,19 @@ export default function MusicLibraryPage() {
                         size="sm"
                         className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
                         onClick={() => handlePayment(song.id)}
+                        disabled={paymentLoading === song.id}
                       >
-                        <Lock className="w-4 h-4 mr-2" />
-                        Pay ₹{song.price} to Unlock
+                        {paymentLoading === song.id ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                        ) : (
+                          <Lock className="w-4 h-4 mr-2" />
+                        )}
+                        {paymentLoading === song.id ? 'Processing...' : `Pay ₹${song.amount} to Unlock`}
                       </Button>
                     </div>
                   )}
 
-                  {song.status === 'completed' && song.paymentStatus === 'paid' && (
+                  {song.status === 'completed' && (
                     <div className="space-y-2">
                       {song.fullAudioUrl && (
                         <>
@@ -172,5 +248,6 @@ export default function MusicLibraryPage() {
         )}
       </div>
     </div>
+    </>
   )
 }

@@ -21,7 +21,11 @@ export async function GET() {
           include: {
             configuration: {
               include: {
-                product: true
+                product: {
+                  include: {
+                    variants: true
+                  }
+                }
               }
             }
           }

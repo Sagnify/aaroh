@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ShoppingCart, User, BookOpen, Calendar, IndianRupee, Edit3, Check, X } from 'lucide-react'
+import { ShoppingCart, User, BookOpen, Calendar, IndianRupee, Edit3, Check, X, Package, Music } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/AdminSkeleton'
 
@@ -15,6 +15,7 @@ export default function ViewPurchases() {
   const [editingId, setEditingId] = useState(null)
   const [editingStatus, setEditingStatus] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [typeFilter, setTypeFilter] = useState('all')
 
   useEffect(() => {
     document.title = 'Purchases - Admin - Aaroh'
@@ -41,25 +42,42 @@ export default function ViewPurchases() {
     }
   }
 
-  const handleSaveStatus = async (purchaseId) => {
+  const handleSaveStatus = async (purchaseId, purchaseType) => {
     try {
-      const response = await fetch(`/api/admin/purchases/${purchaseId}`, {
+      let endpoint = ''
+      let updateField = ''
+      
+      if (purchaseType === 'course') {
+        endpoint = `/api/admin/purchases/${purchaseId}`
+        updateField = 'status'
+      } else if (purchaseType === 'shop') {
+        endpoint = `/api/shop/orders/${purchaseId}`
+        updateField = 'paymentStatus'
+      } else if (purchaseType === 'custom_song') {
+        endpoint = `/api/admin/custom-songs/${purchaseId}`
+        updateField = 'paymentStatus'
+      }
+      
+      const response = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: editingStatus })
+        body: JSON.stringify({ [updateField]: editingStatus })
       })
       
       if (response.ok) {
         setPurchases(prev => prev.map(p => 
-          p.id === purchaseId ? { ...p, status: editingStatus } : p
+          p.id === purchaseId ? { 
+            ...p, 
+            [purchaseType === 'course' ? 'status' : 'paymentStatus']: editingStatus 
+          } : p
         ))
         setEditingId(null)
         setEditingStatus('')
       } else {
-        alert('Failed to update purchase status')
+        alert('Failed to update status')
       }
     } catch (error) {
-      alert('Error updating purchase status')
+      alert('Error updating status')
     }
   }
 
@@ -72,12 +90,22 @@ export default function ViewPurchases() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Purchases</h1>
-          <p className="text-gray-600 dark:text-gray-400">View all course purchases and transactions</p>
+          <p className="text-gray-600 dark:text-gray-400">View all purchases: courses, gifts, and custom songs</p>
         </div>
 
         <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg relative">
-          <div className="px-6 py-4 border-b dark:border-gray-800">
+          <div className="px-6 py-4 border-b dark:border-gray-800 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Purchases</h2>
+            <select 
+              value={typeFilter} 
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="border rounded px-3 py-1 bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-300 text-sm"
+            >
+              <option value="all">All Types</option>
+              <option value="course">Courses</option>
+              <option value="shop">Shop Orders</option>
+              <option value="custom_song">Custom Songs</option>
+            </select>
           </div>
           <div className="overflow-x-auto">
             {isLoading ? (
@@ -86,8 +114,9 @@ export default function ViewPurchases() {
               <table className="w-full">
                 <thead className="border-b dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900">
                   <tr>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">User</th>
-                    <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Course</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Type</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Customer</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Item</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Amount</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Status</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900 dark:text-gray-200">Date</th>
@@ -95,18 +124,37 @@ export default function ViewPurchases() {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchases.map((purchase) => (
+                  {purchases.filter(purchase => typeFilter === 'all' || purchase.type === typeFilter).map((purchase) => (
                     <tr key={purchase.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                       <td className="py-4 px-6">
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">{purchase.user?.name || 'No Name'}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.user?.email}</div>
+                        <div className="flex items-center gap-2">
+                          {purchase.type === 'course' && <BookOpen className="w-4 h-4 text-purple-500" />}
+                          {purchase.type === 'shop' && <Package className="w-4 h-4 text-blue-500" />}
+                          {purchase.type === 'custom_song' && <Music className="w-4 h-4 text-orange-500" />}
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            purchase.type === 'course' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
+                            purchase.type === 'shop' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
+                            'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+                          }`}>
+                            {purchase.type === 'course' ? 'Course' : purchase.type === 'shop' ? 'Gift' : 'Song'}
+                          </span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-white">{purchase.course?.title}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.course?.level}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">{purchase.customerName || 'No Name'}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.customerEmail}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">{purchase.title}</div>
+                          {purchase.type === 'course' && purchase.course?.level && (
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.course.level}</div>
+                          )}
+                          {purchase.type === 'shop' && (
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{purchase.items?.length || 0} item(s)</div>
+                          )}
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -119,22 +167,38 @@ export default function ViewPurchases() {
                             onChange={(e) => setEditingStatus(e.target.value)}
                             className="px-2 py-1 text-xs border dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200"
                           >
-                            <option value="pending">Pending</option>
-                            <option value="completed">Completed</option>
-                            <option value="failed">Failed</option>
-                            <option value="refunded">Refunded</option>
+                            {purchase.type === 'course' ? (
+                              <>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                                <option value="refunded">Refunded</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="cod">COD</option>
+                                <option value="failed">Failed</option>
+                                <option value="cancelled">Cancelled</option>
+                              </>
+                            )}
                           </select>
                         ) : (
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                            purchase.status === 'completed' 
+                            (purchase.status === 'completed' || purchase.paymentStatus === 'paid') 
                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                              : purchase.status === 'pending'
+                              : (purchase.status === 'pending' || purchase.paymentStatus === 'pending')
                               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : purchase.status === 'failed'
+                              : (purchase.status === 'failed' || purchase.paymentStatus === 'failed')
                               ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              : purchase.paymentStatus === 'cod'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                           }`}>
-                            {purchase.status}
+                            {purchase.paymentStatus === 'cod' ? 'COD' : 
+                             purchase.paymentStatus === 'paid' ? 'Paid' :
+                             purchase.status || purchase.paymentStatus}
                           </span>
                         )}
                       </td>
@@ -150,7 +214,7 @@ export default function ViewPurchases() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleSaveStatus(purchase.id)}
+                              onClick={() => handleSaveStatus(purchase.id, purchase.type)}
                               className="text-green-600 hover:text-green-700"
                             >
                               <Check className="w-4 h-4" />
@@ -173,7 +237,7 @@ export default function ViewPurchases() {
                             variant="ghost"
                             onClick={() => {
                               setEditingId(purchase.id)
-                              setEditingStatus(purchase.status)
+                              setEditingStatus(purchase.type === 'course' ? purchase.status : purchase.paymentStatus)
                             }}
                             className="text-blue-600 hover:text-blue-700"
                           >

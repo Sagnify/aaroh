@@ -98,9 +98,38 @@ export async function POST(request) {
         updatedAt: new Date()
       },
       include: {
-        course: true
+        course: true,
+        user: true
       }
     })
+
+    // Send confirmation emails
+    const { sendEmail, emailTemplates } = await import('@/lib/email')
+    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
+    const emailPromises = Promise.all([
+      sendEmail({
+        to: purchase.user.email,
+        ...emailTemplates(baseUrl).purchaseConfirmation(
+          purchase.user.name || 'Student',
+          purchase.course.title,
+          purchase.amount
+        )
+      }).catch(err => console.error('User email failed:', err)),
+      
+      sendEmail({
+        to: process.env.CONTACT_EMAIL,
+        ...emailTemplates(baseUrl).adminPurchaseNotification(
+          purchase.user.name || 'Student',
+          purchase.user.email,
+          purchase.course.title,
+          purchase.amount
+        )
+      }).catch(err => console.error('Admin email failed:', err))
+    ])
+
+    if (request.waitUntil) {
+      request.waitUntil(emailPromises)
+    }
 
     return NextResponse.json({
       success: true,

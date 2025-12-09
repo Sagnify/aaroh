@@ -7,6 +7,7 @@ import { Menu, X, User, LogOut, BookOpen, Settings, ChevronDown, ShoppingCart, P
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useSession, signOut } from "next-auth/react"
+import { useCart } from "@/hooks/useCart"
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const { data: session, status } = useSession()
+  const { cartCount } = useCart()
   const isHomepage = pathname === '/'
   const isAdminPage = pathname.startsWith('/admin')
   const isLoading = status === 'loading'
@@ -109,11 +111,16 @@ export default function Navbar() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className={`${
+                      className={`relative ${
                         isScrolled ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : (isHomepage ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100')
                       }`}
                     >
                       <ShoppingCart size={18} />
+                      {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                          {cartCount > 9 ? '9+' : cartCount}
+                        </span>
+                      )}
                     </Button>
                   </Link>
                 )}
@@ -328,10 +335,15 @@ export default function Navbar() {
                             className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
                             onClick={() => setIsOpen(false)}
                           >
-                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center relative">
                               <ShoppingCart size={16} className="text-gray-600" />
+                              {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+                                  {cartCount > 9 ? '9+' : cartCount}
+                                </span>
+                              )}
                             </div>
-                            <span>My Cart</span>
+                            <span>My Cart ({cartCount})</span>
                           </Link>
                           <Link
                             href="/orders"

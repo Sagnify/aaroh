@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const [totalCourses, totalUsers, totalPurchases, revenueData] = await Promise.all([
+    const [totalCourses, totalUsers, totalPurchases, courseRevenue, shopOrders, shopRevenue, customSongOrders, customSongRevenue] = await Promise.all([
       prisma.course.count(),
       prisma.user.count(),
       prisma.purchase.count(),
@@ -11,14 +11,35 @@ export async function GET() {
         _sum: {
           amount: true
         }
+      }),
+      prisma.shopOrder.count(),
+      prisma.shopOrder.aggregate({
+        where: {
+          OR: [
+            { paymentStatus: 'paid' },
+            { paymentStatus: 'cod' }
+          ]
+        },
+        _sum: {
+          amount: true
+        }
+      }),
+      prisma.customSongOrder.count(),
+      prisma.customSongOrder.aggregate({
+        where: {
+          paymentStatus: 'paid'
+        },
+        _sum: {
+          price: true
+        }
       })
     ])
 
     return NextResponse.json({
       totalCourses,
       totalUsers,
-      totalPurchases,
-      totalRevenue: revenueData._sum.amount || 0
+      totalPurchases: totalPurchases + shopOrders + customSongOrders,
+      totalRevenue: (courseRevenue._sum.amount || 0) + (shopRevenue._sum.amount || 0) + (customSongRevenue._sum.price || 0)
     })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })

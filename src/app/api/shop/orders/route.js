@@ -14,8 +14,15 @@ export async function GET() {
       where: { email: session.user.email }
     })
 
+    if (!user) {
+      return NextResponse.json({ success: true, orders: [] })
+    }
+
+    // Check if user is admin
+    const isAdmin = user.role === 'ADMIN' || session.user.email === process.env.ADMIN_EMAIL
+    
     const orders = await prisma.shopOrder.findMany({
-      where: { userId: user.id },
+      where: isAdmin ? {} : { userId: user.id }, // Admin sees all orders, users see only their orders
       orderBy: { createdAt: 'desc' }
     })
 

@@ -8,10 +8,12 @@ import { ShoppingCart, Trash2, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
+import { useCart } from '@/hooks/useCart'
 
 export default function CartPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { refreshCart } = useCart()
   const [cart, setCart] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -40,6 +42,7 @@ export default function CartPage() {
     try {
       await fetch(`/api/shop/cart?itemId=${itemId}`, { method: 'DELETE' })
       fetchCart()
+      refreshCart()
     } catch (error) {
       console.error('Error removing item:', error)
     }
@@ -96,15 +99,24 @@ export default function CartPage() {
                   <CardContent className="p-6">
                     <div className="flex gap-4">
                       <div className="relative w-24 h-24 bg-gradient-to-br from-blue-100 to-teal-100 rounded-lg overflow-hidden flex-shrink-0">
-                        {item.configuration.product.images?.[0] ? (
-                          <Image src={item.configuration.product.images[0]} alt={item.configuration.product.name} fill className="object-cover" />
-                        ) : (
-                          <ShoppingCart className="w-12 h-12 text-blue-300 absolute inset-0 m-auto" />
-                        )}
+                        {(() => {
+                          // Find the selected variant and get its first image
+                          const selectedVariant = item.configuration.product.variants?.find(v => v.name === item.configuration.variant)
+                          const variantImage = selectedVariant?.images?.[0]
+                          const fallbackImage = item.configuration.product.images?.[0]
+                          const imageToShow = variantImage || fallbackImage
+                          
+                          return imageToShow ? (
+                            <Image src={imageToShow} alt={item.configuration.product.name} fill className="object-cover" />
+                          ) : (
+                            <ShoppingCart className="w-12 h-12 text-blue-300 absolute inset-0 m-auto" />
+                          )
+                        })()} 
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-gray-900 mb-1">{item.configuration.product.name}</h3>
-                        <p className="text-sm text-gray-600 mb-2">For: {item.configuration.recipientName}</p>
+                        <p className="text-sm text-gray-600 mb-1">For: {item.configuration.recipientName}</p>
+                        <p className="text-sm text-gray-500 mb-2">Variant: {item.configuration.variant}</p>
                         {item.configuration.customText && (
                           <p className="text-xs text-gray-500 mb-2">Message: {item.configuration.customText}</p>
                         )}

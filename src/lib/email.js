@@ -341,4 +341,45 @@ export const emailTemplates = (baseUrl) => ({
     `,
     text: `Contact form: ${name} (${email}, ${phone}) - ${message}`
   }),
+
+  // Shop order status update
+  orderStatusUpdate: (userName, orderId, status, trackingUrl) => {
+    const statusConfig = {
+      confirmed: { emoji: '✅', title: 'Order Confirmed', color: '#10b981', message: 'Your order has been confirmed and is being prepared.' },
+      shipped: { emoji: '🚚', title: 'Order Shipped', color: '#3B82F6', message: 'Your order is on its way!' },
+      delivered: { emoji: '🎉', title: 'Order Delivered', color: '#8B5CF6', message: 'Your order has been delivered. Enjoy!' },
+      cancelled: { emoji: '❌', title: 'Order Cancelled', color: '#ef4444', message: 'Your order has been cancelled.' }
+    }
+    const config = statusConfig[status] || statusConfig.confirmed
+    
+    return {
+      subject: `${config.emoji} ${config.title} #${orderId.slice(0, 8)} - Aaroh Shop`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, ${config.color} 0%, ${config.color}dd 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">${config.emoji} ${config.title}</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Order #${orderId.slice(0, 8)}</p>
+          </div>
+          
+          <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="font-size: 16px; color: #1f2937;">Hi ${userName},</p>
+            <p style="font-size: 16px; color: #1f2937;">${config.message}</p>
+            
+            ${trackingUrl ? `
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${trackingUrl}" style="display: inline-block; background: ${config.color}; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                  📦 Track Order
+                </a>
+              </div>
+            ` : ''}
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280;">
+              <p style="margin: 0; font-size: 14px;">Thank you for shopping with us!<br><strong>Aaroh Story Shop Team</strong></p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `${config.title}: Order #${orderId.slice(0, 8)} - ${config.message} ${trackingUrl ? 'Track: ' + trackingUrl : ''}`
+    }
+  },
 })

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import ProductThumbnailCarousel from '@/components/ProductThumbnailCarousel'
 
 export default function GiftsPage() {
   const router = useRouter()
@@ -59,13 +60,16 @@ export default function GiftsPage() {
     <div className="flex-shrink-0 w-[45%] sm:w-[220px] md:w-[260px]">
       <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg active:shadow-md hover:shadow-xl transition-all overflow-hidden cursor-pointer h-full">
         <div className="relative h-44 sm:h-48 md:h-56 bg-gradient-to-br from-blue-100 to-teal-100 overflow-hidden">
-          {product.images?.[0] ? (
-            <Image src={product.images[0]} alt={product.name} fill sizes="240px" className="object-cover" priority={priority} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center"><Gift className="w-12 h-12 text-blue-300" /></div>
-          )}
+          <ProductThumbnailCarousel 
+            variants={product.variants || []} 
+            className="w-full h-full"
+          />
           {product.tags?.[0] && (
-            <div className="absolute top-2 right-2"><span className="text-white text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: product.tags[0].color }}>{product.tags[0].name}</span></div>
+            <div className="absolute top-2 right-2">
+              <span className="text-white text-xs font-semibold px-2 py-1 rounded-full shadow-lg" style={{ backgroundColor: product.tags[0].color }}>
+                {product.tags[0].name}
+              </span>
+            </div>
           )}
         </div>
         <CardContent className="p-3 md:p-4">

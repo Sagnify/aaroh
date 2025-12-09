@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useRouter } from 'next/navigation'
 
+
 export default function CustomSongPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -21,7 +22,20 @@ export default function CustomSongPage() {
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/custom-song')
     }
+    fetchPricing()
   }, [status])
+
+  const fetchPricing = async () => {
+    try {
+      const response = await fetch('/api/admin/custom-song-settings')
+      const data = await response.json()
+      if (data.success) {
+        setPricing(data.settings)
+      }
+    } catch (error) {
+      console.error('Error fetching pricing:', error)
+    }
+  }
   const [formData, setFormData] = useState({
     occasion: '',
     recipientName: '',
@@ -37,21 +51,35 @@ export default function CustomSongPage() {
   const moods = ['Happy', 'Romantic', 'Emotional', 'Upbeat', 'Calm', 'Nostalgic']
   const styles = ['Pop', 'Acoustic', 'Rock', 'Classical', 'Bollywood', 'Jazz']
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pricing, setPricing] = useState({ standardPrice: 2999, expressPrice: 4499 })
+
   const handleSubmit = async () => {
-    const response = await fetch('/api/shop/custom-songs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-    const data = await response.json()
-    
-    if (data.success) {
-      router.push('/shop/music-library')
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('/api/shop/custom-songs/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        router.push(`/shop/custom-song/success?orderId=${data.orderId}`)
+      } else {
+        alert(data.error || 'Failed to create order')
+      }
+    } catch (error) {
+      console.error('Error creating order:', error)
+      alert('Failed to create order. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-28 pb-20 px-4">
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-28 pb-20 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <motion.div
@@ -236,8 +264,8 @@ export default function CustomSongPage() {
                   <Label className="text-gray-700 font-semibold mb-3 block">Delivery timeline</Label>
                   <div className="space-y-3">
                     {[
-                      { value: 'standard', label: 'Standard (7 days)', price: '₹2,999' },
-                      { value: 'express', label: 'Express (3 days)', price: '₹4,499' }
+                      { value: 'standard', label: 'Standard (7 days)', price: `₹${pricing.standardPrice.toLocaleString()}` },
+                      { value: 'express', label: 'Express (3 days)', price: `₹${pricing.expressPrice.toLocaleString()}` }
                     ].map((option) => (
                       <button
                         key={option.value}
@@ -264,7 +292,8 @@ export default function CustomSongPage() {
                     <li>✓ Professionally produced custom song</li>
                     <li>✓ High-quality audio file (MP3 & WAV)</li>
                     <li>✓ Lyrics sheet with your story</li>
-                    <li>✓ Unlimited revisions until perfect</li>
+                    <li>✓ Preview before payment</li>
+                    <li>✓ Pay only after you love it</li>
                   </ul>
                 </div>
 
@@ -278,9 +307,10 @@ export default function CustomSongPage() {
                   </Button>
                   <Button
                     onClick={handleSubmit}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-6"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-6 disabled:opacity-50"
                   >
-                    Proceed to Checkout
+                    {isSubmitting ? 'Submitting...' : 'Submit Order'}
                   </Button>
                 </div>
               </motion.div>
@@ -289,5 +319,6 @@ export default function CustomSongPage() {
         </Card>
       </div>
     </div>
+    </>
   )
 }
