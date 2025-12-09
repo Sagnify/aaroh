@@ -30,8 +30,7 @@ export async function POST(request) {
     const updatedOrder = await prisma.customSongOrder.update({
       where: { id: orderId },
       data: {
-        paymentStatus: 'paid',
-        status: 'confirmed'
+        status: 'completed'
       }
     })
 
@@ -57,15 +56,15 @@ export async function POST(request) {
                 <p><strong>Occasion:</strong> ${updatedOrder.occasion}</p>
                 <p><strong>For:</strong> ${updatedOrder.recipientName}</p>
                 <p><strong>Style:</strong> ${updatedOrder.style} - ${updatedOrder.mood}</p>
-                <p><strong>Delivery:</strong> ${updatedOrder.deadline === 'express' ? '3 days' : '7 days'}</p>
-                <p><strong>Amount Paid:</strong> ₹${updatedOrder.price.toLocaleString()}</p>
+                <p><strong>Delivery:</strong> ${updatedOrder.deliveryType === 'express' ? '3 days' : '7 days'}</p>
+                <p><strong>Amount Paid:</strong> ₹${updatedOrder.amount.toLocaleString()}</p>
               </div>
               <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="color: #1e40af; margin-top: 0;">🎶 What's Next?</h3>
                 <ul style="color: #1e40af; margin: 0;">
                   <li>Our music team will start crafting your song</li>
                   <li>You'll receive preview for approval via email</li>
-                  <li>Final song delivered within ${updatedOrder.deadline === 'express' ? '3 days' : '7 days'}</li>
+                  <li>Final song delivered within ${updatedOrder.deliveryType === 'express' ? '3 days' : '7 days'}</li>
                 </ul>
               </div>
               <div style="text-align: center; margin: 30px 0;">
@@ -94,8 +93,8 @@ export async function POST(request) {
                 <p><strong>Occasion:</strong> ${updatedOrder.occasion}</p>
                 <p><strong>Recipient:</strong> ${updatedOrder.recipientName}</p>
                 <p><strong>Style:</strong> ${updatedOrder.style} - ${updatedOrder.mood}</p>
-                <p><strong>Deadline:</strong> ${updatedOrder.deadline === 'express' ? '3 days (Express)' : '7 days (Standard)'}</p>
-                <p><strong>Amount:</strong> ₹${updatedOrder.price.toLocaleString()}</p>
+                <p><strong>Deadline:</strong> ${updatedOrder.deliveryType === 'express' ? '3 days (Express)' : '7 days (Standard)'}</p>
+                <p><strong>Amount:</strong> ₹${updatedOrder.amount.toLocaleString()}</p>
               </div>
               <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
                 <h3 style="margin-top: 0; color: #92400e;">Story:</h3>
