@@ -22,10 +22,15 @@ export default function CartPage() {
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/cart')
     } else if (status === 'authenticated') {
+      if (session?.user?.role === 'ADMIN') {
+        alert('Admin cannot place orders. Please use a regular user account.')
+        router.push('/shop')
+        return
+      }
       mergeGuestCart()
       fetchCart()
     }
-  }, [status])
+  }, [status, session])
 
   const mergeGuestCart = async () => {
     try {

@@ -40,9 +40,14 @@ export default function ConfigureProductPage() {
     if (status === 'unauthenticated') {
       router.push(`/login?callbackUrl=/shop/gifts/${params.productSlug}/configure`)
     } else if (status === 'authenticated') {
+      if (session?.user?.role === 'ADMIN') {
+        alert('Admin cannot place orders. Please use a regular user account.')
+        router.push('/shop')
+        return
+      }
       fetchProduct()
     }
-  }, [status, params.productSlug])
+  }, [status, params.productSlug, session])
 
   useEffect(() => {
     if (product) {

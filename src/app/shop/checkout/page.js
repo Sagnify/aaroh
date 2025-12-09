@@ -41,6 +41,11 @@ export default function CheckoutPage() {
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/checkout')
     } else if (status === 'authenticated') {
+      if (session?.user?.role === 'ADMIN') {
+        alert('Admin cannot place orders. Please use a regular user account.')
+        router.push('/shop')
+        return
+      }
       fetchUserProfile()
       fetchCart()
     }
@@ -48,7 +53,7 @@ export default function CheckoutPage() {
     return () => {
       document.body.removeChild(script)
     }
-  }, [status])
+  }, [status, session])
 
   const fetchUserProfile = async () => {
     try {

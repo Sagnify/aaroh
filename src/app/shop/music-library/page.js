@@ -20,9 +20,14 @@ export default function MusicLibraryPage() {
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/music-library')
     } else if (status === 'authenticated') {
+      if (session?.user?.role === 'ADMIN') {
+        alert('Admin cannot access user music library. Please use a regular user account.')
+        router.push('/shop')
+        return
+      }
       fetchSongs()
     }
-  }, [status])
+  }, [status, session])
 
   const fetchSongs = async () => {
     try {

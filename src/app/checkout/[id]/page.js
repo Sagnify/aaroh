@@ -33,6 +33,11 @@ export default function CheckoutPage() {
       router.push(`/login?callbackUrl=/checkout/${params.id}`)
       return
     }
+    if (session?.user?.role === 'ADMIN') {
+      alert('Admin cannot purchase courses. Please use a regular user account.')
+      router.push('/courses')
+      return
+    }
     
     fetchCourse()
     fetchUserProfile()

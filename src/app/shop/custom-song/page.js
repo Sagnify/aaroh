@@ -21,9 +21,13 @@ export default function CustomSongPage() {
     document.title = 'Create Your Custom Song | Aaroh Story Shop'
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/custom-song')
+    } else if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      alert('Admin cannot place orders. Please use a regular user account.')
+      router.push('/shop')
+      return
     }
     fetchPricing()
-  }, [status])
+  }, [status, session])
 
   const fetchPricing = async () => {
     try {
