@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,6 +24,8 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const { data: session, status } = useSession()
 
   useEffect(() => {
@@ -36,10 +38,10 @@ export default function Signup() {
       if (session.user.role === 'ADMIN') {
         router.push('/admin/dashboard')
       } else {
-        router.push('/dashboard')
+        router.push(callbackUrl)
       }
     }
-  }, [session, status, router])
+  }, [session, status, router, callbackUrl])
 
   const handleSendOTP = async (e) => {
     e.preventDefault()
@@ -162,7 +164,7 @@ export default function Signup() {
         })
 
         if (!result?.error) {
-          router.push('/dashboard')
+          router.push(callbackUrl)
         } else {
           setError('Registration successful but login failed. Please login manually.')
         }
@@ -372,7 +374,7 @@ export default function Signup() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link href="/login" className="text-[#ff6b6b] hover:text-[#e55a5a] font-medium">
+                <Link href={`/login${callbackUrl !== '/dashboard' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-[#ff6b6b] hover:text-[#e55a5a] font-medium">
                   Sign in
                 </Link>
               </p>

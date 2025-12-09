@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +17,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const { data: session, status } = useSession()
 
   useEffect(() => {
@@ -26,12 +28,12 @@ export default function Login() {
   useEffect(() => {
     if (status === 'loading') return
     if (session && session.user.role !== 'ADMIN') {
-      router.push('/dashboard')
+      router.push(callbackUrl)
     }
     if (session && session.user.role === 'ADMIN') {
       setError('Admin is logged in. Please logout first.')
     }
-  }, [session, status, router])
+  }, [session, status, router, callbackUrl])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -50,7 +52,7 @@ export default function Login() {
         setError(result.error === 'CredentialsSignin' ? 'Invalid email or password' : result.error)
         setLoading(false)
       } else if (result?.ok) {
-        router.push('/dashboard')
+        router.push(callbackUrl)
         router.refresh()
       } else {
         setError('Login failed. Please try again.')

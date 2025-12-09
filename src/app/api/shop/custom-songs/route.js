@@ -14,7 +14,33 @@ export async function GET(request) {
       where: whereClause,
       orderBy: { createdAt: 'desc' }
     })
-    return NextResponse.json({ success: true, songs })
+
+    // Fetch user details for each song
+    const songsWithUserDetails = await Promise.all(
+      songs.map(async (song) => {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: song.userEmail },
+            select: { name: true, phone: true, email: true }
+          })
+          console.log('User lookup for', song.userEmail, ':', user)
+          return {
+            ...song,
+            userName: user?.name || song.userEmail.split('@')[0],
+            userPhone: user?.phone || 'Not provided'
+          }
+        } catch (err) {
+          console.error('Error fetching user for', song.userEmail, err)
+          return {
+            ...song,
+            userName: song.userEmail.split('@')[0],
+            userPhone: 'Not provided'
+          }
+        }
+      })
+    )
+
+    return NextResponse.json({ success: true, songs: songsWithUserDetails })
   } catch (error) {
     console.error('Error fetching custom songs:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch songs' }, { status: 500 })

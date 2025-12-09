@@ -27,6 +27,8 @@ export default function AdminShopPage() {
   const [trackingInputs, setTrackingInputs] = useState({})
   const [expandedOrders, setExpandedOrders] = useState({})
   const [expandedSongs, setExpandedSongs] = useState({})
+  const [expandedCustomerDetails, setExpandedCustomerDetails] = useState({})
+  const [notifyingUser, setNotifyingUser] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -253,6 +255,24 @@ export default function AdminShopPage() {
     } catch (error) {
       console.error('Error deleting custom song:', error)
       alert('Failed to delete custom song')
+    }
+  }
+
+  const handleNotifyUser = async (songId) => {
+    setNotifyingUser(songId)
+    try {
+      const response = await fetch(`/api/admin/custom-songs/${songId}/notify`, { method: 'POST' })
+      const data = await response.json()
+      if (data.success) {
+        alert('User notified successfully!')
+      } else {
+        alert(data.error || 'Failed to notify user')
+      }
+    } catch (error) {
+      console.error('Error notifying user:', error)
+      alert('Failed to notify user')
+    } finally {
+      setNotifyingUser(null)
     }
   }
 
@@ -744,163 +764,214 @@ export default function AdminShopPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {paginatedSongs.map((song) => (
-                <Card key={song.id} className="dark:bg-zinc-950 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-purple-500">
-                  <CardContent className="p-6">
-                    <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-950 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedSongs[song.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedSongs(prev => ({ ...prev, [song.id]: !prev[song.id] }))}>
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                          <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-bold text-gray-900 dark:text-white">{song.occasion} Song</h3>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            song.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
-                            song.status === 'ready' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
-                            song.status === 'in_progress' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
-                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                <Card key={song.id} className="dark:bg-zinc-950 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-all border border-gray-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded overflow-hidden">
+                        {song.posterUrl ? (
+                          <img src={song.posterUrl} alt={song.occasion} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="w-6 h-6 text-white" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-gray-900 dark:text-white truncate">{song.occasion} Song</h3>
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            song.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                            song.status === 'ready' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                            song.status === 'in_progress' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                           }`}>
-                            {song.status}
+                            {song.status === 'in_progress' ? 'Processing' : song.status === 'ready' ? 'Preview' : song.status === 'completed' ? 'Paid' : 'Pending'}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">For: {song.recipientName}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500">{new Date(song.createdAt).toLocaleDateString()}</p>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <span className="truncate">For: {song.recipientName}</span>
+                          <span>•</span>
+                          <span>{song.style}</span>
+                          <span>•</span>
+                          <span>{song.mood}</span>
+                          <span>•</span>
+                          <span>{new Date(song.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="text-right">
-                          <p className="text-xl font-bold text-purple-600">₹{song.amount}</p>
-                          <p className="text-xs text-gray-500 mt-1">{song.deliveryType === 'express' ? 'Express' : 'Standard'}</p>
+                          <p className="text-lg font-bold text-purple-600">₹{song.amount}</p>
+                          <p className="text-xs text-gray-500">{song.deliveryType === 'express' ? 'Express' : 'Standard'}</p>
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 flex items-center justify-center flex-shrink-0">
+                        <button
+                          onClick={() => setExpandedSongs(prev => ({ ...prev, [song.id]: !prev[song.id] }))}
+                          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+                        >
                           {expandedSongs[song.id] ? <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
-                        </div>
+                        </button>
                       </div>
                     </div>
                     
                     {expandedSongs[song.id] && (
                     <>
-                    <div className="bg-gray-50 dark:bg-zinc-900 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2"><span className="font-semibold">Story:</span> {song.story}</p>
-                      <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400 mb-3">
-                        <span>Mood: {song.mood}</span>
-                        <span>Style: {song.style}</span>
-                        <span>Length: {song.length}</span>
-                      </div>
-                      
-                      {/* Audio Links Section */}
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1">Preview URL:</label>
-                            <input
-                              type="url"
-                              placeholder="Drive/Cloud link"
-                              value={song.previewUrl || ''}
-                              onChange={(e) => {
-                                const updatedSongs = customSongs.map(s => 
-                                  s.id === song.id ? { ...s, previewUrl: e.target.value } : s
-                                )
-                                setCustomSongs(updatedSongs)
-                              }}
-                              className="w-full text-xs p-2 border rounded text-gray-900 placeholder:text-gray-400 border-gray-300 bg-white dark:border-gray-600 dark:!bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1">Full Audio URL:</label>
-                            <input
-                              type="url"
-                              placeholder="Drive/Cloud link"
-                              value={song.fullAudioUrl || ''}
-                              onChange={(e) => {
-                                const updatedSongs = customSongs.map(s => 
-                                  s.id === song.id ? { ...s, fullAudioUrl: e.target.value } : s
-                                )
-                                setCustomSongs(updatedSongs)
-                              }}
-                              className="w-full text-xs p-2 border rounded text-gray-900 placeholder:text-gray-400 border-gray-300 bg-white dark:border-gray-600 dark:!bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-3 items-end">
-                          <div className="flex-1">
-                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1">Poster Image:</label>
-                            <div className="flex gap-2 items-center">
-                              {song.posterUrl && (
-                                <div className="relative">
-                                  <img src={song.posterUrl} alt="Poster" className="w-20 h-20 object-cover rounded border border-gray-300 dark:border-gray-600" />
-                                  <button
-                                    onClick={() => {
-                                      const updatedSongs = customSongs.map(s => 
-                                        s.id === song.id ? { ...s, posterUrl: null } : s
-                                      )
-                                      setCustomSongs(updatedSongs)
-                                    }}
-                                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-lg transition-colors"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              )}
-                              <label className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-xs cursor-pointer bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300">
-                                <Upload className="w-4 h-4" />
-                                <span>{song.posterUrl ? 'Change Poster' : 'Upload Poster'}</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const file = e.target.files[0]
-                                    if (!file) return
-                                    const formData = new FormData()
-                                    formData.append('image', file)
-                                    try {
-                                      const res = await fetch('/api/upload-image', { method: 'POST', body: formData })
-                                      const data = await res.json()
-                                      if (data.url) {
-                                        const updatedSongs = customSongs.map(s => 
-                                          s.id === song.id ? { ...s, posterUrl: data.url } : s
-                                        )
-                                        setCustomSongs(updatedSongs)
-                                      }
-                                    } catch (err) {
-                                      alert('Upload failed')
-                                    }
-                                  }}
-                                />
-                              </label>
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-800">
+                      <button
+                        onClick={() => setExpandedCustomerDetails(prev => ({ ...prev, [song.id]: !prev[song.id] }))}
+                        className="w-full flex items-center justify-between bg-gray-50 dark:bg-zinc-900 rounded-lg p-3 mb-3 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">Customer Details</span>
+                        {expandedCustomerDetails[song.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+                      {expandedCustomerDetails[song.id] && (
+                        <div className="bg-gray-50 dark:bg-zinc-900 rounded-lg p-3 mb-3">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Customer</p>
+                              <p className="font-medium text-gray-900 dark:text-white">{song.userName || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                              <p className="font-medium text-gray-900 dark:text-white">{song.userPhone || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                              <p className="font-medium text-gray-900 dark:text-white truncate">{song.userEmail}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Length</p>
+                              <p className="font-medium text-gray-900 dark:text-white">{song.length}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => updateSongLinks(song.id, song.previewUrl, song.fullAudioUrl, song.posterUrl)}
-                            className="flex items-center gap-2 text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium whitespace-nowrap transition-colors"
-                          >
-                            <Save className="w-3.5 h-3.5" />
-                            Save Links
-                          </button>
+                        </div>
+                      )}
+                      <div className="bg-gray-50 dark:bg-zinc-900 rounded-lg p-3 mb-3">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Story</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{song.story}</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Preview URL</label>
+                          <input
+                            type="url"
+                            placeholder="https://drive.google.com/..."
+                            value={song.previewUrl || ''}
+                            onChange={(e) => {
+                              const updatedSongs = customSongs.map(s => 
+                                s.id === song.id ? { ...s, previewUrl: e.target.value } : s
+                              )
+                              setCustomSongs(updatedSongs)
+                            }}
+                            className="w-full text-sm p-2 border rounded bg-white dark:!bg-zinc-900 border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Full Audio URL</label>
+                          <input
+                            type="url"
+                            placeholder="https://drive.google.com/..."
+                            value={song.fullAudioUrl || ''}
+                            onChange={(e) => {
+                              const updatedSongs = customSongs.map(s => 
+                                s.id === song.id ? { ...s, fullAudioUrl: e.target.value } : s
+                              )
+                              setCustomSongs(updatedSongs)
+                            }}
+                            className="w-full text-sm p-2 border rounded bg-white dark:!bg-zinc-900 border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1">Poster Image</label>
+                          <div className="flex gap-2">
+                            {song.posterUrl && (
+                              <div className="relative">
+                                <img src={song.posterUrl} alt="Poster" className="w-16 h-16 object-cover rounded border border-gray-300 dark:border-zinc-700" />
+                                <button
+                                  onClick={() => {
+                                    const updatedSongs = customSongs.map(s => 
+                                      s.id === song.id ? { ...s, posterUrl: null } : s
+                                    )
+                                    setCustomSongs(updatedSongs)
+                                  }}
+                                  className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
+                            <label className="flex-1 border border-gray-300 dark:border-zinc-700 rounded px-3 py-2 text-sm cursor-pointer bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300">
+                              <Upload className="w-4 h-4" />
+                              <span>{song.posterUrl ? 'Change' : 'Upload'}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0]
+                                  if (!file) return
+                                  const formData = new FormData()
+                                  formData.append('image', file)
+                                  try {
+                                    const res = await fetch('/api/upload-image', { method: 'POST', body: formData })
+                                    const data = await res.json()
+                                    if (data.url) {
+                                      const updatedSongs = customSongs.map(s => 
+                                        s.id === song.id ? { ...s, posterUrl: data.url } : s
+                                      )
+                                      setCustomSongs(updatedSongs)
+                                    }
+                                  } catch (err) {
+                                    alert('Upload failed')
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      <button
+                        onClick={() => updateSongLinks(song.id, song.previewUrl, song.fullAudioUrl, song.posterUrl)}
+                        className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors"
+                      >
+                        <Save className="w-4 h-4" />
+                        Save Links
+                      </button>
+                      {(song.status === 'ready' || song.status === 'completed') && (
+                        <button
+                          onClick={() => handleNotifyUser(song.id)}
+                          disabled={notifyingUser === song.id}
+                          className="flex items-center gap-2 text-sm bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
+                        >
+                          {notifyingUser === song.id ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                          ) : (
+                            <Mail className="w-4 h-4" />
+                          )}
+                          Notify User
+                        </button>
+                      )}
                       {song.status === 'pending' && (
-                        <Button size="sm" onClick={() => updateSongStatus(song.id, 'in_progress')} className="bg-blue-500 hover:bg-blue-600">
-                          <Music className="w-4 h-4 mr-2" />
-                          Start Production
-                        </Button>
+                        <button onClick={() => updateSongStatus(song.id, 'in_progress')} className="flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
+                          <Music className="w-4 h-4" />
+                          Start
+                        </button>
                       )}
                       {song.status === 'in_progress' && (
-                        <Button size="sm" onClick={() => updateSongStatus(song.id, 'completed')} className="bg-green-500 hover:bg-green-600">
-                          <Check className="w-4 h-4 mr-2" />
-                          Mark Complete
-                        </Button>
+                        <button onClick={() => updateSongStatus(song.id, 'completed')} className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors">
+                          <Check className="w-4 h-4" />
+                          Complete
+                        </button>
                       )}
-                      <Button size="sm" variant="outline" className="border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDeleteCustomSong(song.id)}>
-                        <Trash2 className="w-4 h-4 mr-2" />
+                      <button onClick={() => handleDeleteCustomSong(song.id)} className="flex items-center gap-2 text-sm border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 py-2 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
                         Delete
-                      </Button>
+                      </button>
                     </div>
                     </>
                     )}

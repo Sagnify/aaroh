@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
-import nodemailer from 'nodemailer'
+import * as nodemailer from 'nodemailer'
 import { getAdminEmail } from '@/lib/email'
 
 const prisma = new PrismaClient()
@@ -59,7 +59,7 @@ export async function POST(request) {
 
 async function sendOrderEmails(order) {
   try {
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,

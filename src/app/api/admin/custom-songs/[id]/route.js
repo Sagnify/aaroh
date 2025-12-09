@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
-import nodemailer from 'nodemailer'
+import * as nodemailer from 'nodemailer'
 
 const prisma = new PrismaClient()
 
@@ -46,19 +46,27 @@ export async function PUT(request, { params }) {
     const { id } = params
     const { previewUrl, fullAudioUrl, posterUrl, status } = await request.json()
 
+    // Get current order to check previous state
+    const currentOrder = await prisma.customSongOrder.findUnique({ where: { id } })
+    
     const updateData = {}
     if (previewUrl !== undefined) updateData.previewUrl = previewUrl
     if (fullAudioUrl !== undefined) updateData.fullAudioUrl = fullAudioUrl
     if (posterUrl !== undefined) updateData.posterUrl = posterUrl
     if (status) updateData.status = status
 
+    // Auto-set status to ready when preview URL is added
+    if (previewUrl && !currentOrder.previewUrl) {
+      updateData.status = 'ready'
+    }
+
     const updatedOrder = await prisma.customSongOrder.update({
       where: { id },
       data: updateData
     })
 
-    // Send email notification when song is ready
-    if (status === 'ready' && previewUrl) {
+    // Send email when preview URL is newly added
+    if (previewUrl && !currentOrder.previewUrl) {
       await sendSongReadyEmail(updatedOrder)
     }
 
@@ -81,7 +89,7 @@ export async function PATCH(request, { params }) {
 
 async function sendSongReadyEmail(order) {
   try {
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,
@@ -92,40 +100,26 @@ async function sendSongReadyEmail(order) {
     const mailOptions = {
       from: process.env.SMTP_USER,
       to: order.userEmail,
-      subject: '🎵 Your Custom Song is Ready for Preview!',
+      subject: '🎵 Your Custom Song is Ready',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="margin: 0; font-size: 28px;">🎵 Your Song is Ready!</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">We're excited to share your custom creation</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333; margin-bottom: 20px;">Your Custom Song is Ready! 🎵</h2>
+          
+          <p style="color: #555; line-height: 1.6;">Your custom song for <strong>${order.recipientName}</strong> (${order.occasion}) is ready for preview.</p>
+          
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #333;"><strong>Order:</strong> #${order.id.slice(0, 8)}</p>
+            <p style="margin: 5px 0 0 0; color: #333;"><strong>Style:</strong> ${order.style} • ${order.mood}</p>
           </div>
           
-          <div style="background: white; color: #333; padding: 30px; border-radius: 15px; margin-bottom: 20px;">
-            <h2 style="color: #667eea; margin-top: 0;">Song Details</h2>
-            <p><strong>Occasion:</strong> ${order.occasion}</p>
-            <p><strong>For:</strong> ${order.recipientName}</p>
-            <p><strong>Style:</strong> ${order.style} - ${order.mood}</p>
-            <p><strong>Order ID:</strong> #${order.id.slice(0, 8)}</p>
-            
-            <div style="background: #f8f9ff; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #667eea;">
-              <h3 style="margin-top: 0; color: #667eea;">🎧 Preview Your Song</h3>
-              <p>Your custom song is ready! Listen to the preview and if you love it, complete the payment to get the full version.</p>
-              <a href="${process.env.NEXTAUTH_URL}/shop/music-library" 
-                 style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 10px;">
-                Listen to Preview
-              </a>
-            </div>
-            
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
-              <p style="margin: 0; color: #856404;"><strong>Next Steps:</strong></p>
-              <p style="margin: 5px 0 0 0; color: #856404;">1. Listen to your preview<br>2. Pay ₹${order.amount} to unlock full song<br>3. Download and enjoy!</p>
-            </div>
-          </div>
+          <p style="color: #555; line-height: 1.6;">Listen to the preview and pay ₹${order.amount} to unlock the full version.</p>
           
-          <div style="text-align: center; font-size: 14px; opacity: 0.8;">
-            <p>Thank you for choosing Aaroh Music!</p>
-            <p>Questions? Reply to this email or contact us.</p>
-          </div>
+          <a href="${process.env.NEXTAUTH_URL}/shop/music-library" 
+             style="display: inline-block; background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+            Listen to Preview
+          </a>
+          
+          <p style="color: #888; font-size: 14px; margin-top: 30px;">Thank you,<br>Aaroh Music Team</p>
         </div>
       `
     }
