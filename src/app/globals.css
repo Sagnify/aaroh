@@ -126,7 +126,21 @@
 @layer base {
   * {
     @apply border-gray-300 dark:border-gray-800;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
+  
+  /* Allow text selection in input fields */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
   body {
     @apply bg-white dark:bg-black text-gray-900 dark:text-white;
   }

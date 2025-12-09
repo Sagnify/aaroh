@@ -307,16 +307,16 @@ export default function AdminShopPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="dark:bg-gray-900 dark:border-gray-800">
+                <Card key={i} className="dark:bg-zinc-950 dark:border-gray-800">
                   <CardContent className="p-6">
-                    <div className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-lg mb-4 animate-pulse" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
-                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded mb-3 w-2/3 animate-pulse" />
+                    <div className="aspect-square bg-gray-200 dark:bg-zinc-900 rounded-lg mb-4 animate-pulse" />
+                    <div className="h-4 bg-gray-200 dark:bg-zinc-900 rounded mb-2 animate-pulse" />
+                    <div className="h-3 bg-gray-200 dark:bg-zinc-900 rounded mb-3 w-2/3 animate-pulse" />
                     <div className="flex justify-between items-center">
-                      <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-20 animate-pulse" />
+                      <div className="h-6 bg-gray-200 dark:bg-zinc-900 rounded w-20 animate-pulse" />
                       <div className="flex gap-2">
-                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-zinc-900 rounded animate-pulse" />
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-zinc-900 rounded animate-pulse" />
                       </div>
                     </div>
                   </CardContent>
@@ -324,7 +324,7 @@ export default function AdminShopPage() {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <Card className="dark:bg-gray-900 dark:border-gray-800">
+            <Card className="dark:bg-zinc-950 dark:border-gray-800">
               <CardContent className="p-12 text-center">
                 <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No products yet</h3>
@@ -334,7 +334,7 @@ export default function AdminShopPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {products.map((product) => (
-                <Card key={product.id} className="dark:bg-gray-900 dark:border-gray-800">
+                <Card key={product.id} className="dark:bg-zinc-950 dark:border-gray-800">
                   <CardContent className="p-6">
                     <div className="aspect-square bg-gradient-to-br from-blue-100 to-teal-100 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">
                       <ProductThumbnailCarousel 
@@ -397,7 +397,7 @@ export default function AdminShopPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 orderFilter === 'all'
                   ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
               }`}
             >
               All ({orders.length})
@@ -407,7 +407,7 @@ export default function AdminShopPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 orderFilter === 'pending'
                   ? 'bg-yellow-500 text-white shadow-lg'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
               }`}
             >
               Pending ({orders.filter(o => o.status === 'pending').length})
@@ -417,7 +417,7 @@ export default function AdminShopPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 orderFilter === 'confirmed'
                   ? 'bg-orange-500 text-white shadow-lg'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
               }`}
             >
               Confirmed ({orders.filter(o => o.status === 'confirmed').length})
@@ -427,7 +427,7 @@ export default function AdminShopPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 orderFilter === 'shipped'
                   ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
               }`}
             >
               Shipped ({orders.filter(o => o.status === 'shipped').length})
@@ -437,7 +437,7 @@ export default function AdminShopPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 orderFilter === 'delivered'
                   ? 'bg-green-500 text-white shadow-lg'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
               }`}
             >
               Delivered ({orders.filter(o => o.status === 'delivered').length})
@@ -447,7 +447,7 @@ export default function AdminShopPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 orderFilter === 'cancelled'
                   ? 'bg-red-500 text-white shadow-lg'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
               }`}
             >
               Cancelled ({orders.filter(o => o.status === 'cancelled').length})
@@ -456,17 +456,17 @@ export default function AdminShopPage() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="dark:bg-gray-900 dark:border-gray-800">
+                <Card key={i} className="dark:bg-zinc-950 dark:border-gray-800">
                   <CardContent className="p-6">
                     <div className="flex justify-between">
                       <div className="flex-1">
-                        <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-2 animate-pulse" />
-                        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-1 animate-pulse" />
-                        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-24 animate-pulse" />
+                        <div className="h-5 bg-gray-200 dark:bg-zinc-900 rounded w-32 mb-2 animate-pulse" />
+                        <div className="h-4 bg-gray-200 dark:bg-zinc-900 rounded w-48 mb-1 animate-pulse" />
+                        <div className="h-3 bg-gray-200 dark:bg-zinc-900 rounded w-24 animate-pulse" />
                       </div>
                       <div>
-                        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-20 mb-2 animate-pulse" />
-                        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-16 animate-pulse" />
+                        <div className="h-6 bg-gray-200 dark:bg-zinc-900 rounded w-20 mb-2 animate-pulse" />
+                        <div className="h-6 bg-gray-200 dark:bg-zinc-900 rounded w-16 animate-pulse" />
                       </div>
                     </div>
                   </CardContent>
@@ -474,7 +474,7 @@ export default function AdminShopPage() {
               ))}
             </div>
           ) : orders.length === 0 ? (
-            <Card className="dark:bg-gray-900 dark:border-gray-800">
+            <Card className="dark:bg-zinc-950 dark:border-gray-800">
               <CardContent className="p-12 text-center">
                 <ShoppingBag className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No orders yet</h3>
@@ -484,9 +484,9 @@ export default function AdminShopPage() {
           ) : (
             <div className="space-y-4">
               {orders.filter(order => orderFilter === 'all' || order.status === orderFilter).map((order) => (
-                <Card key={order.id} className="dark:bg-gray-900 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-blue-500">
+                <Card key={order.id} className="dark:bg-zinc-950 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-blue-500">
                   <CardContent className="p-6">
-                    <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedOrders[order.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }))}>
+                    <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-950 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedOrders[order.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }))}>
                       <div className="flex items-center gap-4 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
                           <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -499,7 +499,7 @@ export default function AdminShopPage() {
                             order.status === 'shipped' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
                             order.status === 'confirmed' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
                             order.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                            'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-gray-300'
                           }`}>
                             {order.status.toUpperCase()}
                           </span>
@@ -523,7 +523,7 @@ export default function AdminShopPage() {
                         </div>
                         </div>
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 flex items-center justify-center flex-shrink-0">
                         {expandedOrders[order.id] ? <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
                       </div>
                     </div>
@@ -531,7 +531,7 @@ export default function AdminShopPage() {
                     {expandedOrders[order.id] && (
                     <>
                     {/* Order Items */}
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
+                    <div className="bg-gray-50 dark:bg-zinc-900 rounded-lg p-4 mb-4">
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Items:</h4>
                       {Array.isArray(order.items) ? (
                         <div className="space-y-2">
@@ -567,7 +567,7 @@ export default function AdminShopPage() {
                       <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-4">
                         <h4 className="font-semibold text-green-900 dark:text-green-300 mb-1 text-sm">Tracking ID:</h4>
                         <div className="flex items-center gap-2">
-                          <code className="text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded border">{order.trackingId}</code>
+                          <code className="text-sm bg-white dark:bg-zinc-900 px-2 py-1 rounded border">{order.trackingId}</code>
                           <Button size="sm" variant="outline" onClick={() => window.open(`https://www.google.com/search?q=${order.trackingId}+tracking`, '_blank')}>
                             🔍 Track
                           </Button>
@@ -635,7 +635,7 @@ export default function AdminShopPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   songFilter === 'all'
                     ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
                 }`}
               >
                 All ({customSongs.length})
@@ -645,7 +645,7 @@ export default function AdminShopPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   songFilter === 'pending'
                     ? 'bg-yellow-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
                 }`}
               >
                 Pending ({customSongs.filter(s => s.status === 'pending').length})
@@ -655,7 +655,7 @@ export default function AdminShopPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   songFilter === 'in_progress'
                     ? 'bg-purple-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
                 }`}
               >
                 In Progress ({customSongs.filter(s => s.status === 'in_progress').length})
@@ -665,7 +665,7 @@ export default function AdminShopPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   songFilter === 'ready'
                     ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
                 }`}
               >
                 Ready ({customSongs.filter(s => s.status === 'ready').length})
@@ -675,7 +675,7 @@ export default function AdminShopPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   songFilter === 'completed'
                     ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
                 }`}
               >
                 Completed ({customSongs.filter(s => s.status === 'completed').length})
@@ -692,30 +692,30 @@ export default function AdminShopPage() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="dark:bg-gray-900 dark:border-gray-800">
+                <Card key={i} className="dark:bg-zinc-950 dark:border-gray-800">
                   <CardContent className="p-6">
                     <div className="flex justify-between mb-4">
                       <div className="flex-1">
-                        <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-40 mb-2 animate-pulse" />
-                        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-1 animate-pulse" />
-                        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-24 animate-pulse" />
+                        <div className="h-5 bg-gray-200 dark:bg-zinc-900 rounded w-40 mb-2 animate-pulse" />
+                        <div className="h-4 bg-gray-200 dark:bg-zinc-900 rounded w-32 mb-1 animate-pulse" />
+                        <div className="h-3 bg-gray-200 dark:bg-zinc-900 rounded w-24 animate-pulse" />
                       </div>
                       <div>
-                        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-20 mb-1 animate-pulse" />
-                        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-16 animate-pulse" />
+                        <div className="h-6 bg-gray-200 dark:bg-zinc-900 rounded w-20 mb-1 animate-pulse" />
+                        <div className="h-3 bg-gray-200 dark:bg-zinc-900 rounded w-16 animate-pulse" />
                       </div>
                     </div>
-                    <div className="h-24 bg-gray-200 dark:bg-gray-800 rounded mb-4 animate-pulse" />
+                    <div className="h-24 bg-gray-200 dark:bg-zinc-900 rounded mb-4 animate-pulse" />
                     <div className="flex gap-2">
-                      <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-32 animate-pulse" />
-                      <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-24 animate-pulse" />
+                      <div className="h-8 bg-gray-200 dark:bg-zinc-900 rounded w-32 animate-pulse" />
+                      <div className="h-8 bg-gray-200 dark:bg-zinc-900 rounded w-24 animate-pulse" />
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : customSongs.length === 0 ? (
-            <Card className="dark:bg-gray-900 dark:border-gray-800">
+            <Card className="dark:bg-zinc-950 dark:border-gray-800">
               <CardContent className="p-12 text-center">
                 <Music className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No custom song requests</h3>
@@ -725,9 +725,9 @@ export default function AdminShopPage() {
           ) : (
             <div className="space-y-4">
               {customSongs.filter(song => songFilter === 'all' || song.status === songFilter).map((song) => (
-                <Card key={song.id} className="dark:bg-gray-900 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-purple-500">
+                <Card key={song.id} className="dark:bg-zinc-950 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-purple-500">
                   <CardContent className="p-6">
-                    <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedSongs[song.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedSongs(prev => ({ ...prev, [song.id]: !prev[song.id] }))}>
+                    <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-950 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedSongs[song.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedSongs(prev => ({ ...prev, [song.id]: !prev[song.id] }))}>
                       <div className="flex items-center gap-4 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
                           <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -753,7 +753,7 @@ export default function AdminShopPage() {
                           <p className="text-xl font-bold text-purple-600">₹{song.amount}</p>
                           <p className="text-xs text-gray-500 mt-1">{song.deliveryType === 'express' ? 'Express' : 'Standard'}</p>
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-900 flex items-center justify-center flex-shrink-0">
                           {expandedSongs[song.id] ? <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
                         </div>
                       </div>
@@ -761,7 +761,7 @@ export default function AdminShopPage() {
                     
                     {expandedSongs[song.id] && (
                     <>
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
+                    <div className="bg-gray-50 dark:bg-zinc-900 rounded-lg p-4 mb-4">
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-2"><span className="font-semibold">Story:</span> {song.story}</p>
                       <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400 mb-3">
                         <span>Mood: {song.mood}</span>
@@ -896,17 +896,17 @@ export default function AdminShopPage() {
           {loading ? (
             <div className="grid md:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="dark:bg-gray-900 dark:border-gray-800">
+                <Card key={i} className="dark:bg-zinc-950 dark:border-gray-800">
                   <CardContent className="p-4">
-                    <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-32 mb-2 animate-pulse" />
-                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-20 animate-pulse" />
+                    <div className="h-5 bg-gray-200 dark:bg-zinc-900 rounded w-32 mb-2 animate-pulse" />
+                    <div className="h-3 bg-gray-200 dark:bg-zinc-900 rounded w-20 animate-pulse" />
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
             <>
-              <Card className="dark:bg-gray-900 dark:border-gray-800 mb-6">
+              <Card className="dark:bg-zinc-950 dark:border-gray-800 mb-6">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-gray-900 dark:text-white mb-4">Create New Category</h3>
                   <div className="flex gap-3">
@@ -923,7 +923,7 @@ export default function AdminShopPage() {
 
               <div className="grid md:grid-cols-3 gap-4">
             {categories.map((cat) => (
-              <Card key={cat.id} className="dark:bg-gray-900 dark:border-gray-800">
+              <Card key={cat.id} className="dark:bg-zinc-950 dark:border-gray-800">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div>
@@ -948,17 +948,17 @@ export default function AdminShopPage() {
           {loading ? (
             <div className="grid md:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="dark:bg-gray-900 dark:border-gray-800">
+                <Card key={i} className="dark:bg-zinc-950 dark:border-gray-800">
                   <CardContent className="p-4">
-                    <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded-full w-24 mb-3 animate-pulse" />
-                    <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-16 animate-pulse" />
+                    <div className="h-6 bg-gray-200 dark:bg-zinc-900 rounded-full w-24 mb-3 animate-pulse" />
+                    <div className="h-8 bg-gray-200 dark:bg-zinc-900 rounded w-16 animate-pulse" />
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
             <>
-              <Card className="dark:bg-gray-900 dark:border-gray-800 mb-6">
+              <Card className="dark:bg-zinc-950 dark:border-gray-800 mb-6">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-gray-900 dark:text-white mb-4">Create New Tag</h3>
                   <div className="flex gap-3">
@@ -981,7 +981,7 @@ export default function AdminShopPage() {
 
               <div className="grid md:grid-cols-3 gap-4">
             {tags.map((tag) => (
-              <Card key={tag.id} className="dark:bg-gray-900 dark:border-gray-800">
+              <Card key={tag.id} className="dark:bg-zinc-950 dark:border-gray-800">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center mb-3">
                     <span

@@ -2,11 +2,12 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ShoppingCart, User, BookOpen, Calendar, IndianRupee, Edit3, Check, X, Package, Music } from 'lucide-react'
+import { ShoppingCart, User, BookOpen, Calendar, IndianRupee, Edit3, Check, X, Package, Music, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/AdminSkeleton'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 export default function ViewPurchases() {
   const { data: session, status } = useSession()
@@ -81,6 +82,99 @@ export default function ViewPurchases() {
     }
   }
 
+  const chartData = useMemo(() => {
+    if (!purchases.length) return { data: [], domain: [0, 10] }
+    
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (6 - i))
+      return date.toISOString().split('T')[0]
+    })
+    
+    const allData = last7Days.map((date, idx) => {
+      const dayPurchases = purchases.filter(p => 
+        new Date(p.createdAt).toISOString().split('T')[0] === date
+      )
+      
+      const success = dayPurchases.filter(p => 
+        p.status === 'completed' || p.paymentStatus === 'paid'
+      ).length
+      
+      const failed = dayPurchases.filter(p => 
+        p.status === 'failed' || p.paymentStatus === 'failed' || p.paymentStatus === 'cancelled'
+      ).length
+      
+      const pending = dayPurchases.filter(p => 
+        p.status === 'pending' || p.paymentStatus === 'pending' || p.paymentStatus === 'cod'
+      ).length
+      
+      return {
+        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        Success: success,
+        Failed: failed,
+        Pending: pending,
+        hasData: success > 0 || failed > 0 || pending > 0,
+        index: idx
+      }
+    })
+    
+    const dataIndices = allData.filter(d => d.hasData).map(d => d.index)
+    
+    // Always start from beginning, sample based on data density
+    let data = [allData[0]] // Always include start date
+    
+    for (let i = 1; i < allData.length; i++) {
+      if (allData[i].hasData) {
+        // Always include data points and 1 date before
+        if (i > 0 && !data.includes(allData[i - 1])) data.push(allData[i - 1])
+        data.push(allData[i])
+      } else if (i === allData.length - 1) {
+        // Always include end date
+        data.push(allData[i])
+      } else {
+        // Sample empty dates - include if near data or every 2nd
+        const nearData = dataIndices.some(idx => Math.abs(idx - i) <= 1)
+        if (nearData || i % 2 === 0) {
+          data.push(allData[i])
+        }
+      }
+    }
+    
+    // Add 1 future date
+    const lastDate = new Date(last7Days[last7Days.length - 1])
+    const futureDate = new Date(lastDate)
+    futureDate.setDate(futureDate.getDate() + 1)
+    data.push({
+      date: futureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      Success: null,
+      Failed: null,
+      Pending: null
+    })
+    
+    const allValues = data.flatMap(d => [d.Success, d.Failed, d.Pending]).filter(v => v !== null)
+    const maxValue = Math.max(...allValues, 0)
+    const minValue = Math.min(...allValues, 0)
+    const padding = Math.ceil((maxValue - minValue) * 0.3) || Math.ceil(maxValue * 0.3) || 2
+    
+    return {
+      data,
+      domain: [Math.max(0, minValue - padding), maxValue + padding]
+    }
+  }, [purchases])
+
+  const stats = useMemo(() => {
+    const total = purchases.length
+    const success = purchases.filter(p => p.status === 'completed' || p.paymentStatus === 'paid').length
+    const failed = purchases.filter(p => p.status === 'failed' || p.paymentStatus === 'failed' || p.paymentStatus === 'cancelled').length
+    const pending = purchases.filter(p => p.status === 'pending' || p.paymentStatus === 'pending' || p.paymentStatus === 'cod').length
+    
+    return {
+      successRate: total ? ((success / total) * 100).toFixed(1) : 0,
+      failureRate: total ? ((failed / total) * 100).toFixed(1) : 0,
+      pendingRate: total ? ((pending / total) * 100).toFixed(1) : 0
+    }
+  }, [purchases])
+
   if (status === 'loading' || !session || session.user.role !== 'ADMIN') {
     return null
   }
@@ -92,6 +186,126 @@ export default function ViewPurchases() {
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Purchases</h1>
           <p className="text-gray-600 dark:text-gray-400">View all purchases: courses, gifts, and custom songs</p>
         </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="dark:bg-zinc-950 dark:border-zinc-800">
+                <CardHeader className="pb-3">
+                  <div className="h-4 bg-gray-200 dark:bg-zinc-700 rounded w-24 animate-pulse"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-9 bg-gray-200 dark:bg-zinc-700 rounded w-20 mb-2 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-32 animate-pulse"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="dark:bg-zinc-950 dark:border-zinc-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Success Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.successRate}%</div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Completed purchases</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="dark:bg-zinc-950 dark:border-zinc-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Failure Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-600 dark:text-red-400">{stats.failureRate}%</div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Failed/Cancelled</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="dark:bg-zinc-950 dark:border-zinc-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pendingRate}%</div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Awaiting completion</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {isLoading ? (
+          <Card className="mb-8 dark:bg-zinc-950 dark:border-zinc-800">
+            <CardHeader>
+              <div className="h-6 bg-gray-200 dark:bg-zinc-700 rounded w-48 animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] bg-gray-100 dark:bg-zinc-800 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-8 dark:bg-zinc-950 dark:border-zinc-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Purchase Trends (Last 7 Days)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData.data}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="currentColor"
+                  tick={{ fontSize: 10 }}
+                  angle={-15}
+                  textAnchor="end"
+                  height={50}
+                />
+                <YAxis 
+                  stroke="currentColor"
+                  domain={chartData.domain}
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--background)', 
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="Success" 
+                  stroke="#22c55e" 
+                  strokeWidth={2}
+                  dot={{ fill: '#22c55e', r: 4 }}
+                  connectNulls
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Failed" 
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                  dot={{ fill: '#ef4444', r: 4 }}
+                  connectNulls
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Pending" 
+                  stroke="#eab308" 
+                  strokeWidth={2}
+                  dot={{ fill: '#eab308', r: 4 }}
+                  connectNulls
+                />
+              </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg relative">
           <div className="px-6 py-4 border-b dark:border-gray-800 flex justify-between items-center">
@@ -158,7 +372,7 @@ export default function ViewPurchases() {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="font-medium text-gray-900 dark:text-white">₹{purchase.amount.toLocaleString()}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">₹{(purchase.amount || 0).toLocaleString()}</div>
                       </td>
                       <td className="py-4 px-6">
                         {editingId === purchase.id ? (

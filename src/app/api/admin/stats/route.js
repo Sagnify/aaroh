@@ -27,10 +27,10 @@ export async function GET() {
       prisma.customSongOrder.count(),
       prisma.customSongOrder.aggregate({
         where: {
-          paymentStatus: 'paid'
+          status: 'completed'
         },
         _sum: {
-          price: true
+          amount: true
         }
       })
     ])
@@ -39,7 +39,7 @@ export async function GET() {
       totalCourses,
       totalUsers,
       totalPurchases: totalPurchases + shopOrders + customSongOrders,
-      totalRevenue: (courseRevenue._sum.amount || 0) + (shopRevenue._sum.amount || 0) + (customSongRevenue._sum.price || 0)
+      totalRevenue: (courseRevenue._sum.amount || 0) + (shopRevenue._sum.amount || 0) + (customSongRevenue._sum.amount || 0)
     })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })

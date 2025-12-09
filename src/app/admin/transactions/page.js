@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -24,6 +24,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 export default function TransactionsPage() {
   const { data: session, status } = useSession()
@@ -38,6 +39,7 @@ export default function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState(null)
+  const [graphPeriod, setGraphPeriod] = useState('month')
 
   useEffect(() => {
     document.title = 'Transactions - Admin Dashboard'
@@ -125,6 +127,75 @@ export default function TransactionsPage() {
       default: return 'This Month'
     }
   }
+
+  const revenueChartData = useMemo(() => {
+    if (!transactions.length) return { data: [], domain: [0, 100] }
+    
+    const days = graphPeriod === 'week' ? 7 : graphPeriod === 'month' ? 30 : graphPeriod === '3months' ? 90 : graphPeriod === '6months' ? 180 : 365
+    const dateRange = Array.from({ length: days }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (days - 1 - i))
+      return date.toISOString().split('T')[0]
+    })
+    
+    const allData = dateRange.map((date, idx) => {
+      const dayTransactions = transactions.filter(t => 
+        new Date(t.createdAt).toISOString().split('T')[0] === date &&
+        (t.paymentStatus === 'paid' || t.paymentStatus === 'cod')
+      )
+      
+      const revenue = dayTransactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+      
+      return {
+        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        Revenue: revenue,
+        hasData: revenue > 0,
+        index: idx
+      }
+    })
+    
+    const dataIndices = allData.filter(d => d.hasData).map(d => d.index)
+    
+    // Always start from beginning, sample based on period and data density
+    let data = [allData[0]] // Always include start date
+    const baseSampleRate = days > 180 ? 30 : days > 90 ? 15 : days > 30 ? 7 : days > 7 ? 2 : 1
+    
+    for (let i = 1; i < allData.length; i++) {
+      if (allData[i].hasData) {
+        // Always include data points and 1 date before
+        if (i > 0 && !data.includes(allData[i - 1])) data.push(allData[i - 1])
+        data.push(allData[i])
+      } else if (i === allData.length - 1) {
+        // Always include end date
+        data.push(allData[i])
+      } else {
+        // Sample empty dates based on rate
+        const nearData = dataIndices.some(idx => Math.abs(idx - i) <= 2)
+        if (nearData || i % baseSampleRate === 0) {
+          data.push(allData[i])
+        }
+      }
+    }
+    
+    // Add 1 future date
+    const lastDate = new Date(dateRange[dateRange.length - 1])
+    const futureDate = new Date(lastDate)
+    futureDate.setDate(futureDate.getDate() + 1)
+    data.push({
+      date: futureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      Revenue: null
+    })
+    
+    const revenues = data.map(d => d.Revenue).filter(r => r !== null)
+    const maxRevenue = Math.max(...revenues, 0)
+    const minRevenue = Math.min(...revenues, 0)
+    const padding = (maxRevenue - minRevenue) * 0.3 || maxRevenue * 0.3 || 100
+    
+    return {
+      data,
+      domain: [Math.max(0, minRevenue - padding), maxRevenue + padding]
+    }
+  }, [transactions, graphPeriod])
 
   if (status === 'loading' || !session || session.user.role !== 'ADMIN') {
     return null
@@ -254,6 +325,81 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Transaction Management</h1>
           <p className="text-gray-600 dark:text-gray-300">Monitor all payment transactions and revenue</p>
         </div>
+
+        {/* Revenue Graph */}
+        {loading ? (
+          <Card className="mb-8 dark:bg-zinc-950 dark:border-zinc-800">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="h-6 bg-gray-200 dark:bg-zinc-700 rounded w-40 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 dark:bg-zinc-700 rounded w-32 animate-pulse"></div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] bg-gray-100 dark:bg-zinc-800 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ) : transactions.length > 0 && (
+          <Card className="mb-8 dark:bg-zinc-950 dark:border-zinc-800">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Revenue Trends
+                </CardTitle>
+                <select 
+                  value={graphPeriod} 
+                  onChange={(e) => setGraphPeriod(e.target.value)}
+                  className="text-sm border rounded px-3 py-1.5 bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-300 dark:border-zinc-700"
+                >
+                  <option value="week">Last 7 Days</option>
+                  <option value="month">Last 30 Days</option>
+                  <option value="3months">Last 3 Months</option>
+                  <option value="6months">Last 6 Months</option>
+                  <option value="year">Last Year</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueChartData.data}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="currentColor"
+                    tick={{ fontSize: 10 }}
+                    angle={-15}
+                    textAnchor="end"
+                    height={50}
+                  />
+                  <YAxis 
+                    stroke="currentColor"
+                    domain={revenueChartData.domain}
+                    tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--background)', 
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px'
+                    }}
+                    formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Revenue" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', r: 3 }}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Cards */}
         {loading ? (

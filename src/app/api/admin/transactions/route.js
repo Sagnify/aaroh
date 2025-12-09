@@ -85,14 +85,14 @@ export async function GET(request) {
       }
     })
 
-    // Get custom song orders
+    // Get custom song orders (completed = paid)
     const customSongOrders = await prisma.customSongOrder.findMany({
       where: {
         createdAt: {
           gte: startDate,
           lte: now
         },
-        paymentStatus: 'paid'
+        status: 'completed'
       },
       orderBy: {
         createdAt: 'desc'
@@ -128,14 +128,14 @@ export async function GET(request) {
         ...order,
         type: 'custom_song',
         customerName: order.recipientName,
-        customerEmail: 'N/A',
+        customerEmail: order.userEmail,
         customerPhone: null,
         paymentMethod: 'online',
-        paymentStatus: order.paymentStatus,
-        amount: order.price,
+        paymentStatus: 'paid',
+        amount: order.amount,
         items: [{
           productName: `Custom Song - ${order.occasion}`,
-          price: order.price,
+          price: order.amount,
           recipientName: order.recipientName
         }]
       }))
@@ -218,17 +218,17 @@ export async function GET(request) {
       }
     })
 
-    // Get custom song statistics
+    // Get custom song statistics (completed = paid)
     const customSongStats = await prisma.customSongOrder.aggregate({
       where: {
         createdAt: {
           gte: startDate,
           lte: now
         },
-        paymentStatus: 'paid'
+        status: 'completed'
       },
       _sum: {
-        price: true
+        amount: true
       },
       _count: {
         id: true
@@ -242,14 +242,14 @@ export async function GET(request) {
       transactions,
       stats: {
         totalTransactions: (shopStats._count.id || 0) + (courseStats._count.id || 0) + (customSongStats._count.id || 0),
-        totalAmount: (shopStats._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.price || 0),
+        totalAmount: (shopStats._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.amount || 0),
         successfulTransactions: (shopSuccessful._count.id || 0) + (courseStats._count.id || 0) + (customSongStats._count.id || 0),
-        successfulAmount: (shopSuccessful._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.price || 0),
+        successfulAmount: (shopSuccessful._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.amount || 0),
         failedTransactions: shopFailed._count.id || 0,
         pendingTransactions: shopPending._count.id || 0,
         codTransactions: codTransactions._count.id || 0,
         codAmount: (codTransactions._sum.amount || 0),
-        totalReceived: (shopSuccessful._sum.amount || 0) + (codTransactions._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.price || 0)
+        totalReceived: (shopSuccessful._sum.amount || 0) + (codTransactions._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.amount || 0)
       },
       pagination: {
         currentPage: page,
