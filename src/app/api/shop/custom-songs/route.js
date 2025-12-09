@@ -75,8 +75,7 @@ export async function POST(request) {
         length,
         deadline,
         price,
-        status: 'pending',
-        paymentStatus: 'pending'
+        status: 'pending'
       }
     })
 

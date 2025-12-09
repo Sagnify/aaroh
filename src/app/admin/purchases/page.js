@@ -477,7 +477,7 @@ export default function ViewPurchases() {
                             variant="ghost"
                             onClick={() => {
                               setEditingId(purchase.id)
-                              setEditingStatus(purchase.type === 'course' ? purchase.status : purchase.paymentStatus)
+                              setEditingStatus(purchase.type === 'shop' ? purchase.paymentStatus : purchase.status)
                             }}
                             className="text-blue-600 hover:text-blue-700"
                           >
