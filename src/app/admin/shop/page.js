@@ -633,12 +633,12 @@ export default function AdminShopPage() {
                 </Card>
               ))}
             </div>
-            <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              onPageChange={setCurrentPage} 
-            />
           )}
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={setCurrentPage} 
+          />
         </div>
         )
       })()}
@@ -908,12 +908,12 @@ export default function AdminShopPage() {
                 </Card>
               ))}
             </div>
-            <Pagination 
-              currentPage={currentPage} 
-              totalPages={totalPages} 
-              onPageChange={setCurrentPage} 
-            />
           )}
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={setCurrentPage} 
+          />
         </div>
         )
       })()}
