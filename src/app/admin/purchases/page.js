@@ -8,6 +8,7 @@ import { ShoppingCart, User, BookOpen, Calendar, IndianRupee, Edit3, Check, X, P
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/AdminSkeleton'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import Pagination from '@/components/Pagination'
 
 export default function ViewPurchases() {
   const { data: session, status } = useSession()
@@ -17,6 +18,8 @@ export default function ViewPurchases() {
   const [editingStatus, setEditingStatus] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [typeFilter, setTypeFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
     document.title = 'Purchases - Admin - Aaroh'
@@ -175,14 +178,18 @@ export default function ViewPurchases() {
     }
   }, [purchases])
 
+  const filteredPurchases = purchases.filter(purchase => typeFilter === 'all' || purchase.type === typeFilter)
+  const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage)
+  const paginatedPurchases = filteredPurchases.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   if (status === 'loading' || !session || session.user.role !== 'ADMIN') {
     return null
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
+      <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
+        <div className="mb-8 px-6 md:px-0">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Purchases</h1>
           <p className="text-gray-600 dark:text-gray-400">View all purchases: courses, gifts, and custom songs</p>
         </div>
@@ -338,7 +345,7 @@ export default function ViewPurchases() {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchases.filter(purchase => typeFilter === 'all' || purchase.type === typeFilter).map((purchase) => (
+                  {paginatedPurchases.map((purchase) => (
                     <tr key={purchase.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
@@ -465,6 +472,11 @@ export default function ViewPurchases() {
               </table>
             )}
             </div>
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
         </div>
 
         {!isLoading && purchases.length === 0 && (

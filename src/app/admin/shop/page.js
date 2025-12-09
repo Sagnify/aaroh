@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ProductThumbnailCarousel from '@/components/ProductThumbnailCarousel'
 import ImageUpload from '@/components/ImageUpload'
+import Pagination from '@/components/Pagination'
 
 export default function AdminShopPage() {
   const router = useRouter()
@@ -26,6 +27,12 @@ export default function AdminShopPage() {
   const [trackingInputs, setTrackingInputs] = useState({})
   const [expandedOrders, setExpandedOrders] = useState({})
   const [expandedSongs, setExpandedSongs] = useState({})
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [orderFilter, songFilter, activeTab])
 
   useEffect(() => {
     document.title = 'Shop Management | Aaroh Admin'
@@ -250,43 +257,43 @@ export default function AdminShopPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 pt-20 md:pt-24">
-      <div className="mb-6 md:mb-8">
+    <div className="p-0 md:p-8 pt-20 md:pt-24">
+      <div className="mb-6 md:mb-8 px-4 md:px-0">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Shop Management</h1>
         <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">Manage products, orders, and custom songs</p>
       </div>
 
-      <div className="flex gap-1 md:gap-2 mb-6 border-b dark:border-gray-700 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex gap-2 mb-6 border-b dark:border-gray-700 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('products')}
-          className={`px-3 md:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm md:text-base ${activeTab === 'products' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
+          className={`px-4 py-2 font-medium transition-all whitespace-nowrap text-sm ${activeTab === 'products' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
         >
-          <Package className="w-4 h-4 inline mr-1 md:mr-2" />
-          <span className="hidden sm:inline">Products </span>({products.length})
+          <Package className="w-4 h-4 inline mr-2" />
+          Products ({products.length})
         </button>
         <button
           onClick={() => setActiveTab('orders')}
-          className={`px-4 py-2 font-medium transition-all ${activeTab === 'orders' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+          className={`px-4 py-2 font-medium transition-all whitespace-nowrap text-sm ${activeTab === 'orders' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
         >
           <ShoppingBag className="w-4 h-4 inline mr-2" />
           Orders ({orders.length})
         </button>
         <button
           onClick={() => setActiveTab('songs')}
-          className={`px-4 py-2 font-medium transition-all ${activeTab === 'songs' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+          className={`px-4 py-2 font-medium transition-all whitespace-nowrap text-sm ${activeTab === 'songs' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
         >
           <Music className="w-4 h-4 inline mr-2" />
           Custom Songs ({customSongs.length})
         </button>
         <button
           onClick={() => setActiveTab('categories')}
-          className={`px-4 py-2 font-medium transition-all ${activeTab === 'categories' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+          className={`px-4 py-2 font-medium transition-all whitespace-nowrap text-sm ${activeTab === 'categories' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
         >
           Categories ({categories.length})
         </button>
         <button
           onClick={() => setActiveTab('tags')}
-          className={`px-4 py-2 font-medium transition-all ${activeTab === 'tags' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+          className={`px-4 py-2 font-medium transition-all whitespace-nowrap text-sm ${activeTab === 'tags' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
         >
           Tags ({tags.length})
         </button>
@@ -388,7 +395,11 @@ export default function AdminShopPage() {
         </>
       )}
 
-      {activeTab === 'orders' && (
+      {activeTab === 'orders' && (() => {
+        const filteredOrders = orders.filter(order => orderFilter === 'all' || order.status === orderFilter)
+        const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
+        const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        return (
         <div>
           {/* Order Filters */}
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -483,7 +494,7 @@ export default function AdminShopPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {orders.filter(order => orderFilter === 'all' || order.status === orderFilter).map((order) => (
+              {paginatedOrders.map((order) => (
                 <Card key={order.id} className="dark:bg-zinc-950 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-blue-500">
                   <CardContent className="p-6">
                     <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-950 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedOrders[order.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedOrders(prev => ({ ...prev, [order.id]: !prev[order.id] }))}>
@@ -622,11 +633,21 @@ export default function AdminShopPage() {
                 </Card>
               ))}
             </div>
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
           )}
         </div>
-      )}
+        )
+      })()}
 
-      {activeTab === 'songs' && (
+      {activeTab === 'songs' && (() => {
+        const filteredSongs = customSongs.filter(song => songFilter === 'all' || song.status === songFilter)
+        const totalPages = Math.ceil(filteredSongs.length / itemsPerPage)
+        const paginatedSongs = filteredSongs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        return (
         <div>
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-2 overflow-x-auto pb-2">
@@ -724,7 +745,7 @@ export default function AdminShopPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {customSongs.filter(song => songFilter === 'all' || song.status === songFilter).map((song) => (
+              {paginatedSongs.map((song) => (
                 <Card key={song.id} className="dark:bg-zinc-950 dark:border-gray-800 hover:shadow-xl transition-all border-l-4 border-l-purple-500">
                   <CardContent className="p-6">
                     <div className={`flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-950 -mx-6 px-6 py-4 -mt-6 transition-colors ${expandedSongs[song.id] ? 'mb-4' : '-mb-6 pb-10'}`} onClick={() => setExpandedSongs(prev => ({ ...prev, [song.id]: !prev[song.id] }))}>
@@ -887,9 +908,15 @@ export default function AdminShopPage() {
                 </Card>
               ))}
             </div>
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
           )}
         </div>
-      )}
+        )
+      })()}
 
       {activeTab === 'categories' && (
         <div>

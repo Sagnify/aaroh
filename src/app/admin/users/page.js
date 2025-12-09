@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Mail, Calendar } from 'lucide-react'
 import { useAdminUsers } from '@/hooks/useCachedData'
 import { TableSkeleton } from '@/components/AdminSkeleton'
+import Pagination from '@/components/Pagination'
 
 export default function ManageUsers() {
   const { data: session, status } = useSession()
@@ -15,6 +16,8 @@ export default function ManageUsers() {
   const [bookings, setBookings] = useState([])
   const [activeTab, setActiveTab] = useState('users')
   const [loadingBookings, setLoadingBookings] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const users = usersData || []
 
@@ -47,9 +50,17 @@ export default function ManageUsers() {
     return null
   }
 
+  const totalPages = activeTab === 'users' 
+    ? Math.ceil(users.length / itemsPerPage)
+    : Math.ceil(bookings.length / itemsPerPage)
+  
+  const paginatedData = activeTab === 'users'
+    ? users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : bookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Users</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage user accounts and class bookings</p>
@@ -105,7 +116,7 @@ export default function ManageUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {paginatedData.map((user) => (
                       <tr key={user.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
@@ -134,6 +145,11 @@ export default function ManageUsers() {
                   </tbody>
                 </table>
               </div>
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
           </div>
         )}
 
@@ -165,7 +181,7 @@ export default function ManageUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {bookings.map((booking) => (
+                    {paginatedData.map((booking) => (
                       <tr key={booking.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
@@ -208,6 +224,11 @@ export default function ManageUsers() {
                   </tbody>
                 </table>
               </div>
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={totalPages} 
+              onPageChange={setCurrentPage} 
+            />
           </div>
         )}
 

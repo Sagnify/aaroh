@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useAdminCourses } from '@/hooks/useCachedData'
 import { useQueryClient } from '@tanstack/react-query'
 import { TableSkeleton } from '@/components/AdminSkeleton'
+import Pagination from '@/components/Pagination'
 
 export default function ManageCourses() {
   const { data: session, status } = useSession()
@@ -18,6 +19,8 @@ export default function ManageCourses() {
   const queryClient = useQueryClient()
   const [popularCourses, setPopularCourses] = useState([])
   const [saving, setSaving] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const courses = coursesData || []
 
@@ -60,9 +63,12 @@ export default function ManageCourses() {
     return null
   }
 
+  const totalPages = Math.ceil(courses.length / itemsPerPage)
+  const paginatedCourses = courses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Courses</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage all courses and content</p>
@@ -170,7 +176,7 @@ export default function ManageCourses() {
                 </tr>
               </thead>
               <tbody>
-                {(courses || []).map((course) => (
+                {paginatedCourses.map((course) => (
                   <tr key={course.id} className="border-b dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-gray-50 dark:hover:bg-zinc-900">
                     <td className="py-4 px-4">
                       <div>
@@ -216,6 +222,11 @@ export default function ManageCourses() {
             </table>
             )}
           </div>
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={setCurrentPage} 
+          />
         </div>
       </div>
     </div>

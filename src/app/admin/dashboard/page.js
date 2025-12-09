@@ -74,7 +74,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="pt-16 dark:bg-black min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Overview</h1>
           <p className="text-gray-600 dark:text-gray-300">Welcome back, {session.user.name}</p>

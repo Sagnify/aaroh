@@ -25,6 +25,7 @@ import {
   Mail
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import Pagination from '@/components/Pagination'
 
 export default function TransactionsPage() {
   const { data: session, status } = useSession()
@@ -320,8 +321,8 @@ export default function TransactionsPage() {
 
   return (
     <div className="pt-16 dark:bg-black min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
+      <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
+        <div className="mb-8 px-6 md:px-0">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Transaction Management</h1>
           <p className="text-gray-600 dark:text-gray-300">Monitor all payment transactions and revenue</p>
         </div>
@@ -575,50 +576,50 @@ export default function TransactionsPage() {
                     key={transaction.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between p-4 border dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                    className="p-4 border dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
                   >
-                    <div className="flex items-center space-x-4">
-                      {getStatusIcon(transaction.paymentStatus, transaction.status)}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">#{transaction.id.slice(0, 8)}</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.type === 'shop' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
-                            transaction.type === 'course' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
-                            'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
-                          }`}>
-                            {transaction.type === 'shop' ? 'Shop' : transaction.type === 'course' ? 'Course' : 'Custom Song'}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.paymentStatus, transaction.status)}`}>
-                            {getStatusText(transaction.paymentStatus, transaction.status)}
-                          </span>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {getStatusIcon(transaction.paymentStatus, transaction.status)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="font-medium text-sm">#{transaction.id.slice(0, 8)}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              transaction.type === 'shop' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
+                              transaction.type === 'course' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
+                              'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+                            }`}>
+                              {transaction.type === 'shop' ? 'Shop' : transaction.type === 'course' ? 'Course' : 'Song'}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            {transaction.customerName}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {new Date(transaction.createdAt).toLocaleDateString('en-IN', { 
+                              month: 'short', 
+                              day: 'numeric'
+                            })}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {transaction.customerName} • {transaction.customerEmail}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(transaction.createdAt).toLocaleDateString('en-IN', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-bold text-lg">₹{transaction.amount.toLocaleString()}</div>
-                        <div className="text-xs text-gray-500">{transaction.items.length} item(s)</div>
                       </div>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => setSelectedTransaction(transaction)}
+                        className="flex-shrink-0"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t dark:border-zinc-700">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.paymentStatus, transaction.status)}`}>
+                        {getStatusText(transaction.paymentStatus, transaction.status)}
+                      </span>
+                      <div className="text-right">
+                        <div className="font-bold text-lg">₹{transaction.amount.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500">{transaction.items.length} item(s)</div>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -631,29 +632,12 @@ export default function TransactionsPage() {
               </div>
             )}
 
-            {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 mt-6">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-gray-600">
-                  Page {currentPage} of {pagination.totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
-                  disabled={currentPage === pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+              <Pagination 
+                currentPage={currentPage} 
+                totalPages={pagination.totalPages} 
+                onPageChange={setCurrentPage} 
+              />
             )}
           </CardContent>
         </Card>
