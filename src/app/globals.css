@@ -133,28 +133,88 @@
     -webkit-tap-highlight-color: transparent;
   }
   
+  /* Scrollbar - auto-hide and minimal */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 3px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+  }
+  
+  ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  
+  ::-webkit-scrollbar-corner {
+    display: none;
+  }
+  
+  *:hover::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+  
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  
+  *:hover {
+    scrollbar-color: #d1d5db transparent;
+  }
+  
   /* Dark mode scrollbar */
   .dark ::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
+    height: 3px;
   }
   
   .dark ::-webkit-scrollbar-track {
-    background: #18181b;
+    background: transparent;
   }
   
   .dark ::-webkit-scrollbar-thumb {
-    background: #3f3f46;
-    border-radius: 4px;
+    background: transparent;
+    border-radius: 2px;
   }
   
-  .dark ::-webkit-scrollbar-thumb:hover {
+  .dark ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  
+  .dark ::-webkit-scrollbar-corner {
+    display: none;
+  }
+  
+  .dark *:hover::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+  }
+  
+  .dark *::-webkit-scrollbar-thumb:hover {
     background: #52525b;
   }
   
   .dark * {
     scrollbar-width: thin;
-    scrollbar-color: #3f3f46 #18181b;
+    scrollbar-color: transparent transparent;
+  }
+  
+  .dark *:hover {
+    scrollbar-color: #3f3f46 transparent;
   }
   
   /* Allow text selection in input fields */
@@ -167,9 +227,40 @@
   
   body {
     @apply bg-white dark:bg-black text-gray-900 dark:text-white;
+    overflow-x: hidden;
   }
+  
+  body::-webkit-scrollbar-track {
+    background: #f9fafb;
+  }
+  
+  body::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+  }
+  
+  body:hover::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+  }
+  
+  .dark body::-webkit-scrollbar-track {
+    background: #000000;
+  }
+  
+  .dark body::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+  }
+  
+  .dark body:hover::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+  }
+  
+  .dark body {
+    scrollbar-color: #3f3f46 #000000;
+  }
+  
   html {
     @apply bg-white dark:bg-black;
+    overflow-x: hidden;
   }
   
   /* Remove default link colors (except in nav) */

@@ -65,8 +65,7 @@ export async function GET() {
         type: 'custom_song',
         title: `Custom Song - ${order.occasion}`,
         customerName: order.recipientName,
-        customerEmail: 'N/A',
-        amount: order.price
+        customerEmail: order.userEmail
       }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 

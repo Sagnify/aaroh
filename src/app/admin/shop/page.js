@@ -649,59 +649,7 @@ export default function AdminShopPage() {
         const paginatedSongs = filteredSongs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
         return (
         <div>
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              <button
-                onClick={() => setSongFilter('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  songFilter === 'all'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
-                }`}
-              >
-                All ({customSongs.length})
-              </button>
-              <button
-                onClick={() => setSongFilter('pending')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  songFilter === 'pending'
-                    ? 'bg-yellow-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
-                }`}
-              >
-                Pending ({customSongs.filter(s => s.status === 'pending').length})
-              </button>
-              <button
-                onClick={() => setSongFilter('in_progress')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  songFilter === 'in_progress'
-                    ? 'bg-purple-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
-                }`}
-              >
-                In Progress ({customSongs.filter(s => s.status === 'in_progress').length})
-              </button>
-              <button
-                onClick={() => setSongFilter('ready')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  songFilter === 'ready'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
-                }`}
-              >
-                Ready ({customSongs.filter(s => s.status === 'ready').length})
-              </button>
-              <button
-                onClick={() => setSongFilter('completed')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  songFilter === 'completed'
-                    ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
-                }`}
-              >
-                Completed ({customSongs.filter(s => s.status === 'completed').length})
-              </button>
-            </div>
+          <div className="flex justify-end mb-4 px-4 md:px-0">
             <Button
               onClick={() => router.push('/admin/custom-song-settings')}
               className="bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100 whitespace-nowrap"
@@ -709,6 +657,58 @@ export default function AdminShopPage() {
               <CreditCard className="w-4 h-4 mr-2" />
               Manage Pricing
             </Button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
+            <button
+              onClick={() => setSongFilter('all')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                songFilter === 'all'
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
+              }`}
+            >
+              All ({customSongs.length})
+            </button>
+            <button
+              onClick={() => setSongFilter('pending')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                songFilter === 'pending'
+                  ? 'bg-yellow-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
+              }`}
+            >
+              Pending ({customSongs.filter(s => s.status === 'pending').length})
+            </button>
+            <button
+              onClick={() => setSongFilter('in_progress')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                songFilter === 'in_progress'
+                  ? 'bg-purple-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
+              }`}
+            >
+              In Progress ({customSongs.filter(s => s.status === 'in_progress').length})
+            </button>
+            <button
+              onClick={() => setSongFilter('ready')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                songFilter === 'ready'
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
+              }`}
+            >
+              Ready ({customSongs.filter(s => s.status === 'ready').length})
+            </button>
+            <button
+              onClick={() => setSongFilter('completed')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                songFilter === 'completed'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
+              }`}
+            >
+              Completed ({customSongs.filter(s => s.status === 'completed').length})
+            </button>
           </div>
           {loading ? (
             <div className="space-y-4">
