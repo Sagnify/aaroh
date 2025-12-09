@@ -29,6 +29,8 @@ export default function AdminShopPage() {
   const [expandedSongs, setExpandedSongs] = useState({})
   const [expandedCustomerDetails, setExpandedCustomerDetails] = useState({})
   const [notifyingUser, setNotifyingUser] = useState(null)
+  const [uploadingPoster, setUploadingPoster] = useState(null)
+  const [savingSong, setSavingSong] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -166,6 +168,7 @@ export default function AdminShopPage() {
   }
 
   const updateSongLinks = async (id, previewUrl, fullAudioUrl, posterUrl) => {
+    setSavingSong(id)
     try {
       const response = await fetch(`/api/admin/custom-songs/${id}`, {
         method: 'PUT',
@@ -180,11 +183,13 @@ export default function AdminShopPage() {
       const data = await response.json()
       if (data.success) {
         fetchCustomSongs()
-        alert('Links saved successfully!')
+        alert('Saved successfully!')
       }
     } catch (error) {
-      console.error('Error updating song links:', error)
-      alert('Failed to save links')
+      console.error('Error updating song:', error)
+      alert('Failed to save')
+    } finally {
+      setSavingSong(null)
     }
   }
 
@@ -919,8 +924,12 @@ export default function AdminShopPage() {
                               </div>
                             )}
                             <label className="flex-1 border border-gray-300 dark:border-zinc-700 rounded px-3 py-2 text-sm cursor-pointer bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300">
-                              <Upload className="w-4 h-4" />
-                              <span>{song.posterUrl ? 'Change' : 'Upload'}</span>
+                              {uploadingPoster === song.id ? (
+                                <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full" />
+                              ) : (
+                                <Upload className="w-4 h-4" />
+                              )}
+                              <span>{uploadingPoster === song.id ? 'Uploading...' : song.posterUrl ? 'Change' : 'Upload'}</span>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -928,6 +937,7 @@ export default function AdminShopPage() {
                                 onChange={async (e) => {
                                   const file = e.target.files[0]
                                   if (!file) return
+                                  setUploadingPoster(song.id)
                                   const formData = new FormData()
                                   formData.append('image', file)
                                   try {
@@ -941,6 +951,8 @@ export default function AdminShopPage() {
                                     }
                                   } catch (err) {
                                     alert('Upload failed')
+                                  } finally {
+                                    setUploadingPoster(null)
                                   }
                                 }}
                               />
@@ -952,10 +964,15 @@ export default function AdminShopPage() {
                     <div className="flex gap-2 mt-3 flex-wrap">
                       <button
                         onClick={() => updateSongLinks(song.id, song.previewUrl, song.fullAudioUrl, song.posterUrl)}
-                        className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors"
+                        disabled={savingSong === song.id}
+                        className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Save className="w-4 h-4" />
-                        Save Links
+                        {savingSong === song.id ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        {savingSong === song.id ? 'Saving...' : 'Save'}
                       </button>
                       {(song.status === 'ready' || song.status === 'completed') && (
                         <button
@@ -974,13 +991,13 @@ export default function AdminShopPage() {
                       {song.status === 'pending' && (
                         <button onClick={() => updateSongStatus(song.id, 'in_progress')} className="flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
                           <Music className="w-4 h-4" />
-                          Start
+                          Start Work
                         </button>
                       )}
                       {song.status === 'in_progress' && (
                         <button onClick={() => updateSongStatus(song.id, 'completed')} className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors">
                           <Check className="w-4 h-4" />
-                          Complete
+                          Mark Complete
                         </button>
                       )}
                       <button onClick={() => handleDeleteCustomSong(song.id)} className="flex items-center gap-2 text-sm border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 py-2 rounded transition-colors">

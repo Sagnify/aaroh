@@ -78,9 +78,11 @@ export default function MusicLibraryPage() {
             })
             
             if (verifyResponse.ok) {
-              fetchSongs() // Refresh the list
-              alert('Payment successful! You can now download your full song.')
+              setPaymentLoading(null)
+              await fetchSongs()
+              alert('🎉 Payment successful! Your full song is now unlocked and ready to download.')
             } else {
+              setPaymentLoading(null)
               alert('Payment verification failed. Please contact support.')
             }
           },

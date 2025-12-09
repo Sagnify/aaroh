@@ -41,7 +41,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const { previewUrl, fullAudioUrl, posterUrl, status } = await request.json()
 
     // Get current order to check previous state

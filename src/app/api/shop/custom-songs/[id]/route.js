@@ -3,6 +3,30 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export async function GET(request, { params }) {
+  try {
+    const { id } = await params
+    
+    const order = await prisma.customSongOrder.findUnique({
+      where: { id }
+    })
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      order 
+    })
+  } catch (error) {
+    console.error('Fetch song order error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch order' 
+    }, { status: 500 })
+  }
+}
+
 export async function PATCH(request, { params }) {
   try {
     const session = await getServerSession(authOptions)
