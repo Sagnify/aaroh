@@ -729,6 +729,16 @@ export default function AdminShopPage() {
             >
               Completed ({customSongs.filter(s => s.status === 'completed').length})
             </button>
+            <button
+              onClick={() => setSongFilter('failed')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                songFilter === 'failed'
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-zinc-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-zinc-800'
+              }`}
+            >
+              Failed ({customSongs.filter(s => s.status === 'failed').length})
+            </button>
           </div>
           {loading ? (
             <div className="space-y-4">
@@ -782,13 +792,18 @@ export default function AdminShopPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-gray-900 dark:text-white truncate">{song.occasion} Song</h3>
-                          <span className={`px-2 py-0.5 rounded text-xs ${
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                             song.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                             song.status === 'ready' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
                             song.status === 'in_progress' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                            song.status === 'failed' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
                             'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                           }`}>
-                            {song.status === 'in_progress' ? 'Processing' : song.status === 'ready' ? 'Preview' : song.status === 'completed' ? 'Paid' : 'Pending'}
+                            {song.status === 'in_progress' ? '🎵 Processing' : 
+                             song.status === 'ready' ? '🎧 Preview Ready' : 
+                             song.status === 'completed' ? '✅ Paid' : 
+                             song.status === 'failed' ? '❌ Payment Failed' : 
+                             '⏳ Pending'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

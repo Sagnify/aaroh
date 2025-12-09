@@ -58,8 +58,8 @@ export default function ViewPurchases() {
         endpoint = `/api/shop/orders/${purchaseId}`
         updateField = 'paymentStatus'
       } else if (purchaseType === 'custom_song') {
-        endpoint = `/api/admin/custom-songs/${purchaseId}`
-        updateField = 'paymentStatus'
+        endpoint = `/api/shop/custom-songs/${purchaseId}`
+        updateField = 'status'
       }
       
       const response = await fetch(endpoint, {
@@ -395,6 +395,14 @@ export default function ViewPurchases() {
                                 <option value="failed">Failed</option>
                                 <option value="refunded">Refunded</option>
                               </>
+                            ) : purchase.type === 'custom_song' ? (
+                              <>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">Processing</option>
+                                <option value="ready">Preview Ready</option>
+                                <option value="completed">Paid</option>
+                                <option value="failed">Failed</option>
+                              </>
                             ) : (
                               <>
                                 <option value="pending">Pending</option>
@@ -406,9 +414,13 @@ export default function ViewPurchases() {
                             )}
                           </select>
                         ) : (
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                             (purchase.status === 'completed' || purchase.paymentStatus === 'paid') 
                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                              : purchase.status === 'ready'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                              : purchase.status === 'in_progress'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                               : (purchase.status === 'pending' || purchase.paymentStatus === 'pending')
                               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                               : (purchase.status === 'failed' || purchase.paymentStatus === 'failed')
@@ -417,9 +429,16 @@ export default function ViewPurchases() {
                               ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                           }`}>
-                            {purchase.paymentStatus === 'cod' ? 'COD' : 
-                             purchase.paymentStatus === 'paid' ? 'Paid' :
-                             purchase.status || purchase.paymentStatus}
+                            {purchase.type === 'custom_song' ? (
+                              purchase.status === 'in_progress' ? 'Processing' :
+                              purchase.status === 'ready' ? 'Preview Ready' :
+                              purchase.status === 'completed' ? 'Paid' :
+                              purchase.status === 'failed' ? 'Failed' : 'Pending'
+                            ) : (
+                              purchase.paymentStatus === 'cod' ? 'COD' : 
+                              purchase.paymentStatus === 'paid' ? 'Paid' :
+                              purchase.status || purchase.paymentStatus
+                            )}
                           </span>
                         )}
                       </td>

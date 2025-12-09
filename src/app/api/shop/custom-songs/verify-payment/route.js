@@ -26,6 +26,18 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
+    // Check if already completed (idempotency)
+    const existingOrder = await prisma.customSongOrder.findUnique({
+      where: { id: orderId }
+    })
+
+    if (existingOrder?.status === 'completed') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Payment already verified' 
+      })
+    }
+
     // Update custom song order
     const updatedOrder = await prisma.customSongOrder.update({
       where: { id: orderId },

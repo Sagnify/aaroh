@@ -26,6 +26,18 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
+    // Check if already paid (idempotency)
+    const existingOrder = await prisma.shopOrder.findUnique({
+      where: { id: orderId }
+    })
+
+    if (existingOrder?.paymentStatus === 'paid') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Payment already verified' 
+      })
+    }
+
     // Update order status
     const order = await prisma.shopOrder.update({
       where: { id: orderId },
