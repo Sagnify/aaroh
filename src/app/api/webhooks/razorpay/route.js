@@ -51,8 +51,13 @@ export async function POST(request) {
         where: { razorpayOrderId: payment.order_id }
       }) : null
       
-      if (!purchase && !shopOrder) {
-        console.error(`No purchase or shop order found for order_id: ${payment.order_id}`)
+      // Try to find custom song order if no purchase or shop order found
+      const customSong = !purchase && !shopOrder ? await prisma.customSongOrder.findFirst({
+        where: { razorpayOrderId: payment.order_id }
+      }) : null
+      
+      if (!purchase && !shopOrder && !customSong) {
+        console.error(`No purchase, shop order, or custom song found for order_id: ${payment.order_id}`)
         return NextResponse.json({ error: 'Order not found' }, { status: 404 })
       }
 
@@ -136,6 +141,18 @@ export async function POST(request) {
             }
           }
         })
+      } else if (customSong) {
+        // Handle custom song order
+        if (customSong.status === 'completed') {
+          console.log(`Payment already processed for custom song ${customSong.id}`)
+          return NextResponse.json({ status: 'ok', message: 'Already processed' })
+        }
+        
+        await prisma.customSongOrder.update({
+          where: { id: customSong.id },
+          data: { status: 'completed' }
+        })
+        console.log(`Custom song payment captured for order ${customSong.id}, payment_id: ${payment.id}`)
       }
 
 
@@ -165,8 +182,12 @@ export async function POST(request) {
         }
       }) : null
       
-      if (!purchase && !shopOrder) {
-        console.error(`No purchase or shop order found for order_id: ${payment.order_id}`)
+      const customSong = !purchase && !shopOrder ? await prisma.customSongOrder.findFirst({
+        where: { razorpayOrderId: payment.order_id }
+      }) : null
+      
+      if (!purchase && !shopOrder && !customSong) {
+        console.error(`No purchase, shop order, or custom song found for order_id: ${payment.order_id}`)
         return NextResponse.json({ error: 'Order not found' }, { status: 404 })
       }
 
@@ -214,6 +235,17 @@ export async function POST(request) {
           await sendShopPaymentFailureEmails(shopOrder, shopOrder.user, payment.error_description, payment.error_code, request)
         } else {
           console.log(`Ignoring failed event for paid shop order ${shopOrder.id}`)
+        }
+      } else if (customSong) {
+        // Handle custom song order failure
+        if (customSong.status !== 'completed') {
+          await prisma.customSongOrder.update({
+            where: { id: customSong.id },
+            data: { status: 'failed' }
+          })
+          console.log(`Custom song payment failed for order ${customSong.id}, reason: ${payment.error_description || 'Unknown'}`)
+        } else {
+          console.log(`Ignoring failed event for completed custom song ${customSong.id}`)
         }
       }
     }
