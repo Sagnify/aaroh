@@ -162,7 +162,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="p-6 space-y-6 min-h-screen dark:bg-black">
+    <div className="px-4 md:px-6 py-6 space-y-6 min-h-screen dark:bg-black pt-20">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Settings</h1>
 
       <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">

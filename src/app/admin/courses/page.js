@@ -69,12 +69,12 @@ export default function ManageCourses() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
       <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
-        <div className="mb-8">
+        <div className="mb-8 px-4 md:px-0">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Courses</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage all courses and content</p>
         </div>
         
-        <div className="mb-6">
+        <div className="mb-6 px-4 md:px-0">
           <Link href="/admin/courses/new">
             <Button className="bg-gray-900 hover:bg-gray-800 text-white">
               <Plus className="w-4 h-4 mr-2" />
@@ -95,7 +95,7 @@ export default function ManageCourses() {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.map((course) => (
-                <div key={course.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <div key={course.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-900">
                   <input
                     type="checkbox"
                     id={`popular-${course.id}`}

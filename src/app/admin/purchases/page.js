@@ -189,7 +189,7 @@ export default function ViewPurchases() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
       <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
-        <div className="mb-8 px-6 md:px-0">
+        <div className="mb-8 px-4 md:px-0">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Purchases</h1>
           <p className="text-gray-600 dark:text-gray-400">View all purchases: courses, gifts, and custom songs</p>
         </div>
@@ -315,7 +315,7 @@ export default function ViewPurchases() {
         )}
 
         <div className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 shadow-sm rounded-lg relative">
-          <div className="px-6 py-4 border-b dark:border-gray-800 flex justify-between items-center">
+          <div className="px-4 md:px-6 py-4 border-b dark:border-gray-800 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Purchases</h2>
             <select 
               value={typeFilter} 

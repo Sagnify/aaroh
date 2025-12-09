@@ -301,7 +301,7 @@ export default function AdminShopPage() {
 
       {activeTab === 'products' && (
         <>
-          <div className="flex justify-end mb-6">
+          <div className="flex justify-end mb-6 px-4 md:px-0">
             <Button
               onClick={() => router.push('/admin/shop/add-product')}
 

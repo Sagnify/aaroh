@@ -61,7 +61,7 @@ export default function ManageUsers() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black pt-16">
       <div className="max-w-7xl mx-auto px-0 md:px-6 py-8">
-        <div className="mb-8">
+        <div className="mb-8 px-4 md:px-0">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Users</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage user accounts and class bookings</p>
           
