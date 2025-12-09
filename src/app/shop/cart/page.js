@@ -22,9 +22,30 @@ export default function CartPage() {
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/shop/cart')
     } else if (status === 'authenticated') {
+      mergeGuestCart()
       fetchCart()
     }
   }, [status])
+
+  const mergeGuestCart = async () => {
+    try {
+      const guestCart = localStorage.getItem('guestCart')
+      if (guestCart) {
+        const guestCartItems = JSON.parse(guestCart)
+        if (guestCartItems.length > 0) {
+          await fetch('/api/shop/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guestCartItems })
+          })
+          localStorage.removeItem('guestCart')
+          refreshCart()
+        }
+      }
+    } catch (error) {
+      console.error('Error merging guest cart:', error)
+    }
+  }
 
   const fetchCart = async () => {
     try {

@@ -51,7 +51,7 @@ export async function POST(request) {
       where: { email: session.user.email }
     })
 
-    const { configId } = await request.json()
+    const { configId, guestCartItems } = await request.json()
 
     let cart = await prisma.cart.findUnique({
       where: { userId: user.id }
@@ -63,15 +63,42 @@ export async function POST(request) {
       })
     }
 
-    const cartItem = await prisma.cartItem.create({
-      data: {
-        cartId: cart.id,
-        configId,
-        quantity: 1
+    // Merge guest cart items if provided
+    if (guestCartItems && Array.isArray(guestCartItems) && guestCartItems.length > 0) {
+      for (const guestItem of guestCartItems) {
+        const existingItem = await prisma.cartItem.findFirst({
+          where: {
+            cartId: cart.id,
+            configId: guestItem.configId
+          }
+        })
+        
+        if (!existingItem) {
+          await prisma.cartItem.create({
+            data: {
+              cartId: cart.id,
+              configId: guestItem.configId,
+              quantity: guestItem.quantity || 1
+            }
+          })
+        }
       }
-    })
+      return NextResponse.json({ success: true, merged: true })
+    }
 
-    return NextResponse.json({ success: true, cartItem })
+    // Add single item
+    if (configId) {
+      const cartItem = await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          configId,
+          quantity: 1
+        }
+      })
+      return NextResponse.json({ success: true, cartItem })
+    }
+
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error adding to cart:', error)
     return NextResponse.json({ error: 'Failed to add to cart' }, { status: 500 })

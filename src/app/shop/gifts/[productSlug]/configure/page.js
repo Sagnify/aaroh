@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { Music, Upload, Link as LinkIcon, Sparkles, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +16,7 @@ import Image from 'next/image'
 import { useCart } from '@/hooks/useCart'
 
 export default function ConfigureProductPage() {
+  const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
   const { refreshCart } = useCart()
@@ -35,8 +37,12 @@ export default function ConfigureProductPage() {
 
   useEffect(() => {
     document.title = 'Customize Your Gift | Aaroh Story Shop'
-    fetchProduct()
-  }, [params.productSlug])
+    if (status === 'unauthenticated') {
+      router.push(`/login?callbackUrl=/shop/gifts/${params.productSlug}/configure`)
+    } else if (status === 'authenticated') {
+      fetchProduct()
+    }
+  }, [status, params.productSlug])
 
   useEffect(() => {
     if (product) {
@@ -87,6 +93,7 @@ export default function ConfigureProductPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ configId: data.orderId })
         })
+        
         if (cartResponse.ok) {
           refreshCart()
           router.push('/shop/cart')
@@ -99,7 +106,7 @@ export default function ConfigureProductPage() {
     }
   }
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-50 pt-28 flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
