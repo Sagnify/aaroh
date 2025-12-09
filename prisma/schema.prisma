@@ -16,6 +16,10 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   phone         String?
+  address       String?
+  city          String?
+  state         String?
+  pincode       String?
   twoFactorSecret String?
   twoFactorEnabled Boolean      @default(false)
   classBookings ClassBooking[]
@@ -23,6 +27,8 @@ model User {
   purchases     Purchase[]
   reviews       Review[]
   certificates  Certificate[]
+  cart          Cart?
+  shopOrders    ShopOrder[]
 }
 
 model Admin {
@@ -197,4 +203,138 @@ model CertificateSettings {
 enum Role {
   USER
   ADMIN
+}
+
+// Shop Models
+model ShopProduct {
+  id             String              @id @default(cuid())
+  name           String
+  slug           String              @unique
+  description    String
+  price          Float
+  categoryId     String?
+  category       ProductCategory?    @relation(fields: [categoryId], references: [id])
+  images         String[]
+  badge          String?
+  isFeatured     Boolean             @default(false)
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String?
+  isActive       Boolean             @default(true)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  variants       ProductVariant[]
+  configurations ProductConfiguration[]
+  tags           ProductTag[]
+}
+
+model ProductCategory {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  slug      String        @unique
+  products  ShopProduct[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ProductTag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  slug      String        @unique
+  color     String        @default("#8B5CF6")
+  products  ShopProduct[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ProductVariant {
+  id        String      @id @default(cuid())
+  productId String
+  name      String
+  price     Float?
+  product   ShopProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model CustomSongOrder {
+  id            String       @id @default(cuid())
+  userId        String?
+  occasion      String
+  recipientName String
+  story         String
+  mood          String
+  style         String
+  language      String       @default("English")
+  length        String
+  deadline      String
+  price         Float
+  status        String       @default("pending")
+  paymentStatus String       @default("pending")
+  previewUrl    String?
+  fullAudioUrl  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  songSources   SongSource[]
+}
+
+model SongSource {
+  id                String            @id @default(cuid())
+  type              String
+  fileUrl           String?
+  externalUrl       String?
+  metadata          Json              @default("{}")
+  customSongOrderId String?
+  createdAt         DateTime          @default(now())
+  customSongOrder   CustomSongOrder?  @relation(fields: [customSongOrderId], references: [id])
+  configurations    ProductConfiguration[]
+}
+
+model ProductConfiguration {
+  id            String      @id @default(cuid())
+  productId     String
+  songSourceId  String?
+  variant       String
+  customText    String?
+  recipientName String
+  occasion      String?
+  createdAt     DateTime    @default(now())
+  product       ShopProduct @relation(fields: [productId], references: [id])
+  songSource    SongSource? @relation(fields: [songSourceId], references: [id])
+  cartItems     CartItem[]
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id            String               @id @default(cuid())
+  cartId        String
+  configId      String
+  quantity      Int                  @default(1)
+  cart          Cart                 @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  configuration ProductConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
+  createdAt     DateTime             @default(now())
+}
+
+model ShopOrder {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  items             Json
+  totalAmount       Float
+  status            String    @default("pending")
+  paymentStatus     String    @default("pending")
+  shippingAddress   Json
+  trackingNumber    String?
+  trackingUrl       String?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  cancelReason      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }

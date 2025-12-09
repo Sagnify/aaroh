@@ -2,13 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, Plus } from 'lucide-react'
 
 export default function ImageUpload({ 
   currentImage, 
   onImageUpload, 
   label = "Upload Image",
-  className = "" 
+  className = "",
+  compact = false,
+  children
 }) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState(currentImage || null)
@@ -68,6 +70,30 @@ export default function ImageUpload({
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  if (compact) {
+    return (
+      <>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <div 
+          className="w-full h-full flex items-center justify-center"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {uploading ? (
+            <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+          ) : (
+            children || <Plus className="w-6 h-6 text-gray-400" />
+          )}
+        </div>
+      </>
+    )
   }
 
   return (

@@ -19,6 +19,10 @@ export default function EditCourse() {
   const [fetchingData, setFetchingData] = useState(true)
   const [success, setSuccess] = useState(false)
   const [refreshingVideos, setRefreshingVideos] = useState({})
+
+  useEffect(() => {
+    document.title = 'Edit Course | Aaroh Admin'
+  }, [])
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',

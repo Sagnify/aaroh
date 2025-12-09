@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, User, LogOut, BookOpen, Settings, ChevronDown } from "lucide-react"
+import { Menu, X, User, LogOut, BookOpen, Settings, ChevronDown, ShoppingCart, Package } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useSession, signOut } from "next-auth/react"
@@ -40,6 +40,7 @@ export default function Navbar() {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/courses", label: "Courses" },
+    { href: "/shop", label: "Shop" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ]
@@ -47,6 +48,7 @@ export default function Navbar() {
   const adminNavItems = [
     { href: "/admin/dashboard", label: "Dashboard" },
     { href: "/admin/courses", label: "Courses" },
+    { href: "/admin/shop", label: "Shop" },
     { href: "/admin/users", label: "Users" },
     { href: "/admin/purchases", label: "Purchases" },
     { href: "/admin/content", label: "Content" },
@@ -102,6 +104,19 @@ export default function Navbar() {
             
             {!isAdminPage && (
               <div className="flex items-center space-x-4">
+                {session && session.user.role === 'USER' && (
+                  <Link href="/shop/cart">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`${
+                        isScrolled ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100' : (isHomepage ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100')
+                      }`}
+                    >
+                      <ShoppingCart size={18} />
+                    </Button>
+                  </Link>
+                )}
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
@@ -138,6 +153,14 @@ export default function Navbar() {
                         >
                           <BookOpen className="w-4 h-4 mr-3 text-gray-600" />
                           My Courses
+                        </Link>
+                        <Link 
+                          href="/orders" 
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          <Package className="w-4 h-4 mr-3 text-gray-600" />
+                          My Orders
                         </Link>
                         <button
                           onClick={() => {
@@ -299,6 +322,26 @@ export default function Navbar() {
                               <BookOpen size={16} className="text-gray-600" />
                             </div>
                             <span>My Courses</span>
+                          </Link>
+                          <Link
+                            href="/shop/cart"
+                            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <ShoppingCart size={16} className="text-gray-600" />
+                            </div>
+                            <span>My Cart</span>
+                          </Link>
+                          <Link
+                            href="/orders"
+                            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <Package size={16} className="text-gray-600" />
+                            </div>
+                            <span>My Orders</span>
                           </Link>
                           <button
                             onClick={() => {

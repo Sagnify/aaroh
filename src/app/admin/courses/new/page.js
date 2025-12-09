@@ -16,6 +16,10 @@ export default function AddCourse() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [refreshingVideos, setRefreshingVideos] = useState({})
+
+  useEffect(() => {
+    document.title = 'Create New Course | Aaroh Admin'
+  }, [])
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',

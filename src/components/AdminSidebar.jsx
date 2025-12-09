@@ -5,7 +5,7 @@ import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Music, Menu, X, LogOut, Home, BookOpen, Users, ShoppingCart, FileText, Award, Settings, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react'
+import { Music, Menu, X, LogOut, Home, BookOpen, Users, ShoppingCart, FileText, Award, Settings, ChevronLeft, ChevronRight, Moon, Sun, ShoppingBag } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 
 export default function AdminSidebar({ onCollapseChange }) {
@@ -24,6 +24,7 @@ export default function AdminSidebar({ onCollapseChange }) {
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
     { name: 'Courses', href: '/admin/courses', icon: BookOpen },
+    { name: 'Shop', href: '/admin/shop', icon: ShoppingBag },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Purchases', href: '/admin/purchases', icon: ShoppingCart },
     { name: 'Content', href: '/admin/content', icon: FileText },
