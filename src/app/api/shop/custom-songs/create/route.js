@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-import * as nodemailer from 'nodemailer'
-import { getAdminEmail } from '@/lib/email'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { sendEmail, getAdminEmail } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -59,17 +56,8 @@ export async function POST(request) {
 
 async function sendOrderEmails(order) {
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    })
-
     // User email
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
+    await sendEmail({
       to: order.userEmail,
       subject: '🎵 Custom Song Order Received!',
       html: `
@@ -105,8 +93,7 @@ async function sendOrderEmails(order) {
     })
 
     // Admin email
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
+    await sendEmail({
       to: getAdminEmail(),
       subject: '🎵 New Custom Song Order',
       html: `

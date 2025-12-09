@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-import * as nodemailer from 'nodemailer'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/email'
 
 export async function POST(request, { params }) {
   try {
@@ -39,18 +37,9 @@ export async function POST(request, { params }) {
 }
 
 async function sendNotificationEmail(order) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  })
-
   const isCompleted = order.status === 'completed'
 
-  await transporter.sendMail({
-    from: process.env.SMTP_USER,
+  await sendEmail({
     to: order.userEmail,
     subject: isCompleted ? '🎵 Your Custom Song is Ready' : '🎵 Your Song Preview is Ready',
     html: `

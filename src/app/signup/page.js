@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -11,7 +11,7 @@ import { PasswordInput } from '@/components/ui/password-input'
 import Loader from '@/components/Loader'
 import { Music, Mail, ArrowLeft } from 'lucide-react'
 
-export default function Signup() {
+function SignupForm() {
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -383,5 +383,13 @@ export default function Signup() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function Signup() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <SignupForm />
+    </Suspense>
   )
 }

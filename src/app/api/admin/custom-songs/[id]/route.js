@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-import * as nodemailer from 'nodemailer'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/email'
 
 // Admin API to update custom song with preview/full links
 export async function DELETE(request, { params }) {
@@ -89,16 +87,7 @@ export async function PATCH(request, { params }) {
 
 async function sendSongReadyEmail(order) {
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    })
-
-    const mailOptions = {
-      from: process.env.SMTP_USER,
+    await sendEmail({
       to: order.userEmail,
       subject: '🎵 Your Custom Song is Ready',
       html: `
@@ -122,9 +111,7 @@ async function sendSongReadyEmail(order) {
           <p style="color: #888; font-size: 14px; margin-top: 30px;">Thank you,<br>Aaroh Music Team</p>
         </div>
       `
-    }
-
-    await transporter.sendMail(mailOptions)
+    })
   } catch (error) {
     console.error('Email sending error:', error)
   }
