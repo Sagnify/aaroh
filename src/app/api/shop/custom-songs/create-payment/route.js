@@ -13,6 +13,10 @@ export async function POST(request) {
 
     const { customSongId } = await request.json()
 
+    if (!customSongId) {
+      return NextResponse.json({ error: 'Custom song ID is required' }, { status: 400 })
+    }
+
     // Get the custom song order
     const customSong = await prisma.customSongOrder.findFirst({
       where: {
@@ -24,6 +28,16 @@ export async function POST(request) {
 
     if (!customSong) {
       return NextResponse.json({ error: 'Song not found or not ready for payment' }, { status: 404 })
+    }
+
+    if (customSong.razorpayOrderId) {
+      return NextResponse.json({ 
+        success: true,
+        orderId: customSong.razorpayOrderId,
+        amount: customSong.amount * 100,
+        currency: 'INR',
+        customSongId: customSong.id
+      })
     }
 
     // Create Razorpay order

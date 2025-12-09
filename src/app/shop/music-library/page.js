@@ -55,6 +55,7 @@ export default function MusicLibraryPage() {
       const data = await response.json()
       
       if (data.success) {
+        const customSongId = data.customSongId
         // Initialize Razorpay
         const options = {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -72,7 +73,7 @@ export default function MusicLibraryPage() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderId: data.customSongId
+                orderId: customSongId
               })
             })
             

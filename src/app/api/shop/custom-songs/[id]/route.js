@@ -11,7 +11,7 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const { status } = await request.json()
 
     const updatedSong = await prisma.customSongOrder.update({

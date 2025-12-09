@@ -15,6 +15,10 @@ export async function POST(request) {
     const body = await request.json()
     const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = body
 
+    if (!orderId || !razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+      return NextResponse.json({ error: 'Missing required payment fields' }, { status: 400 })
+    }
+
     // Verify signature
     const sign = razorpay_order_id + '|' + razorpay_payment_id
     const expectedSign = crypto
@@ -26,12 +30,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    // Check if already completed (idempotency)
+    // Check if already completed (idempotency) and verify ownership
     const existingOrder = await prisma.customSongOrder.findUnique({
       where: { id: orderId }
     })
 
-    if (existingOrder?.status === 'completed') {
+    if (!existingOrder) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
+
+    if (existingOrder.userEmail !== session.user.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    if (existingOrder.status === 'completed') {
       return NextResponse.json({ 
         success: true, 
         message: 'Payment already verified' 

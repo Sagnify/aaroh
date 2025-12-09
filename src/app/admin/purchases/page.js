@@ -72,7 +72,7 @@ export default function ViewPurchases() {
         setPurchases(prev => prev.map(p => 
           p.id === purchaseId ? { 
             ...p, 
-            [purchaseType === 'course' ? 'status' : 'paymentStatus']: editingStatus 
+            [purchaseType === 'shop' ? 'paymentStatus' : 'status']: editingStatus 
           } : p
         ))
         setEditingId(null)

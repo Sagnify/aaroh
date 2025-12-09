@@ -61,11 +61,11 @@ export async function POST(request) {
     const body = await request.json()
     const { occasion, recipientName, story, mood, style, language, length, deadline } = body
 
-    const price = deadline === 'express' ? 4499 : 2999
+    const amount = deadline === 'express' ? 4499 : 2999
 
     const customSong = await prisma.customSongOrder.create({
       data: {
-        userId: user.id,
+        userEmail: session.user.email,
         occasion,
         recipientName,
         story,
@@ -73,8 +73,8 @@ export async function POST(request) {
         style,
         language,
         length,
-        deadline,
-        price,
+        deliveryType: deadline,
+        amount,
         status: 'pending'
       }
     })
