@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getAdminEmail } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -164,7 +164,7 @@ async function sendOrderEmails(order, user, items) {
     })
     
     await sendEmail({
-      to: process.env.CONTACT_EMAIL,
+      to: getAdminEmail(),
       subject: `Payment Received #${order.id.slice(0, 8)}`,
       html: adminEmailHtml
     })

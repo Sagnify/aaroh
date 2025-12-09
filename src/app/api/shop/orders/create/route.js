@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Razorpay from 'razorpay'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getAdminEmail } from '@/lib/email'
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -259,7 +259,7 @@ async function sendOrderEmails(order, user, items) {
     })
     
     await sendEmail({
-      to: process.env.CONTACT_EMAIL,
+      to: getAdminEmail(),
       subject: `New Order #${order.id.slice(0, 8)} - Action Required`,
       html: adminEmailHtml
     })

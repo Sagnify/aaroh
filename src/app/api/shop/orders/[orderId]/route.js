@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getAdminEmail } from '@/lib/email'
 
 export async function GET(request, { params }) {
   try {
@@ -216,7 +216,7 @@ async function sendCancellationEmails(order, user) {
     })
     
     await sendEmail({
-      to: process.env.CONTACT_EMAIL,
+      to: getAdminEmail(),
       subject: `Order Cancellation Alert #${order.id.slice(0, 8)}`,
       html: adminEmailHtml
     })

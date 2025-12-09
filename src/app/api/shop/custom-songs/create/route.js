@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { PrismaClient } from '@prisma/client'
 import nodemailer from 'nodemailer'
+import { getAdminEmail } from '@/lib/email'
 
 const prisma = new PrismaClient()
 
@@ -106,7 +107,7 @@ async function sendOrderEmails(order) {
     // Admin email
     await transporter.sendMail({
       from: process.env.SMTP_USER,
-      to: process.env.ADMIN_EMAIL,
+      to: getAdminEmail(),
       subject: '🎵 New Custom Song Order',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

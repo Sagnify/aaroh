@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, getAdminEmail } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -79,7 +79,7 @@ export async function POST(request) {
       }).catch(err => console.error('User email failed:', err)),
       
       sendEmail({
-        to: process.env.CONTACT_EMAIL,
+        to: getAdminEmail(),
         subject: `💰 Payment Received - Custom Song #${updatedOrder.id.slice(0, 8)}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

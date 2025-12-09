@@ -22,12 +22,21 @@ export async function verifyEmailConfig() {
   }
 }
 
-// Send email function
+// Send email function with robust error handling
 export async function sendEmail({ to, subject, html, text }) {
   try {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('❌ SMTP credentials not configured')
       throw new Error('SMTP credentials not configured')
     }
+
+    if (!to) {
+      console.error('❌ No recipient email provided')
+      throw new Error('No recipient email provided')
+    }
+
+    console.log(`📧 Sending email to: ${to}`)
+    console.log(`📧 Subject: ${subject}`)
 
     const info = await transporter.sendMail({
       from: `"Aaroh Music Academy" <${process.env.SMTP_USER}>`,
@@ -37,12 +46,18 @@ export async function sendEmail({ to, subject, html, text }) {
       html,
     })
 
-    console.log('Email sent:', info.messageId)
+    console.log('✅ Email sent successfully:', info.messageId)
     return { success: true, messageId: info.messageId }
   } catch (error) {
-    console.error('Send email error:', error)
+    console.error('❌ Send email error:', error.message)
+    console.error('❌ Full error:', error)
     return { success: false, error: error.message }
   }
+}
+
+// Get admin email - always use CONTACT_EMAIL for real notifications
+export function getAdminEmail() {
+  return process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL
 }
 
 // Get contact email from database
