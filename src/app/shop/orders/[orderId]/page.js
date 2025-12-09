@@ -4,14 +4,14 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Loader from '@/components/Loader'
-
-function OrderTrackingContent() {
 import { motion } from 'framer-motion'
 import { Package, Truck, CheckCircle, Clock, X, MapPin, Phone, Mail, CreditCard, Calendar, User, ShoppingBag, ExternalLink, Copy, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
+function OrderTrackingContent() {
 
   const { data: session, status } = useSession()
   const router = useRouter()
