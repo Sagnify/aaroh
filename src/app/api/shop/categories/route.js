@@ -16,6 +16,12 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const { name } = await request.json()
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
     

@@ -14,6 +14,8 @@ export default function MusicLibraryPage() {
   const router = useRouter()
   const [songs, setSongs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [scrollY, setScrollY] = useState(0)
+  const [paymentLoading, setPaymentLoading] = useState(null)
 
   useEffect(() => {
     document.title = 'My Music Library | Aaroh Story Shop'
@@ -29,10 +31,31 @@ export default function MusicLibraryPage() {
     }
   }, [status, session])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black pt-28 flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full" />
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    return null
+  }
+
   const fetchSongs = async () => {
     try {
-      const response = await fetch('/api/shop/custom-songs/my-library')
+      const response = await fetch('/api/shop/custom-songs/completed')
       const data = await response.json()
+      console.log('Fetched songs:', data.songs) // Debug log
       setSongs(data.songs || [])
     } catch (error) {
       console.error('Error fetching songs:', error)
@@ -41,10 +64,16 @@ export default function MusicLibraryPage() {
     }
   }
 
-  const [paymentLoading, setPaymentLoading] = useState(null)
-
   const handlePayment = async (songId) => {
     setPaymentLoading(songId)
+    
+    // Check if Razorpay is loaded
+    if (!window.Razorpay) {
+      alert('Payment system is loading. Please try again in a moment.')
+      setPaymentLoading(null)
+      return
+    }
+    
     try {
       // Create payment order
       const response = await fetch('/api/shop/custom-songs/create-payment', {
@@ -65,25 +94,34 @@ export default function MusicLibraryPage() {
           description: 'Custom Song Payment',
           order_id: data.orderId,
           handler: async (response) => {
-            // Verify payment
-            const verifyResponse = await fetch('/api/shop/custom-songs/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: customSongId
+            console.log('🎯 Payment handler called with:', response)
+            try {
+              console.log('📞 Calling verification API...')
+              // Verify payment
+              const verifyResponse = await fetch('/api/shop/custom-songs/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: customSongId
+                })
               })
-            })
-            
-            if (verifyResponse.ok) {
+              
+              if (verifyResponse.ok) {
+                setPaymentLoading(null)
+                await fetchSongs()
+                alert('🎉 Payment successful! Your full song is now unlocked and ready to download.')
+              } else {
+                const errorData = await verifyResponse.json()
+                setPaymentLoading(null)
+                alert(`Payment verification failed: ${errorData.error || 'Please contact support.'}`)
+              }
+            } catch (verifyError) {
+              console.error('Payment verification error:', verifyError)
               setPaymentLoading(null)
-              await fetchSongs()
-              alert('🎉 Payment successful! Your full song is now unlocked and ready to download.')
-            } else {
-              setPaymentLoading(null)
-              alert('Payment verification failed. Please contact support.')
+              alert('Payment verification failed. Please contact support with your payment ID: ' + response.razorpay_payment_id)
             }
           },
           prefill: {
@@ -101,11 +139,12 @@ export default function MusicLibraryPage() {
         const rzp = new window.Razorpay(options)
         rzp.open()
       } else {
-        alert(data.error || 'Failed to create payment order')
+        console.error('Payment creation failed:', data)
+        alert(data.error || 'Failed to create payment order. Please try again.')
       }
     } catch (error) {
       console.error('Payment error:', error)
-      alert('Payment failed. Please try again.')
+      alert('Payment system error. Please refresh the page and try again.')
     } finally {
       setPaymentLoading(null)
     }
@@ -115,7 +154,7 @@ export default function MusicLibraryPage() {
     if (song.status === 'completed') {
       return <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">Paid</span>
     }
-    if (song.status === 'ready') {
+    if (song.status === 'ready' && song.isApproved) {
       return <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">Preview</span>
     }
     if (song.status === 'in_progress') {
@@ -134,98 +173,141 @@ export default function MusicLibraryPage() {
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-      <div className="min-h-screen bg-white dark:bg-black pt-28 pb-20">
-        <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-8"
-          >
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">My Music Library</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{songs.length} {songs.length === 1 ? 'song' : 'songs'}</p>
+      <Script 
+        src="https://checkout.razorpay.com/v1/checkout.js" 
+        strategy="lazyOnload"
+        onLoad={() => console.log('Razorpay loaded successfully')}
+        onError={() => console.error('Failed to load Razorpay')}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-blue-50/30 dark:from-gray-900 dark:via-purple-900/10 dark:to-blue-900/10 pt-20 pb-20">
+        <div
+          className="z-40 fixed top-16 left-0 right-0"
+          style={{
+            backgroundColor: scrollY > 50 ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+            backdropFilter: scrollY > 50 ? 'blur(12px)' : 'none',
+            borderBottom: scrollY > 50 ? '1px solid rgba(229, 231, 235, 0.5)' : 'none',
+            boxShadow: scrollY > 50 ? '0 1px 3px 0 rgba(0, 0, 0, 0.1)' : 'none'
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-3 md:px-6">
+            <div className="flex items-center justify-between py-3 md:py-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg md:rounded-2xl flex items-center justify-center">
+                  <Music className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <span className="md:hidden">Library</span>
+                    <span className="hidden md:inline">My Music Library</span>
+                  </h1>
+                  <p className="hidden md:block text-sm text-gray-600 dark:text-gray-400">
+                    {songs.length} {songs.length === 1 ? 'custom song' : 'custom songs'} in your collection
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => router.push('/shop/custom-song')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2"
+              >
+                <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                <span className="md:hidden">New</span>
+                <span className="hidden md:inline">Create New Song</span>
+              </Button>
             </div>
-            <Button
-              onClick={() => router.push('/shop/custom-song')}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Song
-            </Button>
-          </motion.div>
+          </div>
+        </div>
+        
+        <div className="max-w-6xl mx-auto px-2 md:px-6" style={{ paddingTop: '100px' }}>
 
           {songs.length === 0 ? (
-            <div className="text-center py-20">
-              <Music className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No songs yet</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">Order your first custom song to get started</p>
-              <Button onClick={() => router.push('/shop/custom-song')} className="bg-purple-600 hover:bg-purple-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Order Custom Song
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-3xl border border-gray-200/50 dark:border-gray-700/50 p-16 text-center">
+              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Music className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-3">Your library is empty</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">Create your first personalized song and start building your unique music collection</p>
+              <Button onClick={() => router.push('/shop/custom-song')} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg px-8 py-3">
+                <Plus className="w-5 h-5 mr-2" />
+                Create Your First Song
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-4 md:space-y-6">
               {songs.map((song, index) => (
                 <motion.div
                   key={song.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="group bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors"
+                  className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-lg md:rounded-2xl hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300"
                 >
-                  <div className="p-4">
-                    <div className="flex items-center gap-4">
+                  <div className="p-3 md:p-6">
+                    <div className="flex items-center gap-3 md:gap-6">
                       {/* Thumbnail */}
-                      <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded overflow-hidden">
-                        {song.posterUrl ? (
+                      <div className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg md:rounded-xl overflow-hidden shadow-lg">
+                        {song.posterUrl && song.isApproved ? (
                           <img src={song.posterUrl} alt={song.occasion} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Music className="w-6 h-6 text-white" />
+                            <Music className="w-6 h-6 md:w-8 md:h-8 text-white" />
                           </div>
                         )}
                       </div>
 
                       {/* Song Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900 dark:text-white truncate">{song.occasion} Song</h3>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-sm md:text-lg font-bold text-gray-900 dark:text-white truncate">{song.occasion} Song</h3>
                           {getStatusBadge(song)}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <span className="truncate">For: {song.recipientName}</span>
-                          <span>•</span>
-                          <span>{song.style}</span>
-                          <span>•</span>
-                          <span>{song.mood}</span>
+                        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">
+                          <span className="font-medium">For: {song.recipientName}</span>
+                        </div>
+                        <div className="hidden md:flex gap-2">
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs">{song.style}</span>
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs">{song.mood}</span>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        {song.status === 'pending' && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            <span className="hidden sm:inline">2-3 days</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {!song.previewUrl && (song.status === 'pending' || song.status === 'in_progress') && (
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 text-xs md:text-sm text-amber-600 dark:text-amber-400">
+                              {song.status === 'in_progress' ? (
+                                <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                              )}
+                              <span className="hidden md:inline font-medium">
+                                {song.status === 'in_progress' ? 'Creating...' : 'In Progress'}
+                              </span>
+                            </div>
                           </div>
                         )}
 
-                        {song.status === 'ready' && song.previewUrl && (
+                        {song.previewUrl && !song.isApproved && (
+                          <div className="text-right">
+                            <div className="text-xs md:text-sm text-orange-600 dark:text-orange-400 font-medium">
+                              <span className="hidden md:inline">Under </span>Review
+                            </div>
+                          </div>
+                        )}
+
+                        {song.status === 'ready' && song.previewUrl && song.isApproved && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handlePayment(song.id)}
                             disabled={paymentLoading === song.id}
-                            className="whitespace-nowrap"
+                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 text-xs px-2 md:px-4"
                           >
                             {paymentLoading === song.id ? (
-                              <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full" />
+                              <div className="animate-spin w-3 h-3 md:w-4 md:h-4 border-2 border-white border-t-transparent rounded-full" />
                             ) : (
                               <>
-                                <Lock className="w-4 h-4 mr-2" />
-                                Unlock ₹{song.amount}
+                                <Lock className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                                ₹{song.amount}
                               </>
                             )}
                           </Button>
@@ -235,23 +317,24 @@ export default function MusicLibraryPage() {
                           <a
                             href={song.fullAudioUrl}
                             download
-                            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1 md:p-2"
                           >
-                            <Download className="w-5 h-5" />
+                            <Download className="w-4 h-4 md:w-5 md:h-5" />
                           </a>
                         )}
                       </div>
                     </div>
 
                     {/* Audio Player */}
-                    {((song.status === 'ready' && song.previewUrl) || (song.status === 'completed' && song.fullAudioUrl)) && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-zinc-800">
+                    {((song.status === 'ready' && song.previewUrl && song.isApproved) || (song.status === 'completed' && song.fullAudioUrl)) && (
+                      <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
                         <AudioPlayer
                           src={song.status === 'completed' ? song.fullAudioUrl : song.previewUrl}
                           isPreview={song.status === 'ready'}
                           isPaid={song.status === 'completed'}
                           unlockPrice={song.amount}
                           onUnlock={() => handlePayment(song.id)}
+                          paymentLoading={paymentLoading === song.id}
                           songId={song.id}
                         />
                       </div>

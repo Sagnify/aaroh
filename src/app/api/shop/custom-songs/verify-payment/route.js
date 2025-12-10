@@ -3,12 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
-import { sendEmail, getAdminEmail } from '@/lib/email'
+import { sendEmail, getAdminEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(request) {
+  console.log('🚀 PAYMENT VERIFICATION API CALLED')
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
+      console.error('❌ Payment verification: Unauthorized access attempt')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -16,132 +18,195 @@ export async function POST(request) {
     const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = body
 
     if (!orderId || !razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+      console.error('❌ Payment verification: Missing required fields', { orderId, razorpay_payment_id, razorpay_order_id, hasSignature: !!razorpay_signature })
       return NextResponse.json({ error: 'Missing required payment fields' }, { status: 400 })
     }
+    
+    console.log(`🔒 Verifying payment: ${razorpay_payment_id} | Order: ${razorpay_order_id} | User: ${session.user.email}`)
 
-    // Verify signature
+    // Enhanced signature verification with timing-safe comparison
     const sign = razorpay_order_id + '|' + razorpay_payment_id
     const expectedSign = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(sign.toString())
       .digest('hex')
 
-    if (razorpay_signature !== expectedSign) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    if (!crypto.timingSafeEqual(Buffer.from(razorpay_signature), Buffer.from(expectedSign))) {
+      console.error(`❌ SECURITY: Invalid payment signature | Payment: ${razorpay_payment_id} | User: ${session.user.email}`)
+      
+      // Mark custom song as failed
+      await prisma.customSongOrder.update({
+        where: { id: orderId },
+        data: { 
+          status: 'failed',
+          updatedAt: new Date()
+        }
+      })
+      
+      // Send security alert
+      try {
+        await sendEmail({
+          to: process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL,
+          subject: '🚨 SECURITY ALERT: Invalid Payment Signature',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 3px solid #DC2626;">
+              <h1 style="color: #DC2626;">🚨 SECURITY ALERT: Invalid Payment Signature</h1>
+              <p><strong>User:</strong> ${session.user.email}</p>
+              <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
+              <p><strong>Order ID:</strong> ${razorpay_order_id}</p>
+              <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+              <p style="color: #DC2626; font-weight: bold;">Possible payment tampering attempt!</p>
+            </div>
+          `
+        })
+      } catch (emailError) {
+        console.error('Failed to send security alert:', emailError)
+      }
+      
+      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
 
-    // Check if already completed (idempotency) and verify ownership
+    // Enhanced order validation with security checks
     const existingOrder = await prisma.customSongOrder.findUnique({
       where: { id: orderId }
     })
 
     if (!existingOrder) {
+      console.error(`❌ Payment verification: Order not found | Order: ${orderId} | User: ${session.user.email}`)
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
     if (existingOrder.userEmail !== session.user.email) {
+      console.error(`❌ SECURITY: Unauthorized payment verification attempt | Order: ${orderId} | User: ${session.user.email} | Owner: ${existingOrder.userEmail}`)
+      
+      // Send security alert for unauthorized access
+      try {
+        await sendEmail({
+          to: process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL,
+          subject: '🚨 SECURITY: Unauthorized Payment Verification',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 3px solid #DC2626;">
+              <h1 style="color: #DC2626;">🚨 SECURITY: Unauthorized Payment Verification</h1>
+              <p><strong>Attempting User:</strong> ${session.user.email}</p>
+              <p><strong>Order Owner:</strong> ${existingOrder.userEmail}</p>
+              <p><strong>Order ID:</strong> ${orderId}</p>
+              <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
+              <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+            </div>
+          `
+        })
+      } catch (emailError) {
+        console.error('Failed to send security alert:', emailError)
+      }
+      
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    if (existingOrder.status === 'completed') {
+    // Check for duplicate payment verification (idempotency) - only skip if same payment ID
+    if (existingOrder.status === 'completed' && existingOrder.razorpayPaymentId === razorpay_payment_id) {
+      console.log(`♾️ Payment verification: Already completed with same payment ID | Order: ${orderId}`)
       return NextResponse.json({ 
         success: true, 
         message: 'Payment already verified' 
       })
     }
+    
+    // Allow repayments even if status is completed but with different payment ID
+    if (existingOrder.status === 'completed' && existingOrder.razorpayPaymentId !== razorpay_payment_id) {
+      console.log(`🔄 Processing repayment for completed order | Order: ${orderId} | New Payment: ${razorpay_payment_id}`)
+    }
+    
+    // Validate Razorpay order ID matches
+    if (existingOrder.razorpayOrderId !== razorpay_order_id) {
+      console.error(`❌ Payment verification: Razorpay order ID mismatch | Expected: ${existingOrder.razorpayOrderId} | Received: ${razorpay_order_id}`)
+      return NextResponse.json({ error: 'Order ID mismatch' }, { status: 400 })
+    }
 
-    // Update custom song order
-    const updatedOrder = await prisma.customSongOrder.update({
-      where: { id: orderId },
-      data: {
-        status: 'completed'
-      }
+    // Update custom song order with transaction safety
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      // Check if this is a repayment and add current order ID to history
+      const orderHistory = Array.isArray(existingOrder.orderIdHistory) ? existingOrder.orderIdHistory : []
+      const isRepayment = orderHistory.length > 0
+      
+      // Add current order ID to history if it's a repayment
+      const updatedHistory = isRepayment ? [...orderHistory, existingOrder.razorpayOrderId] : orderHistory
+      
+      return await tx.customSongOrder.update({
+        where: { id: orderId },
+        data: {
+          status: 'completed',
+          razorpayPaymentId: razorpay_payment_id,
+          orderIdHistory: updatedHistory,
+          updatedAt: new Date()
+        }
+      })
     })
+    
+    console.log(`✅ Payment verified successfully | Order: ${orderId} | Payment: ${razorpay_payment_id}`)
+    console.log('📧 About to send emails for order:', JSON.stringify(updatedOrder, null, 2))
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
     })
 
+    if (!user) {
+      console.error('❌ User not found for email:', session.user.email)
+      return NextResponse.json({ success: true }) // Still return success for payment
+    }
+
+    // Detect if this is a repayment (has order history)
+    const orderHistory = Array.isArray(updatedOrder.orderIdHistory) ? updatedOrder.orderIdHistory : []
+    const isRepayment = orderHistory.length > 0
+    console.log('🔄 Is repayment:', isRepayment, '| Order history length:', orderHistory.length)
+
     // Send confirmation emails
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const emailPromises = Promise.all([
-      sendEmail({
-        to: user.email,
-        subject: `🎵 Payment Confirmed - Custom Song Order #${updatedOrder.id.slice(0, 8)}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">✅ Payment Confirmed!</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Your custom song order is confirmed</p>
-            </div>
-            <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-              <div style="background-color: #ecfdf5; padding: 20px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #10b981;">
-                <h2 style="color: #065f46; margin-top: 0;">Order #${updatedOrder.id.slice(0, 8)}</h2>
-                <p><strong>Occasion:</strong> ${updatedOrder.occasion}</p>
-                <p><strong>For:</strong> ${updatedOrder.recipientName}</p>
-                <p><strong>Style:</strong> ${updatedOrder.style} - ${updatedOrder.mood}</p>
-                <p><strong>Delivery:</strong> ${updatedOrder.deliveryType === 'express' ? '3 days' : '7 days'}</p>
-                <p><strong>Amount Paid:</strong> ₹${updatedOrder.amount.toLocaleString()}</p>
-              </div>
-              <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #1e40af; margin-top: 0;">🎶 What's Next?</h3>
-                <ul style="color: #1e40af; margin: 0;">
-                  <li>Our music team will start crafting your song</li>
-                  <li>You'll receive preview for approval via email</li>
-                  <li>Final song delivered within ${updatedOrder.deliveryType === 'express' ? '3 days' : '7 days'}</li>
-                </ul>
-              </div>
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${baseUrl}/shop/music-library" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                  🎵 View Music Library
-                </a>
-              </div>
-            </div>
-          </div>
-        `
-      }).catch(err => console.error('User email failed:', err)),
+    const templates = emailTemplates(baseUrl)
+    
+    try {
+      console.log('📧 Sending emails to:', user.email, 'and', getAdminEmail())
       
-      sendEmail({
-        to: getAdminEmail(),
-        subject: `💰 Payment Received - Custom Song #${updatedOrder.id.slice(0, 8)}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-              <h1 style="color: white; margin: 0;">💰 Payment Received!</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Custom Song Order #${updatedOrder.id.slice(0, 8)}</p>
-            </div>
-            <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-              <div style="background-color: #ecfdf5; padding: 20px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #10b981;">
-                <h2 style="color: #065f46; margin-top: 0;">Paid Order Details</h2>
-                <p><strong>Customer:</strong> ${user.name} (${user.email})</p>
-                <p><strong>Occasion:</strong> ${updatedOrder.occasion}</p>
-                <p><strong>Recipient:</strong> ${updatedOrder.recipientName}</p>
-                <p><strong>Style:</strong> ${updatedOrder.style} - ${updatedOrder.mood}</p>
-                <p><strong>Deadline:</strong> ${updatedOrder.deliveryType === 'express' ? '3 days (Express)' : '7 days (Standard)'}</p>
-                <p><strong>Amount:</strong> ₹${updatedOrder.amount.toLocaleString()}</p>
-              </div>
-              <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                <h3 style="margin-top: 0; color: #92400e;">Story:</h3>
-                <p style="font-style: italic; color: #92400e;">"${updatedOrder.story}"</p>
-              </div>
-              <div style="text-align: center; margin: 24px 0;">
-                <a href="${baseUrl}/admin/shop" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                  🏪 Process in Admin Panel
-                </a>
-              </div>
-            </div>
-          </div>
-        `
-      }).catch(err => console.error('Admin email failed:', err))
-    ])
-
-    if (request.waitUntil) {
-      request.waitUntil(emailPromises)
+      await Promise.all([
+        sendEmail({
+          to: user.email,
+          ...templates.customSongPaymentSuccess(user.name || 'Customer', updatedOrder, isRepayment)
+        }),
+        sendEmail({
+          to: getAdminEmail(),
+          ...templates.adminCustomSongPayment(user.name || 'Customer', user.email, updatedOrder, isRepayment)
+        })
+      ])
+      
+      console.log('✅ Emails sent successfully')
+      
+    } catch (emailError) {
+      console.error('❌ Email failed:', emailError.message)
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error verifying custom song payment:', error)
+    console.error('❌ CRITICAL: Payment verification failed:', error)
+    
+    // Send critical alert for payment verification failures
+    try {
+      await sendEmail({
+        to: process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL,
+        subject: '🚨 CRITICAL: Payment Verification Failed',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 3px solid #DC2626;">
+            <h1 style="color: #DC2626;">🚨 CRITICAL: Payment Verification Failed</h1>
+            <p><strong>User:</strong> ${session?.user?.email || 'Unknown'}</p>
+            <p><strong>Error:</strong> ${error.message}</p>
+            <p><strong>Stack:</strong> <pre>${error.stack}</pre></p>
+            <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+            <p style="color: #DC2626; font-weight: bold;">IMMEDIATE INVESTIGATION REQUIRED!</p>
+          </div>
+        `
+      })
+    } catch (emailError) {
+      console.error('Failed to send payment verification failure alert:', emailError)
+    }
+    
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 })
   }
 }

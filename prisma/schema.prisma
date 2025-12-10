@@ -272,7 +272,12 @@ model CustomSongOrder {
   previewUrl    String?
   fullAudioUrl  String?
   posterUrl     String?
+  isApproved    Boolean      @default(false)
   razorpayOrderId String?
+  razorpayPaymentId String?
+  orderIdHistory Json        @default("[]")
+  repaymentCount Int         @default(0)
+  adminResetCount Int        @default(0)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }

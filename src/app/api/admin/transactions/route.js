@@ -17,28 +17,32 @@ export async function GET(request) {
 
     const now = new Date()
     let startDate = new Date()
+    let whereClause = {}
 
-    switch (period) {
-      case 'week':
-        startDate.setDate(now.getDate() - 7)
-        break
-      case 'month':
-        startDate.setMonth(now.getMonth() - 1)
-        break
-      case '6months':
-        startDate.setMonth(now.getMonth() - 6)
-        break
-      case 'year':
-        startDate.setFullYear(now.getFullYear() - 1)
-        break
-      default:
-        startDate.setMonth(now.getMonth() - 1)
-    }
-
-    const whereClause = {
-      createdAt: {
-        gte: startDate,
-        lte: now
+    // Only apply date filter if period is not 'all'
+    if (period !== 'all') {
+      switch (period) {
+        case 'week':
+          startDate.setDate(now.getDate() - 7)
+          break
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1)
+          break
+        case '6months':
+          startDate.setMonth(now.getMonth() - 6)
+          break
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1)
+          break
+        default:
+          startDate.setMonth(now.getMonth() - 1)
+      }
+      
+      whereClause = {
+        createdAt: {
+          gte: startDate,
+          lte: now
+        }
       }
     }
 
@@ -58,15 +62,9 @@ export async function GET(request) {
       }
     })
 
-    // Get course purchases
+    // Get course purchases (all statuses)
     const coursePurchases = await prisma.purchase.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-          lte: now
-        },
-        status: 'completed'
-      },
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -85,15 +83,9 @@ export async function GET(request) {
       }
     })
 
-    // Get custom song orders (completed = paid)
+    // Get custom song orders (all statuses)
     const customSongOrders = await prisma.customSongOrder.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-          lte: now
-        },
-        status: 'completed'
-      },
+      where: whereClause,
       orderBy: {
         createdAt: 'desc'
       }
@@ -117,7 +109,7 @@ export async function GET(request) {
         customerEmail: purchase.user.email,
         customerPhone: null,
         paymentMethod: 'online',
-        paymentStatus: 'paid',
+        paymentStatus: purchase.status === 'completed' ? 'paid' : purchase.status,
         amount: purchase.amount,
         items: [{
           productName: purchase.course.title,
@@ -131,7 +123,7 @@ export async function GET(request) {
         customerEmail: order.userEmail,
         customerPhone: null,
         paymentMethod: 'online',
-        paymentStatus: 'paid',
+        paymentStatus: order.status === 'completed' ? 'paid' : order.status,
         amount: order.amount,
         items: [{
           productName: `Custom Song - ${order.occasion}`,
@@ -201,13 +193,10 @@ export async function GET(request) {
       }
     })
 
-    // Get course purchase statistics
-    const courseStats = await prisma.purchase.aggregate({
+    // Get completed course and custom song counts for successful transactions
+    const completedCourses = await prisma.purchase.aggregate({
       where: {
-        createdAt: {
-          gte: startDate,
-          lte: now
-        },
+        ...whereClause,
         status: 'completed'
       },
       _sum: {
@@ -218,15 +207,73 @@ export async function GET(request) {
       }
     })
 
-    // Get custom song statistics (completed = paid)
-    const customSongStats = await prisma.customSongOrder.aggregate({
+    const completedCustomSongs = await prisma.customSongOrder.aggregate({
       where: {
-        createdAt: {
-          gte: startDate,
-          lte: now
-        },
+        ...whereClause,
         status: 'completed'
       },
+      _sum: {
+        amount: true
+      },
+      _count: {
+        id: true
+      }
+    })
+
+    // Get failed and pending counts for courses and custom songs
+    const failedCourses = await prisma.purchase.count({
+      where: {
+        ...whereClause,
+        status: 'failed'
+      }
+    })
+
+    const pendingCourses = await prisma.purchase.count({
+      where: {
+        ...whereClause,
+        status: 'pending'
+      }
+    })
+
+    const failedCustomSongs = await prisma.customSongOrder.count({
+      where: {
+        ...whereClause,
+        status: 'failed'
+      }
+    })
+
+    const pendingCustomSongs = await prisma.customSongOrder.count({
+      where: {
+        ...whereClause,
+        OR: [
+          { status: 'pending' },
+          { status: 'awaiting_payment' },
+          { status: 'in_progress' }
+        ]
+      }
+    })
+
+    const readyCustomSongs = await prisma.customSongOrder.count({
+      where: {
+        ...whereClause,
+        status: 'ready'
+      }
+    })
+
+    // Get course purchase statistics
+    const courseStats = await prisma.purchase.aggregate({
+      where: whereClause,
+      _sum: {
+        amount: true
+      },
+      _count: {
+        id: true
+      }
+    })
+
+    // Get custom song statistics
+    const customSongStats = await prisma.customSongOrder.aggregate({
+      where: whereClause,
       _sum: {
         amount: true
       },
@@ -243,13 +290,15 @@ export async function GET(request) {
       stats: {
         totalTransactions: (shopStats._count.id || 0) + (courseStats._count.id || 0) + (customSongStats._count.id || 0),
         totalAmount: (shopStats._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.amount || 0),
-        successfulTransactions: (shopSuccessful._count.id || 0) + (courseStats._count.id || 0) + (customSongStats._count.id || 0),
-        successfulAmount: (shopSuccessful._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.amount || 0),
-        failedTransactions: shopFailed._count.id || 0,
-        pendingTransactions: shopPending._count.id || 0,
+        successfulTransactions: (shopSuccessful._count.id || 0) + (completedCourses._count.id || 0) + (completedCustomSongs._count.id || 0),
+        successfulAmount: (shopSuccessful._sum.amount || 0) + (completedCourses._sum.amount || 0) + (completedCustomSongs._sum.amount || 0),
+        failedTransactions: (shopFailed._count.id || 0) + failedCourses + failedCustomSongs,
+        pendingTransactions: (shopPending._count.id || 0) + pendingCourses + pendingCustomSongs,
+        readyTransactions: readyCustomSongs,
         codTransactions: codTransactions._count.id || 0,
         codAmount: (codTransactions._sum.amount || 0),
-        totalReceived: (shopSuccessful._sum.amount || 0) + (codTransactions._sum.amount || 0) + (courseStats._sum.amount || 0) + (customSongStats._sum.amount || 0)
+        totalReceived: (shopSuccessful._sum.amount || 0) + (codTransactions._sum.amount || 0) + (completedCourses._sum.amount || 0) + (completedCustomSongs._sum.amount || 0),
+        totalPendingAndReady: (shopPending._count.id || 0) + pendingCourses + pendingCustomSongs + readyCustomSongs
       },
       pagination: {
         currentPage: page,

@@ -12,6 +12,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const { to, subject, html, text } = await request.json()
 
     if (!to || !subject || (!html && !text)) {

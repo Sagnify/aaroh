@@ -7,6 +7,7 @@ export default function AdminPage() {
   const router = useRouter()
 
   useEffect(() => {
+    document.title = 'Admin Panel | Aaroh'
     // Redirect to login page
     router.push('/admin/login')
   }, [router])

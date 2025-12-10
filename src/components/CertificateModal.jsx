@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,105 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   const [showImageReveal, setShowImageReveal] = useState(false)
   const [revealComplete, setRevealComplete] = useState(false)
 
+  // Memoized formatted date to prevent recalculation on every render
+  const formattedDate = useMemo(() => {
+    if (!certificate?.issuedAt) return ''
+    const d = new Date(certificate.issuedAt)
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = d.getFullYear()
+    return `${day}/${month}/${year}`
+  }, [certificate?.issuedAt])
+
+  // Memoized event handlers to prevent function recreation on every render
+  const handleNameChange = useCallback((e) => {
+    setCustomName(e.target.value)
+  }, [])
+
+  const handleGenerateCertificate = useCallback(() => {
+    generateCertificate()
+  }, [settings])
+
+  // Memoized wave animation overlay to prevent recalculation on every render
+  const waveRevealOverlay = useMemo(() => {
+    const dampen = fillProgress > 75 ? Math.max(0, (100 - fillProgress) / 25) : 1
+    const convergeTo = 40
+    const wave1Pos = 30 + (convergeTo - 30) * (1 - dampen)
+    const wave2Pos = 45 + (convergeTo - 45) * (1 - dampen)
+    const wave3Pos = 58 + (convergeTo - 58) * (1 - dampen)
+    const minAmplitude = 0.3
+    const amplitudeFactor = minAmplitude + (dampen * (1 - minAmplitude))
+    const wave1Min = 5 * amplitudeFactor
+    const wave1Max = 55 * amplitudeFactor
+    const wave2Min = 22 * amplitudeFactor
+    const wave2Max = 68 * amplitudeFactor
+    const wave3Min = 38 * amplitudeFactor
+    const wave3Max = 78 * amplitudeFactor
+    
+    return (
+      <div 
+        className="absolute left-0 right-0 bg-white transition-all ease-out pointer-events-none"
+        style={{ 
+          top: 0,
+          bottom: `${fillProgress}%`,
+          transitionDuration: '100ms'
+        }}
+      >
+        <svg 
+          className="absolute bottom-0 w-full transition-all duration-500" 
+          style={{ 
+            height: `${Math.max(40, 80 * dampen)}px`, 
+            transform: `translateY(${Math.max(20, 79 * dampen)}px)`,
+            opacity: dampen
+          }} 
+          viewBox="0 0 1200 80" 
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ff6b6b" />
+              <stop offset="20%" stopColor="#ffa07a" />
+              <stop offset="40%" stopColor="#ffd700" />
+              <stop offset="60%" stopColor="#98fb98" />
+              <stop offset="80%" stopColor="#87ceeb" />
+              <stop offset="100%" stopColor="#da70d6" />
+            </linearGradient>
+          </defs>
+          <path 
+            fill="url(#wave-gradient)" 
+            opacity="0.9"
+          >
+            <animate attributeName="d" dur="2.5s" repeatCount="indefinite" values={
+              `M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos - wave1Min} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z;
+              M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos + wave1Max} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z;
+              M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos - wave1Min} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z`
+            } />
+          </path>
+          <path 
+            fill="url(#wave-gradient)" 
+            opacity="0.75"
+          >
+            <animate attributeName="d" dur="3s" repeatCount="indefinite" values={
+              `M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos - wave2Min} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z;
+              M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos + wave2Max} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z;
+              M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos - wave2Min} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z`
+            } />
+          </path>
+          <path 
+            fill="url(#wave-gradient)" 
+            opacity="0.6"
+          >
+            <animate attributeName="d" dur="3.5s" repeatCount="indefinite" values={
+              `M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos - wave3Min} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z;
+              M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos + wave3Max} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z;
+              M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos - wave3Min} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z`
+            } />
+          </path>
+        </svg>
+      </div>
+    )
+  }, [fillProgress])
+
   useEffect(() => {
     const updateWindowDimensions = () => {
       setWindowDimensions({ width: window.innerWidth, height: window.innerHeight })
@@ -41,7 +140,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
     }
   }, [])
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/certificate-settings')
       if (response.ok) {
@@ -55,7 +154,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
     } catch (error) {
       console.error('Failed to fetch settings:', error)
     }
-  }
+  }, [certificate])
 
   useEffect(() => {
     if (isGenerating) {
@@ -100,7 +199,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
     }
   }, [generatedImageUrl, isGenerating])
 
-  const generateCertificate = async (settingsData = settings) => {
+  const generateCertificate = useCallback(async (settingsData = settings) => {
     const courseTitle = certificate?.courseTitle || certificate?.course?.title
     if (!settingsData || !certificate || !certificate.certificateId || !certificate.issuedAt || !courseTitle) {
       console.log('Missing data for certificate generation:', { 
@@ -230,7 +329,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       console.error('Failed to generate certificate:', error)
       setIsGenerating(false)
     }
-  }
+  }, [settings, certificate, customName])
 
   const handleDownload = async () => {
     try {
@@ -269,7 +368,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-200 overflow-y-auto overflow-x-hidden">
       {/* Professional Confetti Animation */}
       {showConfetti && (
         <Confetti
@@ -283,9 +382,9 @@ export default function CertificateModal({ certificate, userName, onClose }) {
         />
       )}
 
-      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4 sm:p-6 text-white relative">
+      <div className="w-full max-w-6xl bg-white rounded-lg sm:rounded-2xl shadow-2xl my-2 sm:my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 max-h-[95vh] flex flex-col">
+        {/* Header - Fixed */}
+        <div className="bg-gradient-to-r from-[#a0303f] to-[#ff6b6b] p-4 sm:p-6 text-white relative rounded-t-lg sm:rounded-t-2xl flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
@@ -303,12 +402,13 @@ export default function CertificateModal({ certificate, userName, onClose }) {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row">
+        {/* Scrollable Body */}
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto overflow-x-hidden">
           {/* Certificate Preview - Left Side */}
-          <div className="lg:w-[60%] mx-auto p-3 sm:p-6 bg-gray-50">
+          <div className="w-full lg:w-[60%] p-3 sm:p-6 bg-gray-50">
             <div 
               id="certificate-preview" 
-              className="relative bg-white rounded-lg sm:rounded-xl shadow-xl border-2 border-gray-200 aspect-[4/3] overflow-hidden"
+              className="relative bg-white rounded-lg sm:rounded-xl shadow-xl border-2 border-gray-200 w-full h-64 sm:h-80 lg:aspect-[4/3] lg:h-auto overflow-hidden"
             >
               {isGenerating ? (
                 <div className="relative h-full w-full overflow-hidden bg-white">
@@ -322,9 +422,9 @@ export default function CertificateModal({ certificate, userName, onClose }) {
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center z-10">
                     <div className="text-center px-4">
-                      <Award className="w-16 h-16 text-[#a0303f] mx-auto mb-4 drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} />
-                      <p className="text-xl font-semibold text-gray-800 mb-1 drop-shadow-sm">Crafting Certificate</p>
-                      <p className="text-3xl font-bold text-[#a0303f] drop-shadow-sm">{fillProgress}%</p>
+                      <Award className="w-12 h-12 sm:w-16 sm:h-16 text-[#a0303f] mx-auto mb-2 sm:mb-4 drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }} />
+                      <p className="text-lg sm:text-xl font-semibold text-gray-800 mb-1 drop-shadow-sm">Crafting Certificate</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-[#a0303f] drop-shadow-sm">{fillProgress}%</p>
                     </div>
                   </div>
                 </div>
@@ -338,97 +438,13 @@ export default function CertificateModal({ certificate, userName, onClose }) {
                       draggable="false"
                     />
                   </div>
-                  {showImageReveal && (() => {
-                    const dampen = fillProgress > 75 ? Math.max(0, (100 - fillProgress) / 25) : 1
-                    
-                    return (
-                      <div 
-                        className="absolute left-0 right-0 bg-white transition-all ease-out pointer-events-none"
-                        style={{ 
-                          top: 0,
-                          bottom: `${fillProgress}%`,
-                          transitionDuration: '100ms'
-                        }}
-                      >
-                        <svg 
-                          className="absolute bottom-0 w-full transition-all duration-500" 
-                          style={{ 
-                            height: `${80 * dampen}px`, 
-                            transform: `translateY(${79 * dampen}px)`,
-                            opacity: dampen
-                          }} 
-                          viewBox="0 0 1200 80" 
-                          preserveAspectRatio="none"
-                        >
-                          <defs>
-                            <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#ff6b6b" />
-                              <stop offset="20%" stopColor="#ffa07a" />
-                              <stop offset="40%" stopColor="#ffd700" />
-                              <stop offset="60%" stopColor="#98fb98" />
-                              <stop offset="80%" stopColor="#87ceeb" />
-                              <stop offset="100%" stopColor="#da70d6" />
-                            </linearGradient>
-                          </defs>
-                          {(() => {
-                          const convergeTo = 40
-                          const wave1Pos = 30 + (convergeTo - 30) * (1 - dampen)
-                          const wave2Pos = 45 + (convergeTo - 45) * (1 - dampen)
-                          const wave3Pos = 58 + (convergeTo - 58) * (1 - dampen)
-                          const minAmplitude = 0.3
-                          const amplitudeFactor = minAmplitude + (dampen * (1 - minAmplitude))
-                          const wave1Min = 5 * amplitudeFactor
-                          const wave1Max = 55 * amplitudeFactor
-                          const wave2Min = 22 * amplitudeFactor
-                          const wave2Max = 68 * amplitudeFactor
-                          const wave3Min = 38 * amplitudeFactor
-                          const wave3Max = 78 * amplitudeFactor
-                          
-                          return (
-                            <>
-                              <path 
-                                fill="url(#wave-gradient)" 
-                                opacity="0.9"
-                              >
-                                <animate attributeName="d" dur="2.5s" repeatCount="indefinite" values={
-                                  `M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos - wave1Min} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z;
-                                  M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos + wave1Max} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z;
-                                  M0,0 L1200,0 L1200,${wave1Pos} Q1050,${wave1Pos - wave1Min} 900,${wave1Pos} T600,${wave1Pos} T300,${wave1Pos} T0,${wave1Pos} Z`
-                                } />
-                              </path>
-                              <path 
-                                fill="url(#wave-gradient)" 
-                                opacity="0.75"
-                              >
-                                <animate attributeName="d" dur="3s" repeatCount="indefinite" values={
-                                  `M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos - wave2Min} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z;
-                                  M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos + wave2Max} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z;
-                                  M0,0 L1200,0 L1200,${wave2Pos} Q1000,${wave2Pos - wave2Min} 800,${wave2Pos} T400,${wave2Pos} T0,${wave2Pos} Z`
-                                } />
-                              </path>
-                              <path 
-                                fill="url(#wave-gradient)" 
-                                opacity="0.6"
-                              >
-                                <animate attributeName="d" dur="3.5s" repeatCount="indefinite" values={
-                                  `M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos - wave3Min} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z;
-                                  M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos + wave3Max} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z;
-                                  M0,0 L1200,0 L1200,${wave3Pos} Q950,${wave3Pos - wave3Min} 700,${wave3Pos} T300,${wave3Pos} T0,${wave3Pos} Z`
-                                } />
-                              </path>
-                            </>
-                            )
-                          })()}
-                        </svg>
-                      </div>
-                    )
-                  })()}
+                  {showImageReveal && waveRevealOverlay}
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   <div className="text-center">
-                    <div className="text-4xl mb-2">📄</div>
-                    <p>Loading certificate...</p>
+                    <div className="text-3xl sm:text-4xl mb-2">📄</div>
+                    <p className="text-sm sm:text-base">Loading certificate...</p>
                   </div>
                 </div>
               )}
@@ -436,7 +452,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
           </div>
 
           {/* Controls - Right Side */}
-          <div className="lg:w-1/3 p-4 sm:p-8 bg-white border-t lg:border-t-0 lg:border-l border-gray-200">
+          <div className="w-full lg:w-1/3 p-4 sm:p-8 bg-white border-t lg:border-t-0 lg:border-l border-gray-200">
             <div className="space-y-4 sm:space-y-6">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">Customize Certificate</h3>
@@ -452,12 +468,12 @@ export default function CertificateModal({ certificate, userName, onClose }) {
                     <Input
                       id="name"
                       value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
+                      onChange={handleNameChange}
                       className="text-base sm:text-lg font-medium flex-1"
                       placeholder="Enter your name"
                     />
                     <Button
-                      onClick={() => generateCertificate()}
+                      onClick={handleGenerateCertificate}
                       disabled={isGenerating}
                       className="bg-[#a0303f] hover:bg-[#8a2a37] text-white px-4 w-full sm:w-auto"
                     >
@@ -475,13 +491,7 @@ export default function CertificateModal({ certificate, userName, onClose }) {
                   <div className="mt-2 text-xs sm:text-sm text-green-700 space-y-1">
                     <p className="break-words"><strong>Course:</strong> {certificate.courseTitle || certificate.course?.title}</p>
                     <p className="break-all"><strong>ID:</strong> {certificate.certificateId}</p>
-                    <p><strong>Date:</strong> {(() => {
-                      const d = new Date(certificate.issuedAt)
-                      const day = String(d.getDate()).padStart(2, '0')
-                      const month = String(d.getMonth() + 1).padStart(2, '0')
-                      const year = d.getFullYear()
-                      return `${day}/${month}/${year}`
-                    })()}</p>
+                    <p><strong>Date:</strong> {formattedDate}</p>
                   </div>
                 </div>
               </div>

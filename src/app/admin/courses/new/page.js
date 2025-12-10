@@ -51,9 +51,16 @@ export default function AddCourse() {
     setLoading(true)
 
     try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                       await fetch('/api/auth/csrf').then(r => r.json()).then(d => d.csrfToken)
+      
       const response = await fetch('/api/courses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
         body: JSON.stringify(formData)
       })
 

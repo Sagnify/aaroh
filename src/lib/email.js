@@ -57,7 +57,10 @@ export async function sendEmail({ to, subject, html, text }) {
 
 // Get admin email - always use CONTACT_EMAIL for real notifications
 export function getAdminEmail() {
-  return process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL
+  if (!process.env.CONTACT_EMAIL) {
+    throw new Error('CONTACT_EMAIL environment variable is required')
+  }
+  return process.env.CONTACT_EMAIL
 }
 
 // Get contact email from database
@@ -66,10 +69,10 @@ export async function getContactEmail() {
     const content = await prisma.siteContent.findUnique({
       where: { key: 'contactEmail' }
     })
-    return content?.value || process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL
+    return content?.value || process.env.CONTACT_EMAIL
   } catch (error) {
     console.error('Failed to fetch contact email:', error)
-    return process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL
+    return process.env.CONTACT_EMAIL
   }
 }
 
@@ -77,16 +80,27 @@ export async function getContactEmail() {
 export const emailTemplates = (baseUrl) => ({
   // Welcome email
   welcome: (userName) => ({
-    subject: 'Welcome to Aaroh Music Academy!',
+    subject: 'Welcome to Aaroh Music Academy',
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #1f2937;">Welcome to Aaroh Music Academy!</h1>
-        <p>Hi ${userName},</p>
-        <p>Thank you for joining Aaroh Music Academy. We're excited to have you on your musical journey!</p>
-        <p>You can now browse our courses and start learning.</p>
-        <a href="${baseUrl}/courses" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Browse Courses</a>
-        <p>If you have any questions, feel free to reach out to us.</p>
-        <p>Best regards,<br>Aaroh Music Academy Team</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Welcome to Aaroh</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Your musical journey begins now</p>
+        </div>
+        
+        <div style="padding: 40px 30px;">
+          <p style="color: #1E293B; font-size: 16px; margin: 0 0 24px 0;">Hi ${userName},</p>
+          <p style="color: #64748B; font-size: 16px; line-height: 1.6; margin: 0 0 32px 0;">Thank you for joining Aaroh Music Academy. We're excited to guide you on your musical journey with our expert instructors and comprehensive courses.</p>
+          
+          <div style="text-align: center; margin-bottom: 32px;">
+            <a href="${baseUrl}/courses" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Browse Courses</a>
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p style="color: #64748B; margin: 0; font-size: 14px;">Questions? Reply to this email or contact our support team.</p>
+            <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Music Academy Team</p>
+          </div>
+        </div>
       </div>
     `,
     text: `Welcome to Aaroh Music Academy! Hi ${userName}, Thank you for joining us. Browse our courses at ${baseUrl}/courses`
@@ -94,24 +108,38 @@ export const emailTemplates = (baseUrl) => ({
 
   // Purchase confirmation
   purchaseConfirmation: (userName, courseName, amount) => ({
-    subject: 'Purchase Confirmation - Aaroh Music Academy',
+    subject: 'Course Purchase Confirmed',
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #1f2937;">Purchase Confirmed!</h1>
-        <p>Hi ${userName},</p>
-        <p>Thank you for your purchase! Your payment has been successfully processed.</p>
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="margin-top: 0; color: #1f2937;">Course Details</h2>
-          <p><strong>Course:</strong> ${courseName}</p>
-          <p><strong>Amount Paid:</strong> ₹${amount.toLocaleString()}</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Purchase Confirmed</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Your course is now available</p>
         </div>
-        <p>You can now access your course from your dashboard.</p>
-        <a href="${baseUrl}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
-        <p>Happy learning!</p>
-        <p>Best regards,<br>Aaroh Music Academy Team</p>
+        
+        <div style="padding: 40px 30px;">
+          <p style="color: #1E293B; font-size: 16px; margin: 0 0 24px 0;">Hi ${userName},</p>
+          <p style="color: #64748B; font-size: 16px; line-height: 1.6; margin: 0 0 32px 0;">Thank you for your purchase! Your payment has been successfully processed and you now have full access to your course.</p>
+          
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <h2 style="color: #1E293B; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Course Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Course:</td><td style="padding: 6px 0; color: #1E293B; font-weight: 600;">${courseName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Amount Paid:</td><td style="padding: 6px 0; color: #1E293B; font-weight: 600;">₹${amount.toLocaleString()}</td></tr>
+            </table>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 32px;">
+            <a href="${baseUrl}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Access Your Course</a>
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p style="color: #64748B; margin: 0; font-size: 14px;">Happy learning! Questions? Reply to this email.</p>
+            <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Music Academy Team</p>
+          </div>
+        </div>
       </div>
     `,
-    text: `Purchase Confirmed! Hi ${userName}, Your payment for ${courseName} (₹${amount}) has been processed. Access your course at ${baseUrl}/dashboard`
+    text: `Course Purchase Confirmed! Hi ${userName}, Your payment for ${courseName} (₹${amount}) has been processed. Access your course at ${baseUrl}/dashboard`
   }),
 
   // Certificate generated
@@ -357,6 +385,132 @@ export const emailTemplates = (baseUrl) => ({
     text: `Contact form: ${name} (${email}, ${phone}) - ${message}`
   }),
 
+  // Custom song payment success
+  customSongPaymentSuccess: (userName, order, isRepayment = false) => ({
+    subject: `${isRepayment ? 'Repayment' : 'Payment'} Confirmed - Custom Song Order #${order.id.slice(0, 8)}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">${isRepayment ? 'Repayment' : 'Payment'} Confirmed</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">${isRepayment ? 'Thank you for completing the payment' : 'Your custom song is now in production'}</p>
+        </div>
+        
+        <div style="padding: 40px 30px;">
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <h2 style="color: #1E293B; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Order Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Order ID:</td><td style="padding: 6px 0; color: #1E293B; font-weight: 600;">#${order.id.slice(0, 8)}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Occasion:</td><td style="padding: 6px 0; color: #1E293B;">${order.occasion}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Recipient:</td><td style="padding: 6px 0; color: #1E293B;">${order.recipientName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Style:</td><td style="padding: 6px 0; color: #1E293B;">${order.style} • ${order.mood}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Delivery:</td><td style="padding: 6px 0; color: #1E293B;">${order.deliveryType === 'express' ? '3 days (Express)' : '7 days (Standard)'}</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #1E293B; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
+            </table>
+          </div>
+          
+          ${!isRepayment ? 
+            `<div style="background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+              <h3 style="color: #1E40AF; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">What happens next?</h3>
+              <ul style="color: #1E40AF; margin: 0; padding-left: 20px; line-height: 1.6;">
+                <li>Our music team will craft your personalized song</li>
+                <li>You'll receive a preview for approval via email</li>
+                <li>Final song delivered within ${order.deliveryType === 'express' ? '3 days' : '7 days'}</li>
+              </ul>
+            </div>` : 
+            `<div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+              <h3 style="color: #065F46; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Payment Complete!</h3>
+              <p style="color: #065F46; margin: 0; line-height: 1.6;">Your payment has been successfully processed. You now have full access to your custom song.</p>
+            </div>`
+          }
+          
+          <div style="text-align: center;">
+            <a href="${baseUrl}/shop/music-library" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">View Music Library</a>
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p style="color: #64748B; margin: 0; font-size: 14px;">Questions? Reply to this email or contact our support team.</p>
+            <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Music Academy</p>
+          </div>
+        </div>
+      </div>
+    `,
+    text: `${isRepayment ? 'Repayment' : 'Payment'} Confirmed - Custom Song Order #${order.id.slice(0, 8)}\n\nHi ${userName}, your ${isRepayment ? 'repayment has been confirmed and you now have full access to your custom song' : 'payment has been confirmed and your custom song is now in production. You\'ll receive a preview for approval within ' + (order.deliveryType === 'express' ? '3 days' : '7 days')}.`
+  }),
+
+  // Custom song payment failed
+  customSongPaymentFailed: (userName, order, errorReason) => ({
+    subject: `Payment Failed - Custom Song Order #${order.id.slice(0, 8)}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Payment Failed</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">We couldn't process your payment</p>
+        </div>
+        
+        <div style="padding: 40px 30px;">
+          <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <h2 style="color: #991B1B; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Order Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Order ID:</td><td style="padding: 6px 0; color: #991B1B; font-weight: 600;">#${order.id.slice(0, 8)}</td></tr>
+              <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #991B1B; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
+              ${errorReason ? `<tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Reason:</td><td style="padding: 6px 0; color: #991B1B;">${errorReason}</td></tr>` : ''}
+            </table>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 32px;">
+            <a href="${baseUrl}/shop/custom-song" style="display: inline-block; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Try Payment Again</a>
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p style="color: #64748B; margin: 0; font-size: 14px;">Need help? Reply to this email or contact our support team.</p>
+            <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Music Academy</p>
+          </div>
+        </div>
+      </div>
+    `,
+    text: `Payment Failed - Custom Song Order #${order.id.slice(0, 8)}\n\nHi ${userName}, we couldn't process your payment for ₹${order.amount.toLocaleString()}. ${errorReason ? 'Reason: ' + errorReason + '. ' : ''}Please try again.`
+  }),
+
+  // Admin custom song payment notification
+  adminCustomSongPayment: (userName, userEmail, order, isRepayment = false) => ({
+    subject: `${isRepayment ? 'Repayment' : 'Payment'} Received - Custom Song #${order.id.slice(0, 8)}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">${isRepayment ? 'Repayment' : 'Payment'} Received</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Custom Song Order #${order.id.slice(0, 8)}${isRepayment ? ' (Repayment)' : ''}</p>
+        </div>
+        
+        <div style="padding: 40px 30px;">
+          <div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+            <h2 style="color: #065F46; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Customer & Order Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Customer:</td><td style="padding: 6px 0; color: #065F46; font-weight: 600;">${userName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Email:</td><td style="padding: 6px 0; color: #065F46;">${userEmail}</td></tr>
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Occasion:</td><td style="padding: 6px 0; color: #065F46;">${order.occasion}</td></tr>
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Recipient:</td><td style="padding: 6px 0; color: #065F46;">${order.recipientName}</td></tr>
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Style:</td><td style="padding: 6px 0; color: #065F46;">${order.style} • ${order.mood}</td></tr>
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Deadline:</td><td style="padding: 6px 0; color: #065F46; font-weight: 600;">${order.deliveryType === 'express' ? '3 days (Express)' : '7 days (Standard)'}</td></tr>
+              <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #065F46; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
+            </table>
+          </div>
+          
+          ${order.story ? `
+            <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+              <h3 style="color: #92400E; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Story/Message:</h3>
+              <p style="color: #92400E; margin: 0; font-style: italic; line-height: 1.6;">"${order.story}"</p>
+            </div>
+          ` : ''}
+          
+          <div style="text-align: center;">
+            <a href="${baseUrl}/admin/shop" style="display: inline-block; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Process in Admin Panel</a>
+          </div>
+        </div>
+      </div>
+    `,
+    text: `${isRepayment ? 'Repayment' : 'Payment'} Received - Custom Song #${order.id.slice(0, 8)}\n\nCustomer: ${userName} (${userEmail})\nOccasion: ${order.occasion}\nRecipient: ${order.recipientName}\nStyle: ${order.style} • ${order.mood}\n${isRepayment ? 'Type: Repayment' : 'Deadline: ' + (order.deliveryType === 'express' ? '3 days (Express)' : '7 days (Standard)')}\nAmount: ₹${order.amount.toLocaleString()}`
+  }),
+
   // Shop order status update
   orderStatusUpdate: (userName, orderId, status, trackingUrl) => {
     const statusConfig = {
@@ -368,28 +522,27 @@ export const emailTemplates = (baseUrl) => ({
     const config = statusConfig[status] || statusConfig.confirmed
     
     return {
-      subject: `${config.emoji} ${config.title} #${orderId.slice(0, 8)} - Aaroh Shop`,
+      subject: `${config.title} - Order #${orderId.slice(0, 8)}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, ${config.color} 0%, ${config.color}dd 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">${config.emoji} ${config.title}</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Order #${orderId.slice(0, 8)}</p>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          <div style="background: linear-gradient(135deg, ${config.color} 0%, ${config.color}dd 100%); padding: 40px 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">${config.title}</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Order #${orderId.slice(0, 8)}</p>
           </div>
           
-          <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-            <p style="font-size: 16px; color: #1f2937;">Hi ${userName},</p>
-            <p style="font-size: 16px; color: #1f2937;">${config.message}</p>
+          <div style="padding: 40px 30px;">
+            <p style="font-size: 16px; color: #1f2937; margin: 0 0 32px 0;">Hi ${userName},</p>
+            <p style="font-size: 16px; color: #1f2937; margin: 0 0 32px 0;">${config.message}</p>
             
             ${trackingUrl ? `
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${trackingUrl}" style="display: inline-block; background: ${config.color}; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                  📦 Track Order
-                </a>
+              <div style="text-align: center; margin-bottom: 32px;">
+                <a href="${trackingUrl}" style="display: inline-block; background: ${config.color}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Track Order</a>
               </div>
             ` : ''}
             
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280;">
-              <p style="margin: 0; font-size: 14px;">Thank you for shopping with us!<br><strong>Aaroh Story Shop Team</strong></p>
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+              <p style="color: #64748B; margin: 0; font-size: 14px;">Thank you for shopping with us!</p>
+              <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Story Shop Team</p>
             </div>
           </div>
         </div>

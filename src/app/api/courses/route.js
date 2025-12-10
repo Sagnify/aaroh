@@ -109,6 +109,12 @@ const calculateCourseDuration = (curriculum) => {
 
 export async function POST(request) {
   try {
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+    
     const data = await request.json()
     
     // Auto-fetch durations for all videos

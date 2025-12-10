@@ -70,7 +70,16 @@ export const adminAuthOptions = {
             }
             return null
           } else {
-            if (credentials.password === process.env.ADMIN_PASSWORD) {
+            const crypto = require('crypto')
+            const expectedPassword = process.env.ADMIN_PASSWORD || ''
+            const providedPassword = credentials.password || ''
+            
+            // Use constant-time comparison to prevent timing attacks
+            const expectedBuffer = Buffer.from(expectedPassword, 'utf8')
+            const providedBuffer = Buffer.from(providedPassword, 'utf8')
+            
+            if (expectedBuffer.length === providedBuffer.length && 
+                crypto.timingSafeEqual(expectedBuffer, providedBuffer)) {
               return {
                 id: 'admin',
                 email: process.env.ADMIN_EMAIL,

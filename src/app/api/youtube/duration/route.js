@@ -8,14 +8,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
+    // Validate URL is from YouTube to prevent SSRF
+    if (!isValidYouTubeUrl(url)) {
+      return NextResponse.json({ error: 'Only YouTube URLs are allowed' }, { status: 400 })
+    }
+
     // Extract video ID from YouTube URL
     const videoId = extractVideoId(url)
-    if (!videoId) {
-      return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 })
+    if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return NextResponse.json({ error: 'Invalid YouTube video ID' }, { status: 400 })
     }
 
     // Use YouTube oEmbed API to get video info (no API key required)
-    const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+    const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&format=json`
     
     try {
       const response = await fetch(oembedUrl)
@@ -25,7 +30,7 @@ export async function POST(request) {
       
       // For duration, we'll use a different approach since oEmbed doesn't provide duration
       // We'll extract it from the YouTube page HTML
-      const pageResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`)
+      const pageResponse = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`)
       const html = await pageResponse.text()
       
       // Look for duration in the page HTML
@@ -49,6 +54,11 @@ export async function POST(request) {
     console.error('YouTube duration API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+function isValidYouTubeUrl(url) {
+  const youtubeRegex = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/.+/
+  return youtubeRegex.test(url)
 }
 
 function extractVideoId(url) {

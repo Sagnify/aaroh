@@ -13,6 +13,7 @@ export default function CustomSongSettingsPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    document.title = 'Custom Song Settings | Aaroh Admin'
     fetchSettings()
   }, [])
 
@@ -33,9 +34,16 @@ export default function CustomSongSettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                       await fetch('/api/auth/csrf').then(r => r.json()).then(d => d.csrfToken)
+      
       const response = await fetch('/api/admin/custom-song-settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
         body: JSON.stringify(settings)
       })
       const data = await response.json()

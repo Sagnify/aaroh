@@ -23,6 +23,17 @@ export async function POST(request) {
       .digest('hex')
 
     if (razorpay_signature !== expectedSign) {
+      // Mark order as failed
+      await prisma.shopOrder.update({
+        where: { id: orderId },
+        data: {
+          status: 'failed',
+          paymentStatus: 'failed',
+          updatedAt: new Date()
+        }
+      })
+      
+      console.error(`Invalid signature for shop order ${orderId} - marking as failed`)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
@@ -52,8 +63,14 @@ export async function POST(request) {
       where: { email: session.user.email }
     })
 
-    // Send confirmation emails
-    await sendOrderEmails(order, user, order.items)
+    // Send confirmation emails with error handling
+    try {
+      console.log('📧 Sending shop order emails...')
+      await sendOrderEmails(order, user, order.items)
+      console.log('✅ Shop order emails sent successfully')
+    } catch (emailError) {
+      console.error('❌ Shop order email failed:', emailError)
+    }
 
     // Clear cart after successful payment
     await prisma.cartItem.deleteMany({
@@ -169,18 +186,20 @@ async function sendOrderEmails(order, user, items) {
   `
   
   try {
-    await sendEmail({
+    const userEmailResult = await sendEmail({
       to: user.email,
       subject: `Payment Confirmed #${order.id.slice(0, 8)}`,
       html: customerEmailHtml
     })
+    console.log('✅ Shop order user email result:', userEmailResult)
     
-    await sendEmail({
+    const adminEmailResult = await sendEmail({
       to: getAdminEmail(),
       subject: `Payment Received #${order.id.slice(0, 8)}`,
       html: adminEmailHtml
     })
+    console.log('✅ Shop order admin email result:', adminEmailResult)
   } catch (emailError) {
-    console.error('Error sending emails:', emailError)
+    console.error('❌ Shop order email error:', emailError)
   }
 }

@@ -73,13 +73,14 @@ export async function POST(request) {
 
     const razorpayOrder = await razorpay.orders.create(options)
 
-    // Create or update pending purchase record
+    // Create or update pending purchase record - mark as pending immediately when payment starts
     const purchase = existingPurchase 
       ? await prisma.purchase.update({
           where: { id: existingPurchase.id },
           data: {
             razorpayOrderId: razorpayOrder.id,
-            status: 'pending'
+            status: 'pending',
+            updatedAt: new Date()
           }
         })
       : await prisma.purchase.create({

@@ -47,7 +47,19 @@ const fetchYouTubeDuration = async (url) => {
 
 export async function PUT(request, { params }) {
   try {
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const { id } = await params
+    
+    // Validate course ID to prevent path traversal
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+      return NextResponse.json({ error: 'Invalid course ID' }, { status: 400 })
+    }
+    
     const data = await request.json()
     
     // Auto-fetch durations for all videos

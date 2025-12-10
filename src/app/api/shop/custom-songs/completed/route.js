@@ -6,30 +6,21 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions)
-    
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Fetch ALL songs for the user - no filtering needed
     const songs = await prisma.customSongOrder.findMany({
       where: {
-        userEmail: session.user.email,
-        status: 'completed'
+        userEmail: session.user.email
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { updatedAt: 'desc' }
     })
 
-    return NextResponse.json({ 
-      success: true, 
-      songs 
-    })
-
+    return NextResponse.json({ success: true, songs })
   } catch (error) {
-    console.error('Fetch completed songs error:', error)
-    return NextResponse.json({ 
-      error: 'Failed to fetch completed songs' 
-    }, { status: 500 })
+    console.error('Error fetching completed songs:', error)
+    return NextResponse.json({ error: 'Failed to fetch songs' }, { status: 500 })
   }
 }

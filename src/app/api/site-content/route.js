@@ -34,6 +34,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const { key, value, type = 'text' } = await request.json()
 
     const content = await prisma.siteContent.upsert({

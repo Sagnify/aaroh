@@ -19,6 +19,10 @@ export default function ContentManagement() {
   const [fetchingContent, setFetchingContent] = useState(true)
 
   useEffect(() => {
+    document.title = 'Content Management | Aaroh Admin'
+  }, [])
+
+  useEffect(() => {
     if (status === 'loading') return
     if (!session || session.user.role !== 'ADMIN') {
       router.push('/admin/login')
@@ -76,10 +80,17 @@ export default function ContentManagement() {
   const handleSave = async () => {
     setLoading(true)
     try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                       await fetch('/api/auth/csrf').then(r => r.json()).then(d => d.csrfToken)
+      
       const promises = Object.entries(content).map(([key, value]) => 
         fetch('/api/site-content', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
           body: JSON.stringify({ key, value: String(value) })
         })
       )

@@ -19,6 +19,12 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const { standardPrice, expressPrice } = await request.json()
 
     const settings = await prisma.customSongSettings.upsert({

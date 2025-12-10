@@ -34,6 +34,8 @@ export async function POST(request) {
       }
     })
 
+    console.log(`Order created with status: ${order.status}, paymentStatus: ${order.paymentStatus}`)
+
     let razorpayOrder = null
     if (createRazorpayOrder && paymentMethod !== 'cod') {
       razorpayOrder = await razorpay.orders.create({

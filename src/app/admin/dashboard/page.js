@@ -131,7 +131,7 @@ export default function AdminDashboard() {
               <select 
                 value={transactionPeriod} 
                 onChange={(e) => setTransactionPeriod(e.target.value)}
-                className="text-xs border rounded px-2 py-1 bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-300"
+                className="text-xs border dark:border-zinc-700 rounded px-2 py-1 bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-300"
               >
                 <option value="week">Week</option>
                 <option value="month">Month</option>
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-gray-500">{getPeriodLabel(transactionPeriod)}</p>
                     <button 
-                      onClick={() => router.push('/admin/transactions')}
+                      onClick={() => router.push('/admin/payments')}
                       className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                     >
                       View All →
@@ -175,13 +175,13 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/courses">
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-50">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
                   <BookOpen className="w-4 h-4 mr-3" />
                   View All Courses
                 </Button>
               </Link>
               <Link href="/admin/courses/new">
-                <Button className="w-full justify-start bg-gray-900 hover:bg-gray-800 text-white">
+                <Button className="w-full justify-start bg-gray-900 hover:bg-gray-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white">
                   <Plus className="w-4 h-4 mr-3" />
                   Add New Course
                 </Button>
@@ -195,13 +195,13 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/shop">
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-50">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
                   <ShoppingCart className="w-4 h-4 mr-3" />
                   Manage Orders
                 </Button>
               </Link>
               <Link href="/admin/custom-song-settings">
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-50">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
                   <CreditCard className="w-4 h-4 mr-3" />
                   Custom Song Pricing
                 </Button>
@@ -215,13 +215,13 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/users">
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-50">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
                   <Users className="w-4 h-4 mr-3" />
                   Manage Users
                 </Button>
               </Link>
               <Link href="/admin/purchases">
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-50">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
                   <ShoppingCart className="w-4 h-4 mr-3" />
                   All Purchases
                 </Button>
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/admin/content">
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:bg-gray-50">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800">
                   <TrendingUp className="w-4 h-4 mr-3" />
                   Manage Content
                 </Button>

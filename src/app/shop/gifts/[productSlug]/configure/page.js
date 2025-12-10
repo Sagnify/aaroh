@@ -37,16 +37,12 @@ export default function ConfigureProductPage() {
 
   useEffect(() => {
     document.title = 'Customize Your Gift | Aaroh Story Shop'
-    if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=/shop/gifts/${params.productSlug}/configure`)
-    } else if (status === 'authenticated') {
-      if (session?.user?.role === 'ADMIN') {
-        alert('Admin cannot place orders. Please use a regular user account.')
-        router.push('/shop')
-        return
-      }
-      fetchProduct()
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      alert('Admin cannot place orders. Please use a regular user account.')
+      router.push('/shop')
+      return
     }
+    fetchProduct()
   }, [status, params.productSlug, session])
 
   useEffect(() => {
@@ -83,6 +79,7 @@ export default function ConfigureProductPage() {
   const handleAddToCart = async () => {
     setAddingToCart(true)
     try {
+      // Create product configuration (works for both guest and authenticated users)
       const response = await fetch('/api/shop/product-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,26 +89,42 @@ export default function ConfigureProductPage() {
         })
       })
       const data = await response.json()
+      
       if (data.success) {
-        const cartResponse = await fetch('/api/shop/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ configId: data.orderId })
-        })
-        
-        if (cartResponse.ok) {
-          refreshCart()
-          router.push('/shop/cart')
+        // Check if user is logged in
+        if (status === 'authenticated') {
+          // Add directly to user's cart
+          const cartResponse = await fetch('/api/shop/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ configId: data.orderId })
+          })
+          
+          if (cartResponse.ok) {
+            refreshCart()
+            router.push('/shop/cart')
+          }
+        } else {
+          // Store in guest cart and redirect to login
+          const guestCart = JSON.parse(localStorage.getItem('guestCart') || '[]')
+          guestCart.push({ configId: data.orderId, quantity: 1 })
+          localStorage.setItem('guestCart', JSON.stringify(guestCart))
+          
+          // Redirect to login with cart callback
+          router.push('/login?callbackUrl=/shop/cart')
         }
+      } else {
+        alert(data.error || 'Failed to add to cart')
       }
     } catch (error) {
       console.error('Error adding to cart:', error)
+      alert('Failed to add to cart. Please try again.')
     } finally {
       setAddingToCart(false)
     }
   }
 
-  if (loading || status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-50 pt-28 flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />

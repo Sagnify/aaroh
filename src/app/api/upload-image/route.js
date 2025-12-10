@@ -6,6 +6,12 @@ export async function POST(request) {
     const { user, error } = await getAuthenticatedUser('ADMIN')
     if (error) return error
 
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const formData = await request.formData()
     const image = formData.get('image')
 

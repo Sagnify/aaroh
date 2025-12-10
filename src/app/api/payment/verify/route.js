@@ -61,28 +61,33 @@ export async function POST(request) {
       // Mark as failed and get purchase details for email
       const failedPurchase = await prisma.purchase.update({
         where: { id: purchaseId },
-        data: { status: 'failed' },
+        data: { 
+          status: 'failed',
+          updatedAt: new Date()
+        },
         include: {
           user: true,
           course: true
         }
       })
-      console.error(`Invalid signature for purchase ${purchaseId}`)
+      console.error(`Invalid signature for purchase ${purchaseId} - marking as failed`)
 
-      // Send payment failed email asynchronously
-      const { sendEmail, emailTemplates } = await import('@/lib/email')
-      const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-      const emailPromise = sendEmail({
-        to: failedPurchase.user.email,
-        ...emailTemplates(baseUrl).paymentFailed(
-          failedPurchase.user.name || 'Student',
-          failedPurchase.course.title,
-          failedPurchase.amount
-        )
-      }).catch(err => console.error('Payment failed email error:', err))
-
-      if (request.waitUntil) {
-        request.waitUntil(emailPromise)
+      // Send payment failed email with proper error handling
+      try {
+        console.log('📧 Sending payment failed email...')
+        const { sendEmail, emailTemplates } = await import('@/lib/email')
+        const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
+        const emailResult = await sendEmail({
+          to: failedPurchase.user.email,
+          ...emailTemplates(baseUrl).paymentFailed(
+            failedPurchase.user.name || 'Student',
+            failedPurchase.course.title,
+            failedPurchase.amount
+          )
+        })
+        console.log('✅ Payment failed email result:', emailResult)
+      } catch (emailError) {
+        console.error('❌ Payment failed email error:', emailError)
       }
 
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
@@ -103,32 +108,35 @@ export async function POST(request) {
       }
     })
 
-    // Send confirmation emails
-    const { sendEmail, emailTemplates } = await import('@/lib/email')
-    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-    const emailPromises = Promise.all([
-      sendEmail({
+    // Send confirmation emails with proper error handling
+    try {
+      console.log('📧 Sending course purchase emails...')
+      const { sendEmail, emailTemplates, getAdminEmail } = await import('@/lib/email')
+      const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
+      
+      const userEmailResult = await sendEmail({
         to: purchase.user.email,
         ...emailTemplates(baseUrl).purchaseConfirmation(
           purchase.user.name || 'Student',
           purchase.course.title,
           purchase.amount
         )
-      }).catch(err => console.error('User email failed:', err)),
+      })
+      console.log('✅ User email result:', userEmailResult)
       
-      sendEmail({
-        to: process.env.CONTACT_EMAIL,
+      const adminEmailResult = await sendEmail({
+        to: getAdminEmail(),
         ...emailTemplates(baseUrl).adminPurchaseNotification(
           purchase.user.name || 'Student',
           purchase.user.email,
           purchase.course.title,
           purchase.amount
         )
-      }).catch(err => console.error('Admin email failed:', err))
-    ])
-
-    if (request.waitUntil) {
-      request.waitUntil(emailPromises)
+      })
+      console.log('✅ Admin email result:', adminEmailResult)
+      
+    } catch (emailError) {
+      console.error('❌ Course purchase email failed:', emailError)
     }
 
     return NextResponse.json({

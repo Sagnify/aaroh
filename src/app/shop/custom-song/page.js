@@ -245,31 +245,14 @@ export default function CustomSongPage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-6"
               >
-                <div>
-                  <Label className="text-gray-700 font-semibold mb-3 block">Song length</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['2-3 minutes', '3-4 minutes'].map((len) => (
-                      <button
-                        key={len}
-                        onClick={() => setFormData({ ...formData, length: len })}
-                        className={`py-3 px-4 rounded-lg border-2 transition-all ${
-                          formData.length === len
-                            ? 'border-purple-500 bg-purple-50 text-purple-700'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        {len}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
 
                 <div>
-                  <Label className="text-gray-700 font-semibold mb-3 block">Delivery timeline</Label>
+                  <Label className="text-gray-700 font-semibold mb-3 block">Choose your package</Label>
                   <div className="space-y-3">
                     {[
-                      { value: 'standard', label: 'Standard (7 days)', price: `₹${pricing.standardPrice.toLocaleString()}` },
-                      { value: 'express', label: 'Express (3 days)', price: `₹${pricing.expressPrice.toLocaleString()}` }
+                      { value: 'standard', label: 'Standard Package', price: `₹${pricing.standardPrice.toLocaleString()}` },
+                      { value: 'express', label: 'Priority Package', price: `₹${pricing.expressPrice.toLocaleString()}` }
                     ].map((option) => (
                       <button
                         key={option.value}

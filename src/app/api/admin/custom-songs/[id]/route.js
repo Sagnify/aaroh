@@ -12,6 +12,12 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
     })
@@ -21,6 +27,11 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params
+    
+    // Validate song ID to prevent injection
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+      return NextResponse.json({ error: 'Invalid song ID' }, { status: 400 })
+    }
 
     await prisma.customSongOrder.delete({
       where: { id }
@@ -41,7 +52,19 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Validate CSRF token
+    const csrfToken = request.headers.get('X-CSRF-Token')
+    if (!csrfToken) {
+      return NextResponse.json({ error: 'CSRF token required' }, { status: 403 })
+    }
+
     const { id } = await params
+    
+    // Validate song ID to prevent injection
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+      return NextResponse.json({ error: 'Invalid song ID' }, { status: 400 })
+    }
+    
     const { previewUrl, fullAudioUrl, posterUrl, status } = await request.json()
 
     // Get current order to check previous state
@@ -53,20 +76,15 @@ export async function PUT(request, { params }) {
     if (posterUrl !== undefined) updateData.posterUrl = posterUrl
     if (status) updateData.status = status
 
-    // Auto-set status to ready when preview URL is added
-    if (previewUrl && !currentOrder.previewUrl) {
-      updateData.status = 'ready'
-    }
+    // Don't auto-set status - require manual approval
+    // Admin must explicitly approve after adding preview URL
 
     const updatedOrder = await prisma.customSongOrder.update({
       where: { id },
       data: updateData
     })
 
-    // Send email when preview URL is newly added
-    if (previewUrl && !currentOrder.previewUrl) {
-      await sendSongReadyEmail(updatedOrder)
-    }
+    // Don't send email automatically - only when approved
 
     return NextResponse.json({ 
       success: true, 
