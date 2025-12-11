@@ -27,6 +27,7 @@ export default function EmailNotifications() {
   const [loadingCustomers, setLoadingCustomers] = useState(false)
   const [loadingCourses, setLoadingCourses] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
+  const [brokenImages, setBrokenImages] = useState(new Set())
 
   useEffect(() => {
     fetchCourses()
@@ -59,7 +60,6 @@ export default function EmailNotifications() {
       const response = await fetch('/api/shop/products')
       if (response.ok) {
         const data = await response.json()
-        console.log('Products fetched:', data)
         setProducts(data.products || data || [])
       } else {
         console.error('Products API failed:', response.status)
@@ -198,12 +198,16 @@ export default function EmailNotifications() {
       return
     }
 
-    const selectedProductsData = products.filter(p => selectedProducts.includes(p.id)).map(p => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      image: p.variants?.[0]?.images?.[0] || p.images?.[0]
-    }))
+    const selectedProductsData = products.filter(p => selectedProducts.includes(p.id)).map(p => {
+      const imageUrl = p.variants?.[0]?.images?.[0] || p.images?.[0]
+      const imageKey = `${p.id}-${imageUrl}`
+      return {
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        image: brokenImages.has(imageKey) ? null : imageUrl
+      }
+    })
 
     setIsLoading(true)
     try {
@@ -247,66 +251,66 @@ export default function EmailNotifications() {
   return (
     <div className="min-h-screen bg-white dark:bg-black pt-16 pb-20">
       <div className="mx-0 border-0 md:mx-6 md:border md:border-gray-200 dark:md:border-gray-800 rounded-none md:rounded-2xl bg-white dark:bg-black overflow-hidden">
-        <div className="p-4 md:p-6 space-y-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Mail className="w-8 h-8 text-[#a0303f] dark:text-[#ff6b6b]" />
+        <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+          <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+            <Mail className="w-6 h-6 md:w-8 md:h-8 text-[#a0303f] dark:text-[#ff6b6b]" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Email Notifications</h1>
-              <p className="text-gray-600 dark:text-gray-400">Manage automated email campaigns and notifications</p>
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">Email Notifications</h1>
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">Manage automated email campaigns and notifications</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-8">
+          <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+            <nav className="-mb-px flex space-x-4 md:space-x-8 min-w-max">
               <button
                 onClick={() => setActiveTab('campaigns')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-2 md:px-1 border-b-2 font-medium text-xs md:text-sm whitespace-nowrap ${
                   activeTab === 'campaigns'
                     ? 'border-[#a0303f] dark:border-[#ff6b6b] text-[#a0303f] dark:text-[#ff6b6b]'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <Send className="w-4 h-4 inline mr-2" />
-                Email Campaigns
+                <Send className="w-3 h-3 md:w-4 md:h-4 inline mr-1 md:mr-2" />
+                Campaigns
               </button>
               <button
                 onClick={() => setActiveTab('recipients')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-2 md:px-1 border-b-2 font-medium text-xs md:text-sm whitespace-nowrap ${
                   activeTab === 'recipients'
                     ? 'border-[#a0303f] dark:border-[#ff6b6b] text-[#a0303f] dark:text-[#ff6b6b]'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <List className="w-4 h-4 inline mr-2" />
-                Email Recipients
+                <List className="w-3 h-3 md:w-4 md:h-4 inline mr-1 md:mr-2" />
+                Recipients
               </button>
               <button
                 onClick={() => setActiveTab('templates')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-2 md:px-1 border-b-2 font-medium text-xs md:text-sm whitespace-nowrap ${
                   activeTab === 'templates'
                     ? 'border-[#a0303f] dark:border-[#ff6b6b] text-[#a0303f] dark:text-[#ff6b6b]'
                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <Edit className="w-4 h-4 inline mr-2" />
-                Email Templates
+                <Edit className="w-3 h-3 md:w-4 md:h-4 inline mr-1 md:mr-2" />
+                Templates
               </button>
             </nav>
           </div>
 
           {activeTab === 'campaigns' && (
             <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             {/* Course Announcements */}
             <Card className="bg-white dark:bg-zinc-950 border-gray-200 dark:border-gray-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                  <BookOpen className="w-5 h-5 text-[#a0303f] dark:text-[#ff6b6b]" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-base md:text-lg">
+                  <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-[#a0303f] dark:text-[#ff6b6b]" />
                   Course Announcements
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4">
                 <div>
                   <Label htmlFor="course-select" className="text-gray-700 dark:text-gray-300">Select Course</Label>
                   {loadingCourses ? (
@@ -324,36 +328,36 @@ export default function EmailNotifications() {
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-2 max-h-40 md:max-h-48 overflow-y-auto">
                       {courses.map(course => (
                         <div 
                           key={course.id} 
                           onClick={() => setSelectedCourse(course.id)}
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                          className={`p-2 md:p-3 border rounded-lg cursor-pointer transition-all ${
                             selectedCourse === course.id
                               ? 'border-[#a0303f] dark:border-[#ff6b6b] bg-[#a0303f]/5 dark:bg-[#ff6b6b]/5'
                               : 'border-gray-300 dark:border-gray-600 hover:border-[#a0303f] dark:hover:border-[#ff6b6b]'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 md:gap-3">
                             {course.thumbnail ? (
                               <img 
                                 src={course.thumbnail} 
                                 alt={course.title}
-                                className="w-16 h-12 object-cover rounded"
+                                className="w-12 h-9 md:w-16 md:h-12 object-cover rounded"
                               />
                             ) : (
-                              <div className="w-16 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                                <BookOpen className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                              <div className="w-12 h-9 md:w-16 md:h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                                <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-gray-400 dark:text-gray-500" />
                               </div>
                             )}
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900 dark:text-white text-sm">{course.title}</h4>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-xs md:text-sm truncate">{course.title}</h4>
                               <p className="text-xs text-gray-500 dark:text-gray-400">₹{course.price}</p>
                             </div>
                             {selectedCourse === course.id && (
-                              <div className="w-5 h-5 bg-[#a0303f] dark:bg-[#ff6b6b] rounded-full flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <div className="w-4 h-4 md:w-5 md:h-5 bg-[#a0303f] dark:bg-[#ff6b6b] rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               </div>
@@ -381,23 +385,23 @@ export default function EmailNotifications() {
                 <Button 
                   onClick={handleCourseAnnouncement}
                   disabled={isLoading || !selectedCourse}
-                  className="w-full bg-[#a0303f] hover:bg-[#8a2a37] dark:bg-[#ff6b6b] dark:hover:bg-[#e55a5a] text-white"
+                  className="w-full bg-[#a0303f] hover:bg-[#8a2a37] dark:bg-[#ff6b6b] dark:hover:bg-[#e55a5a] text-white text-sm py-2"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Sending...' : 'Send Course Announcement'}
+                  <Send className="w-3 h-3 md:w-4 md:h-4 mr-2" />
+                  {isLoading ? 'Sending...' : 'Send Announcement'}
                 </Button>
               </CardContent>
             </Card>
 
             {/* Product Announcements */}
             <Card className="bg-white dark:bg-zinc-950 border-gray-200 dark:border-gray-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                  <Gift className="w-5 h-5 text-[#ff6b6b]" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-base md:text-lg">
+                  <Gift className="w-4 h-4 md:w-5 md:h-5 text-[#ff6b6b]" />
                   Product Announcements
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4">
                 <div>
                   <Label className="text-gray-700 dark:text-gray-300">Select Products (Max 3)</Label>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -418,7 +422,7 @@ export default function EmailNotifications() {
                         <div 
                           key={product.id} 
                           onClick={() => handleProductSelect(product.id)}
-                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                          className={`p-2 md:p-3 border rounded-lg cursor-pointer transition-all ${
                             selectedProducts.includes(product.id)
                               ? 'border-[#ff6b6b] bg-[#ff6b6b]/5'
                               : selectedProducts.length >= 3 && !selectedProducts.includes(product.id)
@@ -426,25 +430,52 @@ export default function EmailNotifications() {
                               : 'border-gray-300 dark:border-gray-600 hover:border-[#ff6b6b]'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            {(product.variants?.[0]?.images?.[0] || product.images?.[0]) ? (
-                              <img 
-                                src={product.variants?.[0]?.images?.[0] || product.images[0]} 
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                                <Gift className="w-6 h-6 text-gray-400 dark:text-gray-500" />
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900 dark:text-white text-sm">{product.name}</h4>
+                          <div className="flex items-center gap-2 md:gap-3">
+                            {(() => {
+                              const imageUrl = product.variants?.[0]?.images?.[0] || product.images?.[0]
+                              const imageKey = `${product.id}-${imageUrl}`
+                              
+                              // Check if it's ImgBB URL or marked as broken
+                              const isImgBB = imageUrl && (imageUrl.includes('ibb.co') || imageUrl.includes('imgbb.com'))
+                              
+                              if (!imageUrl || brokenImages.has(imageKey)) {
+                                return (
+                                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                                    <Gift className="w-4 h-4 md:w-6 md:h-6 text-gray-400 dark:text-gray-500" />
+                                  </div>
+                                )
+                              }
+                              
+                              return (
+                                <img 
+                                  src={imageUrl}
+                                  alt={product.name}
+                                  className="w-10 h-10 md:w-12 md:h-12 object-cover rounded"
+                                  onError={() => {
+                                    setBrokenImages(prev => new Set([...prev, imageKey]))
+                                  }}
+                                  onLoad={(e) => {
+                                    // Check if the loaded image is actually the ImgBB upgrade message
+                                    if (isImgBB) {
+                                      // ImgBB upgrade images are typically 400x400 or have specific characteristics
+                                      const { naturalWidth, naturalHeight } = e.target
+                                      if ((naturalWidth === 400 && naturalHeight === 400) || 
+                                          (naturalWidth === 500 && naturalHeight === 500) ||
+                                          naturalWidth < 100 || naturalHeight < 100) {
+                                        setBrokenImages(prev => new Set([...prev, imageKey]))
+                                      }
+                                    }
+                                  }}
+                                />
+                              )
+                            })()}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 dark:text-white text-xs md:text-sm truncate">{product.name}</h4>
                               <p className="text-xs text-gray-500 dark:text-gray-400">₹{product.price}</p>
                             </div>
                             {selectedProducts.includes(product.id) && (
-                              <div className="w-5 h-5 bg-[#ff6b6b] rounded-full flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <div className="w-4 h-4 md:w-5 md:h-5 bg-[#ff6b6b] rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               </div>
@@ -477,10 +508,10 @@ export default function EmailNotifications() {
                 <Button 
                   onClick={handleProductAnnouncement}
                   disabled={isLoading || selectedProducts.length === 0}
-                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white"
+                  className="w-full bg-[#ff6b6b] hover:bg-[#e55a5a] text-white text-sm py-2"
                 >
-                  <Gift className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Sending...' : 'Send Product Announcement'}
+                  <Gift className="w-3 h-3 md:w-4 md:h-4 mr-2" />
+                  {isLoading ? 'Sending...' : 'Send Announcement'}
                 </Button>
               </CardContent>
             </Card>
@@ -488,11 +519,11 @@ export default function EmailNotifications() {
 
             {/* Email Templates Status */}
             <Card className="bg-white dark:bg-zinc-950 border-gray-200 dark:border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-white">Email Templates Status</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-gray-900 dark:text-white text-base md:text-lg">Email Templates Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {[
                     { name: 'Welcome Email', status: 'Active', trigger: 'User Registration' },
                     { name: 'Purchase Confirmation', status: 'Active', trigger: 'Course Purchase' },
@@ -513,19 +544,19 @@ export default function EmailNotifications() {
                   ].map((template, index) => (
                     <div 
                       key={index} 
-                      className="p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                      className="p-2 md:p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                       onClick={() => setActiveTab('templates')}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-medium text-sm text-gray-900 dark:text-white">{template.name}</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded">
+                      <div className="flex items-start justify-between mb-1 gap-2">
+                        <h4 className="font-medium text-xs md:text-sm text-gray-900 dark:text-white leading-tight">{template.name}</h4>
+                        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                          <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
                             {template.status}
                           </span>
                           <Edit className="w-3 h-3 text-gray-400" />
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{template.trigger}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight">{template.trigger}</p>
                     </div>
                   ))}
                 </div>
@@ -535,55 +566,48 @@ export default function EmailNotifications() {
           )}
 
           {activeTab === 'recipients' && (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* All Users */}
               <Card className="bg-white dark:bg-zinc-950 border-gray-200 dark:border-gray-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
-                    <Users className="w-5 h-5 text-[#a0303f] dark:text-[#ff6b6b]" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-base md:text-lg">
+                    <Users className="w-4 h-4 md:w-5 md:h-5 text-[#a0303f] dark:text-[#ff6b6b]" />
                     All Users ({loadingUsers ? '...' : users.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="max-h-96 overflow-y-auto">
-                    <div className="space-y-2">
+                  <div className="max-h-80 md:max-h-96 overflow-y-auto">
+                    <div className="space-y-1 md:space-y-2">
                       {loadingUsers ? (
                         Array.from({ length: 5 }).map((_, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded-lg animate-pulse">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                              <div>
-                                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24 mb-1"></div>
-                                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          <div key={index} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded animate-pulse">
+                            <div className="w-6 h-6 md:w-8 md:h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
+                            <div className="flex-1 min-w-0">
+                              <div className="h-3 md:h-4 bg-gray-300 dark:bg-gray-600 rounded w-20 md:w-24 mb-1"></div>
+                              <div className="h-2 md:h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 md:w-32"></div>
                             </div>
                           </div>
                         ))
                       ) : (
                         users.map((user, index) => (
-                          <div key={user.id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-[#a0303f] dark:bg-[#ff6b6b] rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{user.name || 'No Name'}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
-                              </div>
+                          <div key={user.id || index} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                            <div className="w-6 h-6 md:w-8 md:h-8 bg-[#a0303f] dark:bg-[#ff6b6b] rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium flex-shrink-0">
+                              {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                             </div>
-                            <div className="text-right">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 dark:text-white text-xs md:text-sm truncate">{user.name || 'No Name'}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0 hidden md:block">
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Joined: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Unknown'}
                               </p>
                             </div>
                           </div>
                         ))
                       )}
                       {!loadingUsers && users.length === 0 && (
-                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">No users found</p>
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-6 md:py-8 text-sm">No users found</p>
                       )}
                     </div>
                   </div>
@@ -592,55 +616,51 @@ export default function EmailNotifications() {
 
               {/* Customers Only */}
               <Card className="bg-white dark:bg-zinc-950 border-gray-200 dark:border-gray-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-base md:text-lg">
                     Customers Only ({loadingCustomers ? '...' : customers.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="max-h-96 overflow-y-auto">
-                    <div className="space-y-2">
+                  <div className="max-h-80 md:max-h-96 overflow-y-auto">
+                    <div className="space-y-1 md:space-y-2">
                       {loadingCustomers ? (
                         Array.from({ length: 3 }).map((_, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded-lg animate-pulse">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                              <div>
-                                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24 mb-1"></div>
-                                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
-                              </div>
+                          <div key={index} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded animate-pulse">
+                            <div className="w-6 h-6 md:w-8 md:h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
+                            <div className="flex-1 min-w-0">
+                              <div className="h-3 md:h-4 bg-gray-300 dark:bg-gray-600 rounded w-20 md:w-24 mb-1"></div>
+                              <div className="h-2 md:h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 md:w-32"></div>
                             </div>
-                            <div className="text-right">
-                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-1"></div>
-                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                            <div className="text-right flex-shrink-0 hidden md:block">
+                              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-12 mb-1"></div>
+                              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                             </div>
                           </div>
                         ))
                       ) : (
                         customers.map((customer, index) => (
-                          <div key={customer.id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-[#ff6b6b] rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                {customer.name?.charAt(0) || customer.email?.charAt(0) || 'C'}
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{customer.name || 'No Name'}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{customer.email}</p>
-                              </div>
+                          <div key={customer.id || index} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-zinc-900 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
+                            <div className="w-6 h-6 md:w-8 md:h-8 bg-[#ff6b6b] rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium flex-shrink-0">
+                              {customer.name?.charAt(0) || customer.email?.charAt(0) || 'C'}
                             </div>
-                            <div className="text-right">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 dark:text-white text-xs md:text-sm truncate">{customer.name || 'No Name'}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{customer.email}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0 hidden md:block">
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Purchases: {customer.purchaseCount || 0}
+                                {customer.purchaseCount || 0} purchases
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Last Purchase: {customer.lastPurchase ? new Date(customer.lastPurchase).toLocaleDateString() : 'Never'}
+                                {customer.lastPurchase ? new Date(customer.lastPurchase).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Never'}
                               </p>
                             </div>
                           </div>
                         ))
                       )}
                       {!loadingCustomers && customers.length === 0 && (
-                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">No customers found</p>
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-6 md:py-8 text-sm">No customers found</p>
                       )}
                     </div>
                   </div>
@@ -697,13 +717,13 @@ export default function EmailNotifications() {
                 </div>
 
                 {/* Editor Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[600px]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 min-h-[500px] md:min-h-[600px]">
                   {/* Editor Panel */}
                   <div className="flex flex-col min-h-0">
                     <Card className="flex-1 bg-white dark:bg-zinc-950 flex flex-col">
-                      <CardHeader className="flex-shrink-0">
-                        <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
-                          <Edit className="w-5 h-5" />
+                      <CardHeader className="flex-shrink-0 pb-3">
+                        <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2 text-base md:text-lg">
+                          <Edit className="w-4 h-4 md:w-5 md:h-5" />
                           Template Editor
                         </CardTitle>
                       </CardHeader>
@@ -731,7 +751,7 @@ export default function EmailNotifications() {
                               <span>Lines: {(selectedTemplate?.htmlContent || '').split('\n').length}</span>
                             </div>
                           </div>
-                          <div className="rounded-lg overflow-hidden" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', height: '400px' }}>
+                          <div className="rounded-lg overflow-hidden" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', height: '300px' }}>
                             <div className="flex h-full">
                               {/* Line Numbers */}
                               <div 
@@ -805,14 +825,14 @@ export default function EmailNotifications() {
                   {/* Preview Panel */}
                   <div className="flex flex-col min-h-0">
                     <Card className="flex-1 bg-white dark:bg-zinc-950 flex flex-col">
-                      <CardHeader className="flex-shrink-0">
-                        <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
-                          <Eye className="w-5 h-5" />
+                      <CardHeader className="flex-shrink-0 pb-3">
+                        <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2 text-base md:text-lg">
+                          <Eye className="w-4 h-4 md:w-5 md:h-5" />
                           Live Preview
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="flex-1 p-0 min-h-0">
-                        <div className="w-full h-full border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden m-4 mr-6 mb-6">
+                        <div className="w-full h-full border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden m-3 md:m-4 mr-4 md:mr-6 mb-4 md:mb-6">
                           {renderTemplatePreview()}
                         </div>
                       </CardContent>
@@ -837,28 +857,28 @@ export default function EmailNotifications() {
                           })
                         }
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
                       size="sm"
                     >
                       Update Templates
                     </Button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {templates.map((template) => (
                       <Card 
                         key={template.id} 
                         className="bg-white dark:bg-zinc-950 border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow cursor-pointer"
                         onClick={() => setSelectedTemplate(template)}
                       >
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">{template.name}</h3>
-                            <Edit className="w-4 h-4 text-gray-400" />
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-start justify-between mb-2 md:mb-3 gap-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base leading-tight">{template.name}</h3>
+                            <Edit className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{template.subject}</p>
+                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2 md:mb-3 line-clamp-2">{template.subject}</p>
                           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                             <span>{template.variables.length} variables</span>
-                            <span className={`px-2 py-1 rounded-full ${template.isActive ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                            <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs ${template.isActive ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-800'}`}>
                               {template.isActive ? 'Active' : 'Inactive'}
                             </span>
                           </div>

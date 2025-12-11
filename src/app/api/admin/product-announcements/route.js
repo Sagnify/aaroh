@@ -35,7 +35,7 @@ export async function POST(request) {
     const productCards = productsData.map(product => `
       <div style="border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <div style="text-align: center; margin-bottom: 16px;">
-          <img src="${product.image || `https://via.placeholder.com/120x120/EC4899/FFFFFF?text=${encodeURIComponent(product.name.substring(0, 8))}`}" alt="${product.name}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px;"/>
+          <img src="${product.image || `https://placehold.co/120x120/EC4899/FFFFFF/png?text=${encodeURIComponent(product.name.substring(0, 8))}`}" alt="${product.name}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; display: block; margin: 0 auto;" onerror="this.src='https://placehold.co/120x120/EC4899/FFFFFF/png?text=${encodeURIComponent(product.name.substring(0, 8))}'"/>
         </div>
         <h3 style="color: #1E293B; margin: 0 0 8px 0; font-size: 18px; font-weight: 600; text-align: center;">${product.name}</h3>
         <p style="color: #64748B; margin: 0 0 8px 0; font-size: 14px; text-align: center;">Starting at <strong>₹${product.price}</strong></p>
@@ -51,7 +51,6 @@ export async function POST(request) {
       try {
         await sendEmail({
           to: user.email,
-          subject: template.subject,
           template: 'newProductAnnouncement',
           variables: {
             userName: user.name || 'Customer',
