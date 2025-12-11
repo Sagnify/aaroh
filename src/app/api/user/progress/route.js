@@ -59,7 +59,7 @@ export async function POST(request) {
       `
     }
 
-    // Check if course is completed and send email
+    // Check progress and send milestone/completion emails
     if (completed) {
       const course = await prisma.course.findUnique({
         where: { id: courseId },
@@ -79,22 +79,43 @@ export async function POST(request) {
           WHERE "userId" = ${user.id} AND "courseId" = ${courseId} AND "completed" = true
         `
         const completedCount = Number(completedVideos[0].count)
+        const progressPercentage = Math.round((completedCount / allVideos.length) * 100)
+
+        const { sendEmail } = await import('@/lib/email')
+
+        // Send milestone emails at 25%, 50%, 75%
+        if ([25, 50, 75].includes(progressPercentage)) {
+          const milestonePromise = sendEmail({
+            to: user.email,
+            template: 'progressMilestone',
+            variables: {
+              userName: user.name || 'Student',
+              courseName: course.title,
+              progressPercentage: progressPercentage.toString(),
+              courseId: courseId,
+              baseUrl: process.env.NEXTAUTH_URL
+            }
+          }).catch(err => console.error('Progress milestone email failed:', err))
+
+          if (request.waitUntil) {
+            request.waitUntil(milestonePromise)
+          }
+        }
 
         // If all videos completed, send congratulations email
         if (completedCount === allVideos.length) {
-          const { sendEmail, emailTemplates } = await import('@/lib/email')
-          const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-          const emailPromise = sendEmail({
+          const completionPromise = sendEmail({
             to: user.email,
-            ...emailTemplates(baseUrl).courseCompletion(
-              user.name || 'Student',
-              course.title,
-              courseId
-            )
+            template: 'courseCompletion',
+            variables: {
+              userName: user.name || 'Student',
+              courseName: course.title,
+              baseUrl: process.env.NEXTAUTH_URL
+            }
           }).catch(err => console.error('Course completion email failed:', err))
 
           if (request.waitUntil) {
-            request.waitUntil(emailPromise)
+            request.waitUntil(completionPromise)
           }
         }
       }

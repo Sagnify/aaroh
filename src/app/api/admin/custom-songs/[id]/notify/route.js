@@ -38,30 +38,16 @@ export async function POST(request, { params }) {
 
 async function sendNotificationEmail(order) {
   const isCompleted = order.status === 'completed'
+  const templateName = isCompleted ? 'customSongReady' : 'customSongOrderUpdate'
 
   await sendEmail({
     to: order.userEmail,
-    subject: isCompleted ? '🎵 Your Custom Song is Ready' : '🎵 Your Song Preview is Ready',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #333; margin-bottom: 20px;">${isCompleted ? 'Your Custom Song is Ready!' : 'Your Song Preview is Ready!'} 🎵</h2>
-        
-        <p style="color: #555; line-height: 1.6;">Your custom song for <strong>${order.recipientName}</strong> (${order.occasion}) is ${isCompleted ? 'ready to download' : 'ready for preview'}.</p>
-        
-        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0; color: #333;"><strong>Order:</strong> #${order.id.slice(0, 8)}</p>
-          <p style="margin: 5px 0 0 0; color: #333;"><strong>Style:</strong> ${order.style} • ${order.mood}</p>
-        </div>
-        
-        ${!isCompleted ? `<p style="color: #555; line-height: 1.6;">Listen to the preview and pay ₹${order.amount} to unlock the full version.</p>` : ''}
-        
-        <a href="${process.env.NEXTAUTH_URL}/shop/music-library" 
-           style="display: inline-block; background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-          ${isCompleted ? 'Download Song' : 'Listen to Preview'}
-        </a>
-        
-        <p style="color: #888; font-size: 14px; margin-top: 30px;">Thank you,<br>Aaroh Music Team</p>
-      </div>
-    `
+    template: templateName,
+    variables: {
+      recipientName: order.recipientName,
+      occasion: order.occasion,
+      status: isCompleted ? 'Ready' : 'Preview Ready',
+      downloadUrl: `${process.env.NEXTAUTH_URL}/shop/music-library`
+    }
   })
 }

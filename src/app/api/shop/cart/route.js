@@ -14,6 +14,10 @@ export async function GET() {
       where: { email: session.user.email }
     })
 
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     const cart = await prisma.cart.findUnique({
       where: { userId: user.id },
       include: {
@@ -36,6 +40,15 @@ export async function GET() {
     return NextResponse.json({ success: true, cart })
   } catch (error) {
     console.error('Error fetching cart:', error)
+    
+    // Handle connection pool timeout specifically
+    if (error.code === 'P2024') {
+      return NextResponse.json({ 
+        error: 'Database connection timeout. Please try again.', 
+        retry: true 
+      }, { status: 503 })
+    }
+    
     return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 })
   }
 }
@@ -47,9 +60,25 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Please login to add to cart' }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    })
+    let user
+    try {
+      user = await prisma.user.findUnique({
+        where: { email: session.user.email }
+      })
+    } catch (dbError) {
+      console.error('Database error finding user:', dbError)
+      if (dbError.code === 'P2024') {
+        return NextResponse.json({ 
+          error: 'Database connection timeout. Please try again.', 
+          retry: true 
+        }, { status: 503 })
+      }
+      throw dbError
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     const { configId, guestCartItems } = await request.json()
 
@@ -101,6 +130,15 @@ export async function POST(request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error adding to cart:', error)
+    
+    // Handle connection pool timeout specifically
+    if (error.code === 'P2024') {
+      return NextResponse.json({ 
+        error: 'Database connection timeout. Please try again.', 
+        retry: true 
+      }, { status: 503 })
+    }
+    
     return NextResponse.json({ error: 'Failed to add to cart' }, { status: 500 })
   }
 }

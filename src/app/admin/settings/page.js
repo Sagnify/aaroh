@@ -162,18 +162,18 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="px-4 md:px-6 py-6 space-y-6 min-h-screen dark:bg-black pt-20">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Settings</h1>
+    <div className="px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6 min-h-screen dark:bg-black pt-20">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Admin Settings</h1>
 
-      <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
+      <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 rounded-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 dark:text-white">
-            <Key className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2 dark:text-white text-base md:text-lg">
+            <Key className="w-4 h-4 md:w-5 md:h-5" />
             Change Password
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleChangePassword} className="space-y-4">
+          <form onSubmit={handleChangePassword} className="space-y-3 md:space-y-4">
             {passwordError && (
               <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm">
                 {passwordError}
@@ -187,7 +187,7 @@ export default function AdminSettings() {
             )}
 
             <div>
-              <label className="block text-sm font-medium dark:text-gray-200 mb-2">
+              <label className="block text-xs md:text-sm font-medium dark:text-gray-200 mb-2">
                 New Password
               </label>
               <Input
@@ -195,11 +195,12 @@ export default function AdminSettings() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
+                className="text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium dark:text-gray-200 mb-2">
+              <label className="block text-xs md:text-sm font-medium dark:text-gray-200 mb-2">
                 Confirm New Password
               </label>
               <Input
@@ -207,35 +208,36 @@ export default function AdminSettings() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                className="text-sm"
               />
             </div>
 
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} size="sm" className="text-sm">
               Change Password
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
+      <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 rounded-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 dark:text-white">
-            <Shield className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2 dark:text-white text-base md:text-lg">
+            <Shield className="w-4 h-4 md:w-5 md:h-5" />
             Two-Factor Authentication
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <CardContent className="space-y-3 md:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 md:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div>
-              <p className="font-medium dark:text-gray-200">Status</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="font-medium dark:text-gray-200 text-sm md:text-base">Status</p>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 {twoFactorEnabled ? 'Enabled' : 'Disabled'}
               </p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            <div className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium self-start sm:self-auto ${
               twoFactorEnabled ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
             }`}>
-              {twoFactorEnabled ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+              {twoFactorEnabled ? <Check className="w-3 h-3 md:w-4 md:h-4" /> : <X className="w-3 h-3 md:w-4 md:h-4" />}
             </div>
           </div>
 
@@ -252,33 +254,33 @@ export default function AdminSettings() {
           )}
 
           {!twoFactorEnabled && !showSetup && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="space-y-3 md:space-y-4">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 Enable two-factor authentication for enhanced security. You'll need an authenticator app like Google Authenticator or Authy.
               </p>
-              <Button onClick={handleSetup2FA} disabled={loading}>
-                <Shield className="w-4 h-4 mr-2" />
+              <Button onClick={handleSetup2FA} disabled={loading} size="sm" className="text-sm">
+                <Shield className="w-3 h-3 md:w-4 md:h-4 mr-2" />
                 Enable 2FA
               </Button>
             </div>
           )}
 
           {showSetup && (
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+            <div className="space-y-3 md:space-y-4">
+              <div className="p-3 md:p-4 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl">
+                <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300 mb-4">
                   Scan this QR code with your authenticator app:
                 </p>
                 <div className="flex justify-center mb-4">
-                  <img src={qrCode} alt="2FA QR Code" className="w-64 h-64" />
+                  <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 md:w-64 md:h-64" />
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-                  Or enter this code manually: <code className="bg-white dark:bg-gray-900 dark:text-gray-200 px-2 py-1 rounded border dark:border-gray-700">{secret}</code>
+                <p className="text-xs text-gray-600 dark:text-gray-400 text-center break-all">
+                  Or enter this code manually: <code className="bg-white dark:bg-gray-900 dark:text-gray-200 px-2 py-1 rounded border dark:border-gray-700 break-all">{secret}</code>
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium dark:text-gray-200 mb-2">
+                <label className="block text-xs md:text-sm font-medium dark:text-gray-200 mb-2">
                   Enter verification code from your app
                 </label>
                 <Input
@@ -287,14 +289,15 @@ export default function AdminSettings() {
                   onChange={(e) => setVerifyToken(e.target.value)}
                   placeholder="000000"
                   maxLength={6}
+                  className="text-sm text-center"
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button onClick={handleVerify2FA} disabled={loading || verifyToken.length !== 6}>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button onClick={handleVerify2FA} disabled={loading || verifyToken.length !== 6} size="sm" className="text-sm">
                   Verify & Enable
                 </Button>
-                <Button variant="outline" onClick={() => setShowSetup(false)}>
+                <Button variant="outline" onClick={() => setShowSetup(false)} size="sm" className="text-sm">
                   Cancel
                 </Button>
               </div>
@@ -302,11 +305,11 @@ export default function AdminSettings() {
           )}
 
           {twoFactorEnabled && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="space-y-3 md:space-y-4">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 Two-factor authentication is currently enabled. You'll need your authenticator app to login.
               </p>
-              <Button variant="outline" onClick={handleDisable2FA} disabled={loading}>
+              <Button variant="outline" onClick={handleDisable2FA} disabled={loading} size="sm" className="text-sm">
                 Disable 2FA
               </Button>
             </div>

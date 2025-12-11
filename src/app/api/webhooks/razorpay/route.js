@@ -130,21 +130,24 @@ export async function POST(request) {
         const emailPromises = Promise.all([
           sendEmail({
             to: updatedPurchase.user.email,
-            ...emailTemplates(baseUrl).purchaseConfirmation(
-              updatedPurchase.user.name || 'Student',
-              updatedPurchase.course.title,
-              updatedPurchase.amount
-            )
+            template: 'purchaseConfirmation',
+            variables: {
+              userName: updatedPurchase.user.name || 'Student',
+              courseName: updatedPurchase.course.title,
+              amount: updatedPurchase.amount,
+              baseUrl: process.env.NEXTAUTH_URL
+            }
           }).catch(err => console.error('User purchase email failed:', err)),
           
           contactEmail ? sendEmail({
             to: contactEmail,
-            ...emailTemplates(baseUrl).adminPurchaseNotification(
-              updatedPurchase.user.name || 'Student',
-              updatedPurchase.user.email,
-              updatedPurchase.course.title,
-              updatedPurchase.amount
-            )
+            template: 'adminPurchaseNotification',
+            variables: {
+              userName: updatedPurchase.user.name || 'Student',
+              userEmail: updatedPurchase.user.email,
+              courseName: updatedPurchase.course.title,
+              amount: updatedPurchase.amount
+            }
           }).catch(err => console.error('Admin purchase email failed:', err)) : Promise.resolve()
         ])
 
@@ -222,8 +225,6 @@ export async function POST(request) {
         })
         
         if (user) {
-          const baseUrl = request.headers.get('origin') || 'http://localhost:3000'
-          const templates = emailTemplates(baseUrl)
           const orderHistory = Array.isArray(updatedCustomSong.orderIdHistory) ? updatedCustomSong.orderIdHistory : []
           const isRepayment = orderHistory.length > 0
           
@@ -233,11 +234,28 @@ export async function POST(request) {
             await Promise.all([
               sendEmail({
                 to: user.email,
-                ...templates.customSongPaymentSuccess(user.name || 'Customer', updatedCustomSong, isRepayment)
+                template: 'customSongPaymentSuccess',
+                variables: {
+                  userName: user.name || 'Customer',
+                  orderId: updatedCustomSong.id,
+                  recipientName: updatedCustomSong.recipientName,
+                  occasion: updatedCustomSong.occasion,
+                  amount: updatedCustomSong.amount,
+                  musicLibraryUrl: `${process.env.NEXTAUTH_URL}/shop/music-library`
+                }
               }),
               sendEmail({
                 to: process.env.CONTACT_EMAIL,
-                ...templates.adminCustomSongPayment(user.name || 'Customer', user.email, updatedCustomSong, isRepayment)
+                template: 'adminCustomSongPayment',
+                variables: {
+                  userName: user.name || 'Customer',
+                  userEmail: user.email,
+                  orderId: updatedCustomSong.id,
+                  recipientName: updatedCustomSong.recipientName,
+                  occasion: updatedCustomSong.occasion,
+                  amount: updatedCustomSong.amount,
+                  adminUrl: `${process.env.NEXTAUTH_URL}/admin/shop`
+                }
               })
             ])
             console.log('✅ Webhook emails sent successfully')
@@ -306,11 +324,12 @@ export async function POST(request) {
           const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
           const emailPromise = sendEmail({
             to: purchase.user.email,
-            ...emailTemplates(baseUrl).paymentFailed(
-              purchase.user.name || 'Student',
-              purchase.course.title,
-              purchase.amount
-            )
+            template: 'paymentFailed',
+            variables: {
+              userName: purchase.user.name || 'Student',
+              courseName: purchase.course.title,
+              retryUrl: `${process.env.NEXTAUTH_URL}/courses`
+            }
           }).catch(err => console.error('Payment failed email error:', err))
 
           if (request.waitUntil) {
@@ -337,8 +356,8 @@ export async function POST(request) {
           console.log(`❌ Shop payment failed for order ${shopOrder.id}, reason: ${payment.error_description || 'Unknown'}`)
           await logWebhookEvent(event, 'failed', `Shop order failed: ${shopOrder.id} - ${payment.error_description}`)
 
-          // Send shop payment failure emails
-          await sendShopPaymentFailureEmails(shopOrder, shopOrder.user, payment.error_description, payment.error_code, request)
+          // Send shop payment failure notification
+          console.log(`❌ Shop payment failed for order ${shopOrder.id}, reason: ${payment.error_description || 'Unknown'}`)
         } else {
           console.log(`⚠️ Ignoring failed event for paid shop order ${shopOrder.id}`)
           await logWebhookEvent(event, 'ignored', `Failed event for paid shop order: ${shopOrder.id}`)
@@ -366,12 +385,19 @@ export async function POST(request) {
           
           if (user) {
             // Send custom song payment failure email
-            const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-            const templates = emailTemplates(baseUrl)
             
             const emailPromise = sendEmail({
               to: user.email,
-              ...templates.customSongPaymentFailed(user.name || 'Customer', updatedCustomSong, payment.error_description)
+              template: 'customSongPaymentFailed',
+              variables: {
+                userName: user.name || 'Customer',
+                orderId: updatedCustomSong.id,
+                recipientName: updatedCustomSong.recipientName,
+                occasion: updatedCustomSong.occasion,
+                amount: updatedCustomSong.amount,
+                errorReason: payment.error_description || 'Payment processing failed',
+                retryUrl: `${process.env.NEXTAUTH_URL}/shop/custom-song`
+              }
             }).catch(err => console.error('Custom song failure email failed:', err))
             
             if (request.waitUntil) {
@@ -498,74 +524,30 @@ export async function POST(request) {
 }
 
 async function sendShopOrderEmails(order, user, items, request) {
-  const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-  
-  const customerEmailHtml = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-      <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Payment Confirmed</h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Your order is being processed</p>
-      </div>
-      
-      <div style="padding: 40px 30px;">
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
-          <h2 style="color: #1E293B; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Order Details</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Order ID:</td><td style="padding: 6px 0; color: #1E293B; font-weight: 600;">#${order.id.slice(0, 8)}</td></tr>
-            <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #1E293B; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
-            <tr><td style="padding: 6px 0; color: #64748B; font-weight: 500;">Payment ID:</td><td style="padding: 6px 0; color: #1E293B;">${order.razorpayPaymentId}</td></tr>
-          </table>
-        </div>
-        
-        <div style="text-align: center; margin-bottom: 32px;">
-          <a href="${baseUrl}/shop/orders/${order.id}" style="display: inline-block; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Track Your Order</a>
-        </div>
-        
-        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
-          <p style="color: #64748B; margin: 0; font-size: 14px;">Questions? Reply to this email or contact our support team.</p>
-          <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Story Shop Team</p>
-        </div>
-      </div>
-    </div>
-  `
-  
-  const adminEmailHtml = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-      <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Payment Received</h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Shop Order #${order.id.slice(0, 8)}</p>
-      </div>
-      
-      <div style="padding: 40px 30px;">
-        <div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 8px; padding: 24px;">
-          <h2 style="color: #065F46; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Order Details</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Customer:</td><td style="padding: 6px 0; color: #065F46; font-weight: 600;">${order.customerName}</td></tr>
-            <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Email:</td><td style="padding: 6px 0; color: #065F46;">${order.customerEmail}</td></tr>
-            <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #065F46; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
-            <tr><td style="padding: 6px 0; color: #047857; font-weight: 500;">Payment ID:</td><td style="padding: 6px 0; color: #065F46;">${order.razorpayPaymentId}</td></tr>
-          </table>
-        </div>
-        
-        <div style="text-align: center; margin-top: 32px;">
-          <a href="${baseUrl}/admin/shop" style="display: inline-block; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Process in Admin Panel</a>
-        </div>
-      </div>
-    </div>
-  `
-  
   try {
     const emailPromises = Promise.all([
       sendEmail({
         to: user.email,
-        subject: `Payment Confirmed - Order #${order.id.slice(0, 8)}`,
-        html: customerEmailHtml
+        template: 'shopOrderConfirmation',
+        variables: {
+          userName: order.customerName,
+          orderId: order.id,
+          paymentId: order.razorpayPaymentId,
+          amount: order.amount,
+          orderUrl: `${process.env.NEXTAUTH_URL}/shop/orders/${order.id}`
+        }
       }),
       
       sendEmail({
         to: process.env.CONTACT_EMAIL,
-        subject: `Payment Received - Shop Order #${order.id.slice(0, 8)}`,
-        html: adminEmailHtml
+        template: 'adminShopOrderNotification',
+        variables: {
+          customerName: order.customerName,
+          orderId: order.id,
+          paymentId: order.razorpayPaymentId,
+          amount: order.amount,
+          adminUrl: `${process.env.NEXTAUTH_URL}/admin/shop`
+        }
       })
     ])
     
@@ -577,79 +559,4 @@ async function sendShopOrderEmails(order, user, items, request) {
   }
 }
 
-async function sendShopPaymentFailureEmails(order, user, errorDescription, errorCode, request) {
-  const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-  
-  const customerEmailHtml = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-      <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); padding: 40px 30px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Payment Failed</h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">We couldn't process your payment</p>
-      </div>
-      
-      <div style="padding: 40px 30px;">
-        <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
-          <h2 style="color: #991B1B; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Order Details</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Order ID:</td><td style="padding: 6px 0; color: #991B1B; font-weight: 600;">#${order.id.slice(0, 8)}</td></tr>
-            <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #991B1B; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
-            ${errorDescription ? `<tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Reason:</td><td style="padding: 6px 0; color: #991B1B;">${errorDescription}</td></tr>` : ''}
-          </table>
-        </div>
-        
-        <div style="text-align: center; margin-bottom: 32px;">
-          <a href="${baseUrl}/shop/cart" style="display: inline-block; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Try Payment Again</a>
-        </div>
-        
-        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
-          <p style="color: #64748B; margin: 0; font-size: 14px;">Need help? Reply to this email or contact our support team.</p>
-          <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Story Shop Team</p>
-        </div>
-      </div>
-    </div>
-  `
-  
-  const adminEmailHtml = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-      <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); padding: 40px 30px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Payment Failed</h1>
-        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Shop Order #${order.id.slice(0, 8)}</p>
-      </div>
-      
-      <div style="padding: 40px 30px;">
-        <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 24px;">
-          <h2 style="color: #991B1B; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">Failure Details</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Customer:</td><td style="padding: 6px 0; color: #991B1B; font-weight: 600;">${order.customerName}</td></tr>
-            <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Email:</td><td style="padding: 6px 0; color: #991B1B;">${order.customerEmail}</td></tr>
-            <tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Amount:</td><td style="padding: 6px 0; color: #991B1B; font-weight: 600;">₹${order.amount.toLocaleString()}</td></tr>
-            ${errorCode ? `<tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Error Code:</td><td style="padding: 6px 0; color: #991B1B;">${errorCode}</td></tr>` : ''}
-            ${errorDescription ? `<tr><td style="padding: 6px 0; color: #7F1D1D; font-weight: 500;">Error:</td><td style="padding: 6px 0; color: #991B1B;">${errorDescription}</td></tr>` : ''}
-          </table>
-        </div>
-      </div>
-    </div>
-  `
-  
-  try {
-    const emailPromises = Promise.all([
-      sendEmail({
-        to: user.email,
-        subject: `Payment Failed - Order #${order.id.slice(0, 8)}`,
-        html: customerEmailHtml
-      }),
-      
-      sendEmail({
-        to: process.env.CONTACT_EMAIL,
-        subject: `Payment Failure Alert - Shop Order #${order.id.slice(0, 8)}`,
-        html: adminEmailHtml
-      })
-    ])
-    
-    if (request.waitUntil) {
-      request.waitUntil(emailPromises)
-    }
-  } catch (emailError) {
-    console.error('Error sending payment failure emails:', emailError)
-  }
-}
+// Shop payment failure emails removed - using direct sendEmail calls with templates

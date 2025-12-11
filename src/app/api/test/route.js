@@ -3,23 +3,25 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const courses = await prisma.course.findMany({
-      select: {
-        id: true,
-        title: true,
-        published: true
-      }
-    })
+    // Test database connection
+    await prisma.$connect()
+    
+    // Check if EmailTemplate table exists by trying to count records
+    const count = await prisma.emailTemplate.count()
     
     return NextResponse.json({ 
+      success: true, 
       message: 'Database connection successful',
-      courseCount: courses.length,
-      courses: courses
+      emailTemplateCount: count
     })
   } catch (error) {
+    console.error('Database test error:', error)
     return NextResponse.json({ 
-      error: 'Database connection failed',
-      details: error.message 
+      success: false, 
+      error: error.message,
+      code: error.code 
     }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

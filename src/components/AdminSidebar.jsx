@@ -5,7 +5,7 @@ import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Music, Menu, X, LogOut, Home, BookOpen, Users, ShoppingCart, FileText, Award, Settings, ChevronLeft, ChevronRight, Moon, Sun, ShoppingBag, CreditCard } from 'lucide-react'
+import { Music, Menu, X, LogOut, Home, BookOpen, Users, ShoppingCart, FileText, Award, Settings, ChevronLeft, ChevronRight, Moon, Sun, ShoppingBag, CreditCard, Mail } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 
 export default function AdminSidebar({ onCollapseChange }) {
@@ -31,6 +31,7 @@ export default function AdminSidebar({ onCollapseChange }) {
     { name: 'Purchases', href: '/admin/purchases', icon: ShoppingCart },
     { name: 'Content', href: '/admin/content', icon: FileText },
     { name: 'Certificates', href: '/admin/certificate-settings', icon: Award },
+    { name: 'Email Notifications', href: '/admin/email-notifications', icon: Mail },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 

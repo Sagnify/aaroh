@@ -8,27 +8,29 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  password      String
-  name          String?
-  role          Role           @default(USER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  phone         String?
-  address       String?
-  city          String?
-  state         String?
-  pincode       String?
-  twoFactorSecret String?
-  twoFactorEnabled Boolean      @default(false)
-  classBookings ClassBooking[]
-  progress      Progress[]
-  purchases     Purchase[]
-  reviews       Review[]
-  certificates  Certificate[]
-  cart          Cart?
-  shopOrders    ShopOrder[]
+  id               String         @id @default(cuid())
+  email            String         @unique
+  password         String
+  name             String?
+  role             Role           @default(USER)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  phone            String?
+  twoFactorEnabled Boolean        @default(false)
+  twoFactorSecret  String?
+  address          String?
+  city             String?
+  pincode          String?
+  state            String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  cart             Cart?
+  certificates     Certificate[]
+  classBookings    ClassBooking[]
+  purchases        Purchase[]
+  reviews          Review[]
+  shopOrders       ShopOrder[]
+  progress         Progress[]
 }
 
 model Admin {
@@ -42,36 +44,36 @@ model Admin {
 }
 
 model Course {
-  id            String        @id @default(cuid())
-  title         String
-  subtitle      String?
-  description   String
-  price         Int
-  originalPrice Int?
-  duration      String
-  lessons       Int
-  level         String
-  language      String        @default("Hindi/English")
-  thumbnail     String?
-  instructor    String        @default("Kashmira Chakraborty")
-  rating        Float         @default(4.8)
-  students      Int           @default(0)
-  featured      Boolean       @default(false)
-  published     Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  whatYouLearn  String[]
-  requirements  String[]
-  trailerUrl    String?
-  popular       Boolean       @default(false)
-  seoTitle      String?       // Optional: Custom SEO title (defaults to title)
-  seoDescription String?      // Optional: Custom SEO description (defaults to subtitle)
-  seoKeywords   String?       // Optional: SEO keywords
-  progress      Progress[]
-  purchases     Purchase[]
-  curriculum    Section[]
-  reviews       Review[]
-  certificates  Certificate[]
+  id             String        @id @default(cuid())
+  title          String
+  subtitle       String?
+  description    String
+  price          Int
+  originalPrice  Int?
+  duration       String
+  lessons        Int
+  level          String
+  language       String        @default("Hindi/English")
+  thumbnail      String?
+  instructor     String        @default("Kashmira Chakraborty")
+  rating         Float         @default(4.8)
+  students       Int           @default(0)
+  featured       Boolean       @default(false)
+  published      Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  whatYouLearn   String[]
+  requirements   String[]
+  trailerUrl     String?
+  popular        Boolean       @default(false)
+  seoDescription String?
+  seoKeywords    String?
+  seoTitle       String?
+  certificates   Certificate[]
+  purchases      Purchase[]
+  reviews        Review[]
+  curriculum     Section[]
+  progress       Progress[]
 }
 
 model Section {
@@ -98,18 +100,18 @@ model Video {
 }
 
 model Purchase {
-  id              String   @id @default(cuid())
-  userId          String
-  courseId        String
-  amount          Int
-  status          String   @default("pending")
-  razorpayOrderId String?
+  id                String   @id @default(cuid())
+  userId            String
+  courseId          String
+  amount            Int
+  status            String   @default("pending")
+  createdAt         DateTime @default(now())
+  razorpayOrderId   String?
   razorpayPaymentId String?
   razorpaySignature String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt @default(now())
-  course          Course   @relation(fields: [courseId], references: [id])
-  user            User     @relation(fields: [userId], references: [id])
+  updatedAt         DateTime @default(now()) @updatedAt
+  course            Course   @relation(fields: [courseId], references: [id])
+  user              User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId])
 }
@@ -123,14 +125,12 @@ model Progress {
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
   course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId, videoId])
   @@map("video_progress")
 }
-
-
 
 model SiteContent {
   id        String   @id @default(cuid())
@@ -145,9 +145,9 @@ model ClassBooking {
   id        String   @id @default(cuid())
   userId    String
   classType String
-  phone     String
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
+  phone     String
   user      User     @relation(fields: [userId], references: [id])
 }
 
@@ -159,82 +159,76 @@ model Review {
   comment   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
   course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId])
 }
 
 model Certificate {
-  id           String   @id @default(cuid())
-  userId       String
-  courseId     String
-  certificateId String  @unique
-  issuedAt     DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id])
-  course       Course   @relation(fields: [courseId], references: [id])
+  id            String   @id @default(cuid())
+  userId        String
+  courseId      String
+  certificateId String   @unique
+  issuedAt      DateTime @default(now())
+  course        Course   @relation(fields: [courseId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId])
 }
 
 model CertificateSettings {
-  id                   String @id @default(cuid())
-  templateUrl          String @default("/certificates/template.png")
-  studentNameX         Int    @default(562)
-  studentNameY         Int    @default(400)
-  studentNameWidth     Int    @default(200)
-  studentNameHeight    Int    @default(40)
-  courseTitleX         Int    @default(562)
-  courseTitleY         Int    @default(500)
-  courseTitleWidth     Int    @default(250)
-  courseTitleHeight    Int    @default(40)
-  dateX                Int    @default(150)
-  dateY                Int    @default(700)
-  dateWidth            Int    @default(150)
-  dateHeight           Int    @default(30)
-  certificateIdX       Int    @default(973)
-  certificateIdY       Int    @default(700)
-  certificateIdWidth   Int    @default(120)
-  certificateIdHeight  Int    @default(30)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  templateUrl         String   @default("/certificates/template.png")
+  studentNameX        Int      @default(562)
+  studentNameY        Int      @default(400)
+  courseTitleX        Int      @default(562)
+  courseTitleY        Int      @default(500)
+  dateX               Int      @default(150)
+  dateY               Int      @default(700)
+  certificateIdX      Int      @default(973)
+  certificateIdY      Int      @default(700)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  certificateIdHeight Int      @default(30)
+  certificateIdWidth  Int      @default(120)
+  courseTitleHeight   Int      @default(40)
+  courseTitleWidth    Int      @default(250)
+  dateHeight          Int      @default(30)
+  dateWidth           Int      @default(150)
+  studentNameHeight   Int      @default(40)
+  studentNameWidth    Int      @default(200)
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
-// Shop Models
 model ShopProduct {
-  id             String              @id @default(cuid())
+  id             String                 @id @default(cuid())
   name           String
-  slug           String              @unique
+  slug           String                 @unique
   description    String
   price          Float
-  categoryId     String?
-  category       ProductCategory?    @relation(fields: [categoryId], references: [id])
   images         String[]
   badge          String?
-  isFeatured     Boolean             @default(false)
   seoTitle       String?
   seoDescription String?
   seoKeywords    String?
-  isActive       Boolean             @default(true)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  variants       ProductVariant[]
+  isActive       Boolean                @default(true)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  categoryId     String?
+  isFeatured     Boolean                @default(false)
   configurations ProductConfiguration[]
-  tags           ProductTag[]
+  variants       ProductVariant[]
+  category       ProductCategory?       @relation(fields: [categoryId], references: [id])
+  tags           ProductTag[]           @relation("ProductTagToShopProduct")
 }
 
 model ProductCategory {
   id        String        @id @default(cuid())
   name      String        @unique
   slug      String        @unique
-  products  ShopProduct[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  products  ShopProduct[]
 }
 
 model ProductTag {
@@ -242,9 +236,9 @@ model ProductTag {
   name      String        @unique
   slug      String        @unique
   color     String        @default("#8B5CF6")
-  products  ShopProduct[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  products  ShopProduct[] @relation("ProductTagToShopProduct")
 }
 
 model ProductVariant {
@@ -257,29 +251,29 @@ model ProductVariant {
 }
 
 model CustomSongOrder {
-  id            String       @id @default(cuid())
-  userEmail     String
-  occasion      String
-  recipientName String
-  story         String
-  mood          String
-  style         String
-  language      String       @default("English")
-  length        String
-  deliveryType  String
-  amount        Int
-  status        String       @default("pending")
-  previewUrl    String?
-  fullAudioUrl  String?
-  posterUrl     String?
-  isApproved    Boolean      @default(false)
-  razorpayOrderId String?
+  id                String   @id @default(cuid())
+  occasion          String
+  recipientName     String
+  story             String
+  mood              String
+  style             String
+  language          String   @default("English")
+  length            String
+  status            String   @default("pending")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  fullAudioUrl      String?
+  previewUrl        String?
+  amount            Int
+  deliveryType      String
+  razorpayOrderId   String?
+  userEmail         String
+  posterUrl         String?
+  isApproved        Boolean  @default(false)
   razorpayPaymentId String?
-  orderIdHistory Json        @default("[]")
-  repaymentCount Int         @default(0)
-  adminResetCount Int        @default(0)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  adminResetCount   Int      @default(0)
+  repaymentCount    Int      @default(0)
+  orderIdHistory    Json     @default("[]")
 }
 
 model CustomSongSettings {
@@ -291,13 +285,13 @@ model CustomSongSettings {
 }
 
 model SongSource {
-  id                String            @id @default(cuid())
-  type              String
-  fileUrl           String?
-  externalUrl       String?
-  metadata          Json              @default("{}")
-  createdAt         DateTime          @default(now())
-  configurations    ProductConfiguration[]
+  id             String                 @id @default(cuid())
+  type           String
+  fileUrl        String?
+  externalUrl    String?
+  metadata       Json                   @default("{}")
+  createdAt      DateTime               @default(now())
+  configurations ProductConfiguration[]
 }
 
 model ProductConfiguration {
@@ -309,18 +303,20 @@ model ProductConfiguration {
   recipientName String
   occasion      String?
   createdAt     DateTime    @default(now())
+  songData      Json?
+  songType      String?
+  cartItems     CartItem[]
   product       ShopProduct @relation(fields: [productId], references: [id])
   songSource    SongSource? @relation(fields: [songSourceId], references: [id])
-  cartItems     CartItem[]
 }
 
 model Cart {
   id        String     @id @default(cuid())
   userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     CartItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
 }
 
 model CartItem {
@@ -328,29 +324,46 @@ model CartItem {
   cartId        String
   configId      String
   quantity      Int                  @default(1)
+  createdAt     DateTime             @default(now())
   cart          Cart                 @relation(fields: [cartId], references: [id], onDelete: Cascade)
   configuration ProductConfiguration @relation(fields: [configId], references: [id], onDelete: Cascade)
-  createdAt     DateTime             @default(now())
 }
 
 model ShopOrder {
-  id                String    @id @default(cuid())
+  id                String   @id @default(cuid())
   userId            String
-  user              User      @relation(fields: [userId], references: [id])
-  customerName      String
-  customerEmail     String
-  customerPhone     String
   items             Json
-  amount            Float
-  paymentMethod     String    @default("online")
-  status            String    @default("pending")
-  paymentStatus     String    @default("pending")
+  status            String   @default("pending")
+  paymentStatus     String   @default("pending")
   shippingAddress   Json
-  trackingId        String?
   trackingUrl       String?
   razorpayOrderId   String?
   razorpayPaymentId String?
   cancelReason      String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  amount            Float
+  customerEmail     String
+  customerName      String
+  customerPhone     String
+  paymentMethod     String   @default("online")
+  trackingId        String?
+  user              User     @relation(fields: [userId], references: [id])
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subject     String
+  htmlContent String
+  textContent String?
+  variables   Json     @default("[]")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
 }

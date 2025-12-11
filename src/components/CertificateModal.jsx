@@ -357,6 +357,23 @@ export default function CertificateModal({ certificate, userName, onClose }) {
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`Certificate-${certificate.certificateId}.pdf`)
 
+      // Send certificate generated email
+      try {
+        await fetch('/api/certificates/notify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            certificateId: certificate.certificateId,
+            courseName: certificate.courseTitle || certificate.course?.title,
+            userName: customName
+          })
+        })
+      } catch (emailError) {
+        console.error('Failed to send certificate email:', emailError)
+      }
+
       setDownloadState('downloaded')
       setTimeout(() => setDownloadState('idle'), 2000)
 

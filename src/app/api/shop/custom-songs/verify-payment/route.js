@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
-import { sendEmail, getAdminEmail, emailTemplates } from '@/lib/email'
+import { sendEmail, getAdminEmail } from '@/lib/email'
 
 export async function POST(request) {
   console.log('🚀 PAYMENT VERIFICATION API CALLED')
@@ -160,8 +160,7 @@ export async function POST(request) {
     console.log('🔄 Is repayment:', isRepayment, '| Order history length:', orderHistory.length)
 
     // Send confirmation emails
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const templates = emailTemplates(baseUrl)
+    const baseUrl = process.env.NEXTAUTH_URL
     
     try {
       console.log('📧 Sending emails to:', user.email, 'and', getAdminEmail())
@@ -169,11 +168,28 @@ export async function POST(request) {
       await Promise.all([
         sendEmail({
           to: user.email,
-          ...templates.customSongPaymentSuccess(user.name || 'Customer', updatedOrder, isRepayment)
+          template: 'customSongPaymentSuccess',
+          variables: {
+            userName: user.name || 'Customer',
+            orderId: updatedOrder.id,
+            recipientName: updatedOrder.recipientName,
+            occasion: updatedOrder.occasion,
+            amount: updatedOrder.amount,
+            musicLibraryUrl: `${baseUrl}/shop/music-library`
+          }
         }),
         sendEmail({
           to: getAdminEmail(),
-          ...templates.adminCustomSongPayment(user.name || 'Customer', user.email, updatedOrder, isRepayment)
+          template: 'adminCustomSongPayment',
+          variables: {
+            userName: user.name || 'Customer',
+            userEmail: user.email,
+            orderId: updatedOrder.id,
+            recipientName: updatedOrder.recipientName,
+            occasion: updatedOrder.occasion,
+            amount: updatedOrder.amount,
+            adminUrl: `${baseUrl}/admin/shop`
+          }
         })
       ])
       

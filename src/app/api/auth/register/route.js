@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, emailTemplates } from '@/lib/email'
+import { sendEmail } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -53,10 +53,14 @@ export async function POST(request) {
     })
 
     // Send welcome email asynchronously (non-blocking)
-    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
     const emailPromise = sendEmail({
       to: user.email,
-      ...emailTemplates(baseUrl).welcome(user.name)
+      template: 'welcome',
+      variables: {
+        siteName: 'Aaroh Music Academy',
+        userName: user.name,
+        baseUrl: process.env.NEXTAUTH_URL
+      }
     }).catch(err => console.error('Welcome email failed:', err))
 
     // For Vercel serverless - ensure email completes

@@ -22,8 +22,8 @@ export async function verifyEmailConfig() {
   }
 }
 
-// Send email function with robust error handling
-export async function sendEmail({ to, subject, html, text }) {
+// Send email function with robust error handling and template support
+export async function sendEmail({ to, subject, html, text, template, variables }) {
   try {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
       console.error('❌ SMTP credentials not configured')
@@ -35,15 +35,45 @@ export async function sendEmail({ to, subject, html, text }) {
       throw new Error('No recipient email provided')
     }
 
+    let finalSubject = subject
+    let finalHtml = html
+    let finalText = text
+
+    // If template name is provided, fetch from database
+    if (template && variables) {
+      try {
+        const dbTemplate = await prisma.emailTemplate.findUnique({
+          where: { name: template }
+        })
+
+        if (dbTemplate) {
+          finalSubject = dbTemplate.subject
+          finalHtml = dbTemplate.htmlContent
+          finalText = dbTemplate.textContent || ''
+
+          // Replace variables in subject, html, and text
+          Object.entries(variables).forEach(([key, value]) => {
+            const placeholder = `{{${key}}}`
+            finalSubject = finalSubject.replace(new RegExp(placeholder, 'g'), value)
+            finalHtml = finalHtml.replace(new RegExp(placeholder, 'g'), value)
+            finalText = finalText.replace(new RegExp(placeholder, 'g'), value)
+          })
+        }
+      } catch (dbError) {
+        console.error('❌ Failed to fetch template from database:', dbError)
+        // Fall back to provided subject/html/text if template fetch fails
+      }
+    }
+
     console.log(`📧 Sending email to: ${to}`)
-    console.log(`📧 Subject: ${subject}`)
+    console.log(`📧 Subject: ${finalSubject}`)
 
     const info = await transporter.sendMail({
       from: `"Aaroh Music Academy" <${process.env.SMTP_USER}>`,
       to,
-      subject,
-      text,
-      html,
+      subject: finalSubject,
+      text: finalText,
+      html: finalHtml,
     })
 
     console.log('✅ Email sent successfully:', info.messageId)
@@ -349,23 +379,106 @@ export const emailTemplates = (baseUrl) => ({
   }),
 
   // New course announcement
-  newCourseAnnouncement: (userName, courseName, courseDescription, courseUrl) => ({
-    subject: `New Course Available: ${courseName} - Aaroh`,
+  newCourseAnnouncement: (userName, course, courseUrl) => ({
+    subject: `New Course Available: ${course.title} - Aaroh`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #1f2937;">New Course Alert! 🎉</h1>
-        <p>Hi ${userName},</p>
-        <p>We're excited to announce a new course: <strong>${courseName}</strong></p>
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p>${courseDescription}</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #a0303f 0%, #ff6b6b 100%); padding: 40px 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">New Course Alert! 🎉</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Start your musical journey today</p>
         </div>
-        <p>Enroll now and start your learning journey!</p>
-        <a href="${courseUrl}" style="display: inline-block; padding: 12px 24px; background-color: #1f2937; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">View Course</a>
-        <p>Best regards,<br>Aaroh Music Academy Team</p>
+        
+        <div style="padding: 40px 30px;">
+          <p style="color: #1E293B; font-size: 16px; margin: 0 0 24px 0;">Hi ${userName},</p>
+          <p style="color: #64748B; font-size: 16px; line-height: 1.6; margin: 0 0 32px 0;">We're excited to announce a new course: <strong>${course.title}</strong></p>
+          
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 32px;">
+            ${course.thumbnail ? 
+              `<img src="${course.thumbnail}" alt="${course.title}" style="width: 100%; height: 200px; object-fit: cover;">` : 
+              `<div style="width: 100%; height: 200px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center; color: #6b7280;">
+                  <div style="font-size: 48px; margin-bottom: 8px;">🎵</div>
+                  <div style="font-size: 14px; font-weight: 500;">${course.title}</div>
+                </div>
+              </div>`
+            }
+            <div style="padding: 24px;">
+              <h2 style="color: #1E293B; margin: 0 0 12px 0; font-size: 20px; font-weight: 600;">${course.title}</h2>
+              <p style="color: #64748B; margin: 0 0 16px 0; line-height: 1.6;">${course.description}</p>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                <span style="color: #a0303f; font-size: 24px; font-weight: 700;">₹${course.price.toLocaleString()}</span>
+                <span style="color: #64748B; font-size: 14px;">${course.duration} • ${course.lessons} lessons</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 32px;">
+            <a href="${courseUrl}" style="display: inline-block; background: linear-gradient(135deg, #a0303f 0%, #ff6b6b 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Enroll Now</a>
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+            <p style="color: #64748B; margin: 0; font-size: 14px;">Start your musical journey today!</p>
+            <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Music Academy Team</p>
+          </div>
+        </div>
       </div>
     `,
-    text: `New course available: ${courseName}. ${courseDescription} View at ${courseUrl}`
+    text: `New course available: ${course.title}. ${course.description} Enroll at ${courseUrl}`
   }),
+
+  // New product announcement
+  newProductAnnouncement: (userName, products, shopUrl) => {
+    const productCards = products.map(p => `
+      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+        ${(p.variants && p.variants[0] && p.variants[0].images && p.variants[0].images[0]) || (p.images && p.images[0]) ? 
+          `<img src="${(p.variants && p.variants[0] && p.variants[0].images && p.variants[0].images[0]) || p.images[0]}" alt="${p.name}" style="width: 100%; height: 150px; object-fit: cover;">` : 
+          `<div style="width: 100%; height: 150px; background: linear-gradient(135deg, #fef3f3 0%, #fee2e2 100%); display: flex; align-items: center; justify-content: center;">
+            <div style="text-align: center; color: #ef4444;">
+              <div style="font-size: 36px; margin-bottom: 6px;">🎁</div>
+              <div style="font-size: 12px; font-weight: 500;">${p.name}</div>
+            </div>
+          </div>`
+        }
+        <div style="padding: 20px;">
+          <h3 style="color: #1E293B; margin: 0 0 8px 0; font-size: 18px; font-weight: 600;">${p.name}</h3>
+          <p style="color: #64748B; margin: 0 0 12px 0; font-size: 14px; line-height: 1.5;">${p.description || ''}</p>
+          <div style="color: #ff6b6b; font-size: 20px; font-weight: 700;">₹${p.price.toLocaleString()}</div>
+        </div>
+      </div>
+    `).join('')
+    const productNames = products.map(p => p.name).join(', ')
+    
+    return {
+      subject: `New Products Available: ${productNames} - Aaroh Shop`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          <div style="background: linear-gradient(135deg, #ff6b6b 0%, #e55a5a 100%); padding: 40px 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">New Products Alert! 🎁</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">Discover our latest additions</p>
+          </div>
+          
+          <div style="padding: 40px 30px;">
+            <p style="color: #1E293B; font-size: 16px; margin: 0 0 24px 0;">Hi ${userName},</p>
+            <p style="color: #64748B; font-size: 16px; line-height: 1.6; margin: 0 0 32px 0;">We're excited to introduce our latest products:</p>
+            
+            <div style="margin-bottom: 32px;">
+              ${productCards}
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 32px;">
+              <a href="${shopUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff6b6b 0%, #e55a5a 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Shop Now</a>
+            </div>
+            
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E2E8F0; text-align: center;">
+              <p style="color: #64748B; margin: 0; font-size: 14px;">Discover amazing new additions to our collection!</p>
+              <p style="color: #64748B; margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">Aaroh Story Shop Team</p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `New products available: ${productNames}. Shop at ${shopUrl}`
+    }
+  },
 
   // Contact form submission
   contactFormSubmission: (name, email, phone, message) => ({

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, emailTemplates, getContactEmail } from '@/lib/email'
+import { sendEmail, getContactEmail } from '@/lib/email'
 
 export async function POST(request) {
   try {
@@ -41,27 +41,30 @@ export async function POST(request) {
                            'Offline (Kolkata)'
     
     const contactEmail = await getContactEmail()
-    const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
     
     const emailPromises = Promise.all([
       // Admin notification
       contactEmail ? sendEmail({
         to: contactEmail,
-        ...emailTemplates(baseUrl).adminClassBookingNotification(
-          user.name || 'Student',
-          user.email,
+        template: 'adminClassBookingNotification',
+        variables: {
+          userName: user.name || 'Student',
+          userEmail: user.email,
           phone,
-          classTypeLabel
-        )
+          classType: classTypeLabel,
+          adminUrl: `${process.env.NEXTAUTH_URL}/admin/users`
+        }
       }).catch(err => console.error('Admin email failed:', err)) : Promise.resolve(),
       
       // User confirmation
       sendEmail({
         to: user.email,
-        ...emailTemplates(baseUrl).classBookingConfirmation(
-          user.name || 'Student',
-          classTypeLabel
-        )
+        template: 'classBookingConfirmation',
+        variables: {
+          userName: user.name || 'Student',
+          classType: classTypeLabel,
+          phone: phone
+        }
       }).catch(err => console.error('User email failed:', err))
     ])
 

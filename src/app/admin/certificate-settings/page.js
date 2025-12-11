@@ -187,22 +187,23 @@ export default function CertificateSettings() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[#a0303f]">Certificate Settings</h1>
-        <Button onClick={() => setPreviewMode(!previewMode)} variant="outline">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6 pt-20 md:pt-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#a0303f]">Certificate Settings</h1>
+        <Button onClick={() => setPreviewMode(!previewMode)} variant="outline" size="sm" className="self-start sm:self-auto">
           <Eye className="w-4 h-4 mr-2" />
-          {previewMode ? 'Edit Mode' : 'Preview Mode'}
+          <span className="hidden sm:inline">{previewMode ? 'Edit Mode' : 'Preview Mode'}</span>
+          <span className="sm:hidden">{previewMode ? 'Edit' : 'Preview'}</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Settings Panel */}
-        <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
+        <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 rounded-2xl">
           <CardHeader>
-            <CardTitle>Template & Positioning</CardTitle>
+            <CardTitle className="text-base md:text-lg">Template & Positioning</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 md:space-y-4">
             <div>
               <Label className="dark:text-gray-200">Certificate Template</Label>
               <ImageUpload
@@ -212,121 +213,130 @@ export default function CertificateSettings() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="dark:text-gray-200">Student Name X</Label>
+                <Label className="dark:text-gray-200 text-sm">Student Name X</Label>
                 <Input
                   type="number"
                   value={settings?.studentNameX ?? ''}
                   onChange={(e) => updateSetting('studentNameX', e.target.value)}
+                  className="text-sm"
                 />
               </div>
               <div>
-                <Label className="dark:text-gray-200">Student Name Y</Label>
+                <Label className="dark:text-gray-200 text-sm">Student Name Y</Label>
                 <Input
                   type="number"
                   value={settings?.studentNameY ?? ''}
                   onChange={(e) => updateSetting('studentNameY', e.target.value)}
+                  className="text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="dark:text-gray-200">Course Title X</Label>
+                <Label className="dark:text-gray-200 text-sm">Course Title X</Label>
                 <Input
                   type="number"
                   value={settings?.courseTitleX ?? ''}
                   onChange={(e) => updateSetting('courseTitleX', e.target.value)}
+                  className="text-sm"
                 />
               </div>
               <div>
-                <Label className="dark:text-gray-200">Course Title Y</Label>
+                <Label className="dark:text-gray-200 text-sm">Course Title Y</Label>
                 <Input
                   type="number"
                   value={settings?.courseTitleY ?? ''}
                   onChange={(e) => updateSetting('courseTitleY', e.target.value)}
+                  className="text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="dark:text-gray-200">Date X</Label>
+                <Label className="dark:text-gray-200 text-sm">Date X</Label>
                 <Input
                   type="number"
                   value={settings?.dateX ?? ''}
                   onChange={(e) => updateSetting('dateX', e.target.value)}
+                  className="text-sm"
                 />
               </div>
               <div>
-                <Label className="dark:text-gray-200">Date Y</Label>
+                <Label className="dark:text-gray-200 text-sm">Date Y</Label>
                 <Input
                   type="number"
                   value={settings?.dateY ?? ''}
                   onChange={(e) => updateSetting('dateY', e.target.value)}
+                  className="text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="dark:text-gray-200">Certificate ID X</Label>
+                <Label className="dark:text-gray-200 text-sm">Certificate ID X</Label>
                 <Input
                   type="number"
                   value={settings?.certificateIdX ?? ''}
                   onChange={(e) => updateSetting('certificateIdX', e.target.value)}
+                  className="text-sm"
                 />
               </div>
               <div>
-                <Label className="dark:text-gray-200">Certificate ID Y</Label>
+                <Label className="dark:text-gray-200 text-sm">Certificate ID Y</Label>
                 <Input
                   type="number"
                   value={settings?.certificateIdY ?? ''}
                   onChange={(e) => updateSetting('certificateIdY', e.target.value)}
+                  className="text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="dark:text-gray-200">Instructor Name X</Label>
+                <Label className="dark:text-gray-200 text-sm">Instructor Name X</Label>
                 <Input
                   type="number"
                   value={settings?.instructorNameX ?? ''}
                   onChange={(e) => updateSetting('instructorNameX', e.target.value)}
+                  className="text-sm"
                 />
               </div>
               <div>
-                <Label className="dark:text-gray-200">Instructor Name Y</Label>
+                <Label className="dark:text-gray-200 text-sm">Instructor Name Y</Label>
                 <Input
                   type="number"
                   value={settings?.instructorNameY ?? ''}
                   onChange={(e) => updateSetting('instructorNameY', e.target.value)}
+                  className="text-sm"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm text-gray-600 dark:text-gray-400">💡 Drag the colored boxes on the template to position text elements</p>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">💡 Drag the colored boxes on the template to position text elements</p>
               <div className="grid grid-cols-2 gap-2 text-xs dark:text-gray-300">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded"></div>
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                   <span>Student Name</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <span>Course Title</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span>Date</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                  <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                   <span>Certificate ID</span>
                 </div>
-
               </div>
             </div>
 
@@ -338,9 +348,9 @@ export default function CertificateSettings() {
         </Card>
 
         {/* Preview Panel */}
-        <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800">
+        <Card className="bg-white dark:bg-zinc-950 border dark:border-zinc-800 rounded-2xl">
           <CardHeader>
-            <CardTitle>Certificate Preview</CardTitle>
+            <CardTitle className="text-base md:text-lg">Certificate Preview</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="certificate-preview-container relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden aspect-[4/3]">
@@ -500,7 +510,7 @@ export default function CertificateSettings() {
                 </>
               )}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-2">
               {previewMode ? 'Showing text positions' : 'Click Preview Mode to see text positions'}
             </p>
           </CardContent>

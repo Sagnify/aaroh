@@ -9,16 +9,21 @@ export async function POST(request) {
     const body = await request.json()
     const { productId, configuration } = body
 
+    // Validate required fields
+    if (!productId || !configuration?.variant || !configuration?.recipientName) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
     // Create product configuration (allow guest configurations)
     const config = await prisma.productConfiguration.create({
       data: {
         productId,
         variant: configuration.variant,
-        customText: configuration.customText,
+        customText: configuration.customText || null,
         recipientName: configuration.recipientName,
-        occasion: configuration.occasion,
-        songType: configuration.songType,
-        songData: configuration.songData ? JSON.stringify(configuration.songData) : null
+        occasion: configuration.occasion || null,
+        songType: configuration.songType || null,
+        songData: configuration.songData ? configuration.songData : null
       }
     })
 

@@ -52,7 +52,7 @@ export async function POST(request) {
 
     // Send emails for COD orders immediately
     if (paymentMethod === 'cod') {
-      await sendOrderEmails(order, user, items)
+      await sendOrderEmails(order, user, items, request)
       
       // Clear cart after successful COD order
       await prisma.cartItem.deleteMany({
@@ -75,8 +75,8 @@ export async function POST(request) {
   }
 }
 
-async function sendOrderEmails(order, user, items) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+async function sendOrderEmails(order, user, items, request) {
+  const baseUrl = process.env.NEXTAUTH_URL
   
   // Email to customer
   const customerEmailHtml = `

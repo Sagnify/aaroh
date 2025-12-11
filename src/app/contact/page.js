@@ -12,8 +12,10 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     message: ""
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [content, setContent] = useState({})
 
   useEffect(() => {
@@ -63,12 +65,31 @@ export default function Contact() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Form submitted:", formData)
-    // Handle form submission here
-    alert("Thank you for your message! We'll get back to you soon.")
-    setFormData({ name: "", email: "", message: "" })
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+      
+      if (response.ok) {
+        alert("Thank you for your message! We'll get back to you soon.")
+        setFormData({ name: "", email: "", phone: "", message: "" })
+      } else {
+        alert("Failed to send message. Please try again.")
+      }
+    } catch (error) {
+      console.error('Contact form error:', error)
+      alert("Failed to send message. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -165,6 +186,20 @@ export default function Contact() {
                   </div>
                   
                   <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number (Optional)
+                    </label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  
+                  <div>
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                       Message
                     </label>
@@ -179,8 +214,12 @@ export default function Contact() {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white">
-                    Send Message
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
                   </Button>
                 </form>
               </CardContent>

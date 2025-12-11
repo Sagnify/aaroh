@@ -78,11 +78,12 @@ export async function POST(request) {
     const { sendEmail, emailTemplates } = await import('@/lib/email')
     const emailPromise = sendEmail({
       to: user.email,
-      ...emailTemplates(baseUrl).certificateGenerated(
-        user.name || 'Student',
-        course.title,
-        `${baseUrl}/dashboard`
-      )
+      template: 'certificateGenerated',
+      variables: {
+        userName: user.name || 'Student',
+        courseName: course.title,
+        certificateUrl: `${baseUrl}/dashboard`
+      }
     }).catch(err => console.error('Certificate email failed:', err))
 
     if (request.waitUntil) {

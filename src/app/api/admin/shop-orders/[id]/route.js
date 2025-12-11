@@ -50,12 +50,14 @@ export async function PATCH(request, { params }) {
       
       const emailPromise = sendEmail({
         to: order.user.email,
-        ...emailTemplates(baseUrl).orderStatusUpdate(
-          order.user.name || 'Customer',
-          order.id,
-          status,
-          trackingUrl
-        )
+        template: 'orderStatusUpdate',
+        variables: {
+          customerName: order.user.name || 'Customer',
+          orderId: order.id,
+          orderStatus: status,
+          amount: order.amount,
+          orderUrl: trackingUrl
+        }
       }).catch(err => console.error('Order status email failed:', err))
 
       if (request.waitUntil) {

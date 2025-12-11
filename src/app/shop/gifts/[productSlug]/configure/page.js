@@ -76,8 +76,9 @@ export default function ConfigureProductPage() {
     setConfig({ ...config, songType: type, songData: data })
   }
 
-  const handleAddToCart = async () => {
-    setAddingToCart(true)
+  const handleAddToCart = async (retryCount = 0) => {
+    if (retryCount === 0) setAddingToCart(true)
+    
     try {
       // Create product configuration (works for both guest and authenticated users)
       const response = await fetch('/api/shop/product-orders', {
@@ -100,9 +101,18 @@ export default function ConfigureProductPage() {
             body: JSON.stringify({ configId: data.orderId })
           })
           
+          const cartData = await cartResponse.json()
+          
           if (cartResponse.ok) {
             refreshCart()
             router.push('/shop/cart')
+            return
+          } else if (cartResponse.status === 503 && cartData.retry && retryCount < 2) {
+            // Retry on connection timeout
+            setTimeout(() => handleAddToCart(retryCount + 1), 1500)
+            return
+          } else {
+            throw new Error(cartData.error || 'Failed to add to cart')
           }
         } else {
           // Store in guest cart and redirect to login
@@ -112,13 +122,19 @@ export default function ConfigureProductPage() {
           
           // Redirect to login with cart callback
           router.push('/login?callbackUrl=/shop/cart')
+          return
         }
       } else {
-        alert(data.error || 'Failed to add to cart')
+        throw new Error(data.error || 'Failed to create configuration')
       }
     } catch (error) {
       console.error('Error adding to cart:', error)
-      alert('Failed to add to cart. Please try again.')
+      if (retryCount < 2) {
+        setTimeout(() => handleAddToCart(retryCount + 1), 1500)
+        return
+      } else {
+        alert(error.message || 'Failed to add to cart. Please try again.')
+      }
     } finally {
       setAddingToCart(false)
     }
@@ -143,37 +159,37 @@ export default function ConfigureProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-50 pt-28 pb-20 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-teal-50 to-purple-50 pt-20 md:pt-28 pb-20 px-3 md:px-4">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-6 md:mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Customize Your {product.name}</h1>
-          <p className="text-gray-600">Make it uniquely yours</p>
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">Customize Your {product.name}</h1>
+          <p className="text-sm md:text-base text-gray-600">Make it uniquely yours</p>
         </motion.div>
 
         {/* Progress */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-1 md:gap-2 mb-6 md:mb-8">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+              <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-semibold transition-all ${
                 step >= s ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
               }`}>
                 {s}
               </div>
-              {s < 3 && <div className={`w-12 h-1 ${step > s ? 'bg-blue-500' : 'bg-gray-200'}`} />}
+              {s < 3 && <div className={`w-8 md:w-12 h-1 ${step > s ? 'bg-blue-500' : 'bg-gray-200'}`} />}
             </div>
           ))}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-8">
           {/* Product Preview */}
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl md:sticky md:top-24 h-fit">
-            <CardContent className="p-6">
-              <div className="relative aspect-square bg-gradient-to-br from-blue-100 to-teal-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl md:sticky md:top-24 h-fit rounded-2xl">
+            <CardContent className="p-4 md:p-6">
+              <div className="relative aspect-square bg-gradient-to-br from-blue-100 to-teal-100 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
                 {currentImages && currentImages.length > 0 ? (
                   <Image
                     src={currentImages[selectedImage]}
@@ -190,12 +206,12 @@ export default function ConfigureProductPage() {
                 )}
               </div>
               {currentImages && currentImages.length > 1 && (
-                <div className="flex gap-2 mb-4 overflow-x-auto">
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
                   {currentImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                      className={`relative w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${
                         selectedImage === idx ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -204,9 +220,9 @@ export default function ConfigureProductPage() {
                   ))}
                 </div>
               )}
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
-              <p className="text-gray-600 text-sm mb-4">{product.description}</p>
-              <div className="text-3xl font-bold text-blue-600">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+              <p className="text-gray-600 text-xs md:text-sm mb-4">{product.description}</p>
+              <div className="text-2xl md:text-3xl font-bold text-blue-600">
                 ₹{(() => {
                   if (config.variant && product.variants?.length > 0) {
                     const selectedVariant = product.variants.find(v => v.name === config.variant)
@@ -219,8 +235,8 @@ export default function ConfigureProductPage() {
           </Card>
 
           {/* Configuration Form */}
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl">
-            <CardContent className="p-8">
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl rounded-2xl">
+            <CardContent className="p-4 md:p-8">
               {/* Step 1: Product Details */}
               {step === 1 && (
                 <motion.div
@@ -229,8 +245,8 @@ export default function ConfigureProductPage() {
                   className="space-y-6"
                 >
                   <div>
-                    <Label className="text-gray-700 font-semibold mb-3 block">Choose variant</Label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <Label className="text-gray-700 font-semibold mb-3 block text-sm md:text-base">Choose variant</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                       {product.variants?.map((variant, index) => {
                         const variantPrice = variant.price || product.price
                         return (
@@ -249,14 +265,14 @@ export default function ConfigureProductPage() {
                               setCurrentImages(imagesToShow)
                               setSelectedImage(0) // Reset to first image
                             }}
-                            className={`py-3 px-4 rounded-lg border-2 transition-all text-left relative ${
+                            className={`py-2 md:py-3 px-3 md:px-4 rounded-xl border-2 transition-all text-left relative ${
                               config.variant === variant.name
                                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
-                            <div className="font-medium">{variant.name}</div>
-                            <div className="text-sm text-gray-600">₹{variantPrice}</div>
+                            <div className="font-medium text-sm md:text-base">{variant.name}</div>
+                            <div className="text-xs md:text-sm text-gray-600">₹{variantPrice}</div>
                           </button>
                         )
                       })}
@@ -264,32 +280,32 @@ export default function ConfigureProductPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="recipientName" className="text-gray-700 font-semibold">Recipient name</Label>
+                    <Label htmlFor="recipientName" className="text-gray-700 font-semibold text-sm md:text-base">Recipient name</Label>
                     <Input
                       id="recipientName"
                       placeholder="Who is this gift for?"
                       value={config.recipientName}
                       onChange={(e) => setConfig({ ...config, recipientName: e.target.value })}
-                      className="mt-2"
+                      className="mt-2 text-sm md:text-base"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="customText" className="text-gray-700 font-semibold">Custom message (optional)</Label>
+                    <Label htmlFor="customText" className="text-gray-700 font-semibold text-sm md:text-base">Custom message (optional)</Label>
                     <Textarea
                       id="customText"
                       placeholder="Add a personal message..."
                       value={config.customText}
                       onChange={(e) => setConfig({ ...config, customText: e.target.value })}
-                      rows={4}
-                      className="mt-2"
+                      rows={3}
+                      className="mt-2 text-sm md:text-base resize-none"
                     />
                   </div>
 
                   <Button
                     onClick={() => setStep(2)}
                     disabled={!config.variant || !config.recipientName}
-                    className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white py-6"
+                    className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white py-4 md:py-6 text-sm md:text-base"
                   >
                     Continue <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -303,8 +319,8 @@ export default function ConfigureProductPage() {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-6"
                 >
-                  <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200 mb-6">
-                    <p className="text-sm text-blue-800 font-medium">
+                  <div className="bg-blue-50 rounded-xl p-3 md:p-4 border-2 border-blue-200 mb-4 md:mb-6">
+                    <p className="text-xs md:text-sm text-blue-800 font-medium">
                       <Music className="w-4 h-4 inline mr-2" />
                       Every gift needs a song! Choose how you want to add music.
                     </p>
@@ -314,17 +330,17 @@ export default function ConfigureProductPage() {
                     {/* Spotify Search */}
                     <button
                       onClick={() => handleSongSelect('spotify', null)}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all text-left ${
                         config.songType === 'spotify'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Music className="w-6 h-6 text-blue-500" />
+                        <Music className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
                         <div>
-                          <div className="font-semibold text-gray-900">Search Spotify</div>
-                          <div className="text-sm text-gray-600">Find any song from Spotify</div>
+                          <div className="font-semibold text-gray-900 text-sm md:text-base">Search Spotify</div>
+                          <div className="text-xs md:text-sm text-gray-600">Find any song from Spotify</div>
                         </div>
                       </div>
                     </button>
@@ -366,17 +382,17 @@ export default function ConfigureProductPage() {
                     {/* Paste Link */}
                     <button
                       onClick={() => handleSongSelect('link', null)}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all text-left ${
                         config.songType === 'link'
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <LinkIcon className="w-6 h-6 text-blue-500" />
+                        <LinkIcon className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
                         <div>
-                          <div className="font-semibold text-gray-900">Paste Link</div>
-                          <div className="text-sm text-gray-600">Spotify/YouTube URL</div>
+                          <div className="font-semibold text-gray-900 text-sm md:text-base">Paste Link</div>
+                          <div className="text-xs md:text-sm text-gray-600">Spotify/YouTube URL</div>
                         </div>
                       </div>
                     </button>
@@ -395,17 +411,17 @@ export default function ConfigureProductPage() {
                     {/* Select from Library */}
                     <button
                       onClick={() => handleSongSelect('library', null)}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all text-left ${
                         config.songType === 'library'
                           ? 'border-purple-500 bg-purple-50'
                           : 'border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Sparkles className="w-6 h-6 text-purple-500" />
+                        <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-purple-500" />
                         <div>
-                          <div className="font-semibold text-gray-900">Select from Library</div>
-                          <div className="text-sm text-gray-600">Choose from our completed custom songs</div>
+                          <div className="font-semibold text-gray-900 text-sm md:text-base">Select from Library</div>
+                          <div className="text-xs md:text-sm text-gray-600">Choose from our completed custom songs</div>
                         </div>
                       </div>
                     </button>
@@ -420,18 +436,18 @@ export default function ConfigureProductPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-4 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
                     <Button
                       onClick={() => setStep(1)}
                       variant="outline"
-                      className="flex-1 py-6"
+                      className="flex-1 py-4 md:py-6 text-sm md:text-base"
                     >
                       Back
                     </Button>
                     <Button
                       onClick={() => setStep(3)}
                       disabled={!config.songType || !config.songData}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white py-6"
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white py-4 md:py-6 text-sm md:text-base"
                     >
                       Continue <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -446,9 +462,9 @@ export default function ConfigureProductPage() {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-6"
                 >
-                  <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-lg p-6 border-2 border-blue-200">
-                    <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
-                    <div className="space-y-2 text-sm">
+                  <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-4 md:p-6 border-2 border-blue-200">
+                    <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 text-base md:text-lg">Order Summary</h3>
+                    <div className="space-y-2 text-xs md:text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Product:</span>
                         <span className="font-medium">{product.name}</span>
@@ -477,7 +493,7 @@ export default function ConfigureProductPage() {
                           </div>
                         </>
                       )}
-                      <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between text-lg">
+                      <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between text-base md:text-lg">
                         <span className="font-semibold">Total:</span>
                         <span className="font-bold text-blue-600">
                           ₹{(() => {
@@ -501,23 +517,24 @@ export default function ConfigureProductPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                     <Button
                       onClick={() => setStep(2)}
                       variant="outline"
-                      className="flex-1 py-6"
+                      className="flex-1 py-4 md:py-6 text-sm md:text-base"
                     >
                       Back
                     </Button>
                     <Button
                       onClick={handleAddToCart}
                       disabled={addingToCart}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white py-6 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white py-4 md:py-6 disabled:opacity-70 disabled:cursor-not-allowed text-sm md:text-base"
                     >
                       {addingToCart ? (
                         <>
                           <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                          Adding to Cart...
+                          <span className="hidden sm:inline">Adding to Cart...</span>
+                          <span className="sm:hidden">Adding...</span>
                         </>
                       ) : (
                         'Add to Cart'

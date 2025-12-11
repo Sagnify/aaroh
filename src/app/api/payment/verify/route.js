@@ -75,15 +75,15 @@ export async function POST(request) {
       // Send payment failed email with proper error handling
       try {
         console.log('📧 Sending payment failed email...')
-        const { sendEmail, emailTemplates } = await import('@/lib/email')
-        const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
+        const { sendEmail } = await import('@/lib/email')
         const emailResult = await sendEmail({
           to: failedPurchase.user.email,
-          ...emailTemplates(baseUrl).paymentFailed(
-            failedPurchase.user.name || 'Student',
-            failedPurchase.course.title,
-            failedPurchase.amount
-          )
+          template: 'paymentFailed',
+          variables: {
+            userName: failedPurchase.user.name || 'Student',
+            courseName: failedPurchase.course.title,
+            retryUrl: `${process.env.NEXTAUTH_URL}/courses`
+          }
         })
         console.log('✅ Payment failed email result:', emailResult)
       } catch (emailError) {
@@ -111,27 +111,29 @@ export async function POST(request) {
     // Send confirmation emails with proper error handling
     try {
       console.log('📧 Sending course purchase emails...')
-      const { sendEmail, emailTemplates, getAdminEmail } = await import('@/lib/email')
-      const baseUrl = request.headers.get('origin') || `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
-      
+      const { sendEmail, getAdminEmail } = await import('@/lib/email')
       const userEmailResult = await sendEmail({
         to: purchase.user.email,
-        ...emailTemplates(baseUrl).purchaseConfirmation(
-          purchase.user.name || 'Student',
-          purchase.course.title,
-          purchase.amount
-        )
+        template: 'purchaseConfirmation',
+        variables: {
+          userName: purchase.user.name || 'Student',
+          courseName: purchase.course.title,
+          amount: purchase.amount,
+          baseUrl: process.env.NEXTAUTH_URL
+        }
       })
       console.log('✅ User email result:', userEmailResult)
       
       const adminEmailResult = await sendEmail({
         to: getAdminEmail(),
-        ...emailTemplates(baseUrl).adminPurchaseNotification(
-          purchase.user.name || 'Student',
-          purchase.user.email,
-          purchase.course.title,
-          purchase.amount
-        )
+        template: 'adminPurchaseNotification',
+        variables: {
+          userName: purchase.user.name || 'Student',
+          userEmail: purchase.user.email,
+          courseName: purchase.course.title,
+          amount: purchase.amount,
+          baseUrl: process.env.NEXTAUTH_URL
+        }
       })
       console.log('✅ Admin email result:', adminEmailResult)
       
