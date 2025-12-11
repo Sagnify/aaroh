@@ -289,7 +289,7 @@ export default function EmailTemplates() {
                       <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 flex flex-wrap gap-1">
                         {selectedTemplate.variables.map(v => (
                           <span key={v.name} className="bg-gray-200 dark:bg-zinc-700 px-2 py-1 rounded">
-                            {{`{{${v.name}}}`}}
+                            {`{{${v.name}}}`}
                           </span>
                         ))}
                       </div>
