@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Lock, Eye, EyeOff } from 'lucide-react'
 
-export default function ResetPassword() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   
@@ -183,5 +183,22 @@ export default function ResetPassword() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdf6e3] via-[#f7f0e8] to-[#ffb088]/10 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <Lock className="w-12 h-12 text-[#a0303f] mx-auto mb-4" />
+            <p className="text-gray-600">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
